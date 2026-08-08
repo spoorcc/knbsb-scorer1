@@ -1,0 +1,40 @@
+{
+  "name": "knbsb-scorer1",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "npm run lint:js && npm run lint:css && npm run lint:html",
+    "lint:js": "node scripts/extract-inline-script.mjs && eslint .",
+    "lint:css": "stylelint index.html",
+    "lint:html": "htmlhint index.html",
+    "verify": "npm run lint && npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spoorcc/knbsb-scorer1.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/spoorcc/knbsb-scorer1/issues"
+  },
+  "homepage": "https://github.com/spoorcc/knbsb-scorer1#readme",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@vitest/coverage-v8": "^4.1.10",
+    "eslint": "^10.8.1",
+    "globals": "^17.9.0",
+    "htmlhint": "^1.9.2",
+    "jsdom": "^30.0.1",
+    "postcss-html": "^2.0.0",
+    "stylelint": "^17.14.1",
+    "stylelint-config-recommended": "^18.0.0",
+    "vitest": "^4.1.10"
+  }
+}
