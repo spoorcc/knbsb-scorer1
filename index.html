@@ -1124,7 +1124,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
         // throwing error to first: exclude the first baseman himself (can't throw to his own base)
         p2 = pick([1,2,4,5,6]);
         text=`<b>${batter.name}</b> slaat een grondbal; de ${P(p2)} gooit onzuiver over naar het eerste honk. Fout!`;
-        refs=['Error bij het aangooien naar een honk, p.11'];
+        refs=['Error bij het aangooien naar een honk, p.12'];
       } else {
         // dropped fly ball: any fielder who can reasonably catch a fly ball
         p2 = pick([3,4,5,6,7,8,9]);
@@ -1717,7 +1717,7 @@ function buildPinchHitterQuizEvent(teamKey){
     narrative: `<b>${originalName}</b> (slagvolgorde ${slot+1}) wordt vervangen door invaller <b>${subName}</b>, die in zijn plaats gaat slaan.`,
     options: shuffled.options,
     correctIndex: shuffled.correctIndex,
-    refs:['De scorekaart, p.7'],
+    refs:['De scorekaart, p.7', 'Verandering van werper, slagman en veldspeler, p.20'],
     explain: `Een vervangende slagman (pinch hitter) noteer je met de afkorting <code>PH</code> in de positiekolom, met de naam van <b>${subName}</b> en het moment van wisselen (<code>${halfLabel}</code>) erbij.`,
     applyBases: b=>({bases:b, runs:0}),
     lineupChange: {teamKey, slot, newName: subName, subType:'PH'},
@@ -1740,7 +1740,7 @@ function buildPitcherChangeQuizEvent(fieldingTeamKey){
   const subName = sub.name;
   const halfLabel = halfInningLabel();
   const shuffled = shuffleMcOptions([
-    `Met een "bootje" op de kaart van de tegenstander, én bij ${team.name} zelf in het volgende positievakje van ${curName} het kale cijfer "1", met de naam van ${subName} eronder gevolgd door "${halfLabel}".`,
+    `Met een "bootje" op de kaart van de tegenstander, én bij ${team.name} zelf in de rij eronder de naam van ${subName}, met alleen het kale cijfer "1" in de positiekolom en "${halfLabel}" achter zijn naam.`,
     'Alleen met de letters "PH" bij de naam van de nieuwe werper.',
     'Door de oude werper van de kaart te schrappen.',
     'Dit hoeft niet apart genoteerd te worden.'
@@ -1751,7 +1751,7 @@ function buildPitcherChangeQuizEvent(fieldingTeamKey){
     options: shuffled.options,
     correctIndex: shuffled.correctIndex,
     refs:['Verandering van werper, slagman en veldspeler, p.20-21'],
-    explain: `Bij een werperwissel plaats je aan de kant van de slagpartij (dus op de scorekaart van de tegenstander) een dikke horizontale streep met de uiteinden een stukje omhoog: het "bootje". Bij ${team.name} zelf geldt de gewone regel voor een positiewissel, want werper is positie 1: in het volgende positievakje van <b>${curName}</b> komt alleen het kale cijfer <code>1</code> te staan. Op de naamregel van <b>${subName}</b> komt daarachter <code>${halfLabel}</code> (de speelhelft en inning van de wissel).`,
+    explain: `Bij een werperwissel plaats je aan de kant van de slagpartij (dus op de scorekaart van de tegenstander) een dikke horizontale streep met de uiteinden een stukje omhoog: het "bootje". Bij ${team.name} zelf komt <b>${subName}</b> op een nieuwe regel onder <b>${curName}</b> in hetzelfde slagvolgordevakje: alleen het kale cijfer <code>1</code> in de positiekolom (want werper is positie 1), met zijn naam en daarachter <code>${halfLabel}</code> (de speelhelft en inning van de wissel).`,
     applyBases: b=>({bases:b, runs:0}),
     pitcherChange: {teamKey:fieldingTeamKey, slot, newName:subName, halfLabel},
   };
