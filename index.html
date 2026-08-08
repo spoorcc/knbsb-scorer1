@@ -1,0 +1,2226 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KNBSB Scorer 1 – Oefentrainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Federation palette — derived from the KNBSB "Scorer 1" course cover (pale sky blue,
+       deep federation navy, crest red) rather than a generic UI blue. */
+    --navy:#153458;         /* primary ink / headlines / scoreboard */
+    --navy-2:#2c567f;       /* mid-blue, gradients & secondary accents */
+    --sky:#e7edf6;          /* pale cover-page wash behind the whole app */
+    --paper:#fbfaf6;        /* warm paper surface for cards (not stark white) */
+    --rule:#c9d3e0;         /* hairline borders / scorecard grid lines */
+    --rule-soft:#e1e7f0;
+    --red:#a4202d;          /* crest red */
+    --red-deep:#7c1620;
+    --ink:#182430;
+    --ink-muted:#5a6674;
+    --green:#1e6e46;
+    --radius:5px;
+    --space-1:6px; --space-2:12px; --space-3:20px; --space-4:28px;
+  }
+  *{box-sizing:border-box;}
+  html{background:var(--sky); overflow-x:hidden;}
+  body{
+    margin:0; font-family:'Inter', system-ui, -apple-system, Arial, sans-serif;
+    background:var(--sky); color:var(--ink); line-height:1.45; font-size:15px;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden; width:100%;
+  }
+  h1,h2,h3, .serif{font-family:'Source Serif 4', 'Georgia', serif;}
+  .mono, code, .builder-text, .log-entry .codes, table.innings{font-family:'IBM Plex Mono','Consolas',monospace;}
+
+  /* ============ HEADER ============ */
+  header{
+    position:relative; overflow:hidden;
+    background:linear-gradient(140deg,var(--navy) 0%, var(--navy-2) 100%);
+    color:#fff; padding:18px 20px; border-bottom:3px solid var(--red);
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+  }
+  header::before{
+    /* faint baseball-seam texture, echoing the course cover artwork */
+    content:''; position:absolute; inset:0; opacity:.10; pointer-events:none;
+    background-image:
+      repeating-linear-gradient(115deg, transparent 0 26px, #fff 26px 27px, transparent 27px 52px),
+      repeating-linear-gradient(115deg, transparent 6px 18px, #fff 18px 19px, transparent 19px 34px);
+  }
+  .header-id{display:flex; align-items:center; gap:12px; position:relative; z-index:1;}
+  .crest{
+    flex:0 0 auto; width:44px; height:44px; border-radius:50%;
+    background:#fff; border:2px solid rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center;
+    box-shadow:0 1px 3px rgba(0,0,0,.35), inset 0 0 0 1px rgba(21,52,88,.08);
+  }
+  .crest svg{width:38px; height:38px; display:block;}
+  header h1{font-size:1.2rem; margin:0; font-weight:600; letter-spacing:.2px;}
+  header .sub{font-size:.72rem; letter-spacing:.6px; text-transform:uppercase; opacity:.75; margin-top:1px;}
+  header .stats{
+    position:relative; z-index:1; font-family:'IBM Plex Mono',monospace; font-size:.85rem; font-weight:600;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.35); color:#fff;
+    padding:6px 12px; border-radius:3px; letter-spacing:.5px;
+  }
+  .header-right{position:relative; z-index:1; display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;}
+  .export-btn{
+    font-family:'Inter',sans-serif; font-size:.68rem; font-weight:700; letter-spacing:.3px; text-transform:none;
+    background:transparent; color:rgba(255,255,255,.85); border:1px solid rgba(255,255,255,.4);
+    padding:6px 10px; border-radius:3px; display:inline-block; text-decoration:none; cursor:pointer;
+  }
+  .export-btn:hover{background:rgba(255,255,255,.12); color:#fff;}
+
+  main{max-width:720px; margin:0 auto; padding:var(--space-3) 16px 40px;}
+
+  /* ============ CARD SYSTEM ============ */
+  .card{
+    background:var(--paper); border:1px solid var(--rule); border-top:3px solid var(--navy);
+    border-radius:var(--radius); padding:var(--space-3); margin-bottom:var(--space-3);
+    box-shadow:0 1px 2px rgba(21,52,88,.06);
+  }
+  .eyebrow{
+    font-size:.68rem; font-weight:700; letter-spacing:1.2px; text-transform:uppercase;
+    color:var(--red); margin:0 0 4px 0;
+  }
+  h2{font-size:1.05rem; margin:0 0 12px 0; color:var(--navy); font-weight:600; letter-spacing:.1px;
+     padding-bottom:8px; border-bottom:1px solid var(--rule-soft);}
+  p{margin:0 0 var(--space-2) 0; color:var(--ink);}
+  .hidden{display:none !important;}
+
+  /* ============ FORM CONTROLS / BUTTONS ============ */
+  .setup-row{display:flex; align-items:center; gap:12px; margin:var(--space-2) 0; flex-wrap:wrap;}
+  .sport-toggle{display:inline-flex; border:1.5px solid var(--navy); border-radius:6px; overflow:hidden;}
+  .sport-btn{
+    font-family:'Inter',sans-serif; font-size:.85rem; font-weight:700; color:var(--navy);
+    background:#fff; border:none; padding:8px 16px; cursor:pointer; transition:background .15s ease, color .15s ease;
+  }
+  .sport-btn + .sport-btn{border-left:1.5px solid var(--navy);}
+  .sport-btn.active{background:var(--navy); color:#fff;}
+  label{font-size:.9rem; color:var(--ink-muted); font-weight:600;}
+  select, input[type=number]{
+    padding:8px 12px; border-radius:3px; border:1px solid var(--rule); font-size:16px;
+    background:#fff; color:var(--ink); font-family:'IBM Plex Mono',monospace;
+  }
+  button{
+    cursor:pointer; border:1px solid transparent; border-radius:3px; padding:10px 18px; font-size:.85rem;
+    font-weight:700; letter-spacing:.4px; text-transform:uppercase; font-family:'Inter',sans-serif;
+    transition:background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .btn-primary{background:var(--navy); color:#fff; border-color:var(--navy);}
+  .btn-primary:hover{background:var(--navy-2);}
+  .btn-primary:disabled{opacity:.4; cursor:default;}
+  .btn-secondary{background:transparent; color:var(--navy); border-color:var(--rule);}
+  .btn-secondary:hover{background:var(--sky);}
+
+  /* ============ SCOREBOARD ============ */
+  .scoreboard{text-align:center;}
+  .team-names{font-size:.92rem; font-weight:600; letter-spacing:.3px; color:var(--ink-muted); text-transform:uppercase;}
+  .team-names .away{color:var(--navy);}
+  .team-names .home{color:var(--red);}
+  .team-names .vs{margin:0 8px; color:var(--rule); font-weight:400;}
+  .team-score{font-size:2.2rem; font-weight:700; margin-top:4px; font-family:'IBM Plex Mono',monospace;}
+  .team-score .tally.away{color:var(--navy);}
+  .team-score .tally.home{color:var(--red);}
+  .team-score .sep{color:var(--rule); margin:0 10px; font-weight:400;}
+  .meta{font-size:.8rem; color:var(--ink-muted); margin-top:6px; letter-spacing:.3px; text-transform:uppercase;}
+  table.innings{border-collapse:collapse; width:100%; margin-top:var(--space-2); font-size:.78rem;}
+  table.innings th, table.innings td{border:1px solid var(--rule-soft); padding:5px 6px; text-align:center;}
+  table.innings th{background:var(--sky); color:var(--navy); font-family:'Inter',sans-serif; font-weight:700; font-size:.68rem; text-transform:uppercase;}
+  table.innings td.teamname{text-align:left; font-weight:600; white-space:nowrap; font-family:'Inter',sans-serif;}
+
+  /* ============ FIELD (diamond + outs) ============ */
+  .field-row{display:grid; grid-template-columns:140px 1fr; align-items:center; gap:16px;}
+  .diamond-wrap{flex:0 0 auto; width:140px;}
+  svg .base{fill:var(--paper); stroke:var(--navy); stroke-width:3;}
+  svg .base.occupied{fill:var(--red); stroke:var(--red-deep);}
+  svg .basenum{font-family:'IBM Plex Mono',monospace; font-size:11px; fill:var(--navy); font-weight:600;}
+  svg .base.occupied + .basenum{fill:#fff;}
+  svg .homeplate{fill:var(--ink);}
+  .outs{display:flex; gap:8px; align-items:center; font-size:.78rem; font-weight:700; letter-spacing:.6px; text-transform:uppercase; color:var(--ink-muted);}
+  .out-dot{width:15px; height:15px; border-radius:50%; border:2px solid var(--red); background:transparent;}
+  .out-dot.filled{background:var(--red);}
+  .batter-info{font-size:.95rem; margin-top:10px;}
+  .batter-info b{color:var(--navy);}
+  .runner-list{font-size:.78rem; color:var(--ink-muted); margin-top:5px;}
+  .runner-list b{color:var(--navy);}
+  .runner-list .via{font-family:'IBM Plex Mono',monospace; font-size:.72rem; color:var(--navy-2);}
+
+  /* ============ NARRATIVE ============ */
+  .narrative{font-size:1.08rem; padding:2px 0; color:var(--ink);}
+  .narrative b{color:var(--navy);}
+
+  /* ============ SCORETEKEN BUILDER — the "honkvakje" signature element ============ */
+  .builder-wrap{display:flex; align-items:center; gap:20px; flex-wrap:wrap;}
+  .honk-cell{
+    position:relative; width:130px; height:130px; flex:0 0 auto;
+    background-color:#fff;
+    background-image:
+      linear-gradient(var(--rule), var(--rule)),
+      linear-gradient(var(--rule), var(--rule));
+    background-size: 100% 1.5px, 1.5px 100%;
+    background-position: center, center;
+    background-repeat: no-repeat;
+    border:1.5px solid var(--navy); border-radius:3px;
+  }
+  .qbtn{
+    position:absolute; border:none; background:transparent; cursor:pointer; z-index:3;
+    font-size:.55rem; font-weight:700; letter-spacing:.3px; color:var(--ink-muted);
+    text-transform:uppercase; font-family:'Inter',sans-serif; display:flex; transition:background .12s ease;
+  }
+  .qbtn.q-3e{top:0; left:0; width:50%; height:50%; justify-content:flex-start; align-items:flex-start; padding:5px 0 0 7px;}
+  .qbtn.q-2e{top:0; right:0; width:50%; height:50%; justify-content:flex-end; align-items:flex-start; padding:5px 7px 0 0;}
+  .qbtn.q-thuis{bottom:0; left:0; width:50%; height:50%; justify-content:flex-start; align-items:flex-end; padding:0 0 5px 7px;}
+  .qbtn.q-1e{bottom:0; right:0; width:50%; height:50%; justify-content:flex-end; align-items:flex-end; padding:0 7px 5px 0;}
+  .qbtn:hover{background:rgba(21,52,88,.06);}
+  .qbtn.q-any{
+    top:50%; left:50%; width:28px; height:28px; margin:-14px 0 0 -14px; border-radius:50%;
+    background:#fff; border:1.5px solid var(--rule); z-index:4; align-items:center; justify-content:center;
+    font-size:.85rem; color:var(--ink-muted); padding:0;
+  }
+  .qbtn.q-any:hover{background:var(--sky); border-color:var(--navy-2);}
+  #builderBox.locked .qbtn{pointer-events:none; cursor:default;}
+
+  .hist-text{
+    position:absolute; display:flex; align-items:center; justify-content:center; z-index:2;
+    font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:.8rem; color:#2a2a2a;
+    pointer-events:none; padding-top:8px;
+  }
+  .hist-text.q-1e{top:50%; left:50%; right:2px; bottom:2px;}
+  .hist-text.q-2e{top:2px; left:50%; right:2px; bottom:50%;}
+  .hist-text.q-3e{top:2px; left:2px; right:50%; bottom:50%;}
+  .out-circle-inner{
+    display:inline-flex; align-items:center; justify-content:center;
+    border:1.3px solid currentColor; border-radius:50%; padding:.15em .38em; line-height:1;
+  }
+  .hist-text.q-thuis{top:50%; left:2px; right:50%; bottom:2px;}
+
+  .q-highlight{position:absolute; background:transparent; transition:all .18s ease; z-index:0;}
+  .q-highlight.slot-1e{top:50%; left:50%; right:2px; bottom:2px;}
+  .q-highlight.slot-2e{top:2px; left:50%; right:2px; bottom:50%;}
+  .q-highlight.slot-3e{top:2px; left:2px; right:50%; bottom:50%;}
+  .q-highlight.slot-thuis{top:50%; left:2px; right:50%; bottom:2px;}
+  .q-highlight.slot-any{inset:2px;}
+
+  .honk-dot{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:9px; height:9px; border-radius:50%; background:#000; z-index:3; pointer-events:none;
+  }
+  .honk-cell.mini .honk-dot{width:5px; height:5px;}
+  .honk-cell.sc-cell .honk-dot{width:7px; height:7px;}
+
+  /* Authentic honkslag tick-mark (1B/2B/3B): a stroke with 1/2/3 crossbars, per the course material */
+  .hs-mark{position:relative; display:inline-block; width:.6em; height:1.15em; vertical-align:middle;}
+  .hs-mark::before{
+    content:''; position:absolute; left:50%; top:.18em; bottom:0; width:.1em; background:currentColor; transform:translateX(-50%);
+  }
+  .hs-tick{position:absolute; left:50%; width:.62em; height:.1em; background:currentColor; transform:translateX(-50%) rotate(-18deg);}
+  .q-highlight.state-selected{background:rgba(21,52,88,.10);}
+  .q-highlight.state-correct{background:rgba(30,110,70,.15);}
+  .q-highlight.state-wrong{background:rgba(164,32,45,.15);}
+
+  .builder-text{
+    position:absolute; display:flex; align-items:center; justify-content:center; z-index:5;
+    font-weight:700; letter-spacing:.5px; color:var(--navy); text-align:center;
+    padding:3px; word-break:break-all; line-height:1.05; transition:all .18s ease; pointer-events:none;
+  }
+  .builder-text.slot-any{
+    inset:24px; font-size:1.15rem; border:1.5px solid var(--navy); border-radius:50%; background:#fff;
+  }
+  .builder-text.slot-any.state-correct{border-color:var(--green);}
+  .builder-text.slot-any.state-wrong{border-color:var(--red);}
+  .honk-cell.mini .builder-text.slot-any,
+  .honk-cell.sc-cell .builder-text.slot-any{inset:8px; border-width:1.5px; font-size:.9rem; background:#fff; border-color:#000 !important; color:#000;}
+  .builder-text.slot-1e{top:50%; left:50%; right:2px; bottom:2px; font-size:1rem;}
+  .builder-text.slot-2e{top:2px; left:50%; right:2px; bottom:50%; font-size:1rem;}
+  .builder-text.slot-3e{top:2px; left:2px; right:50%; bottom:50%; font-size:1rem;}
+  .builder-text.slot-thuis{top:50%; left:2px; right:50%; bottom:2px; font-size:1rem;}
+  .builder-text.state-correct{color:var(--green);}
+  .builder-text.state-wrong{color:var(--red);}
+
+  .quadrant-hint{
+    font-size:.72rem; font-weight:700; letter-spacing:.4px; text-transform:uppercase;
+    color:var(--navy-2); margin-bottom:8px;
+  }
+  .builder-side{flex:1 1 220px; min-width:200px;}
+  .hint-row{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  .info-btn{
+    flex:0 0 auto; width:20px; height:20px; padding:0; border-radius:50%; border:1.5px solid var(--navy-2);
+    background:#fff; color:var(--navy-2); font-size:.72rem; line-height:1; display:flex; align-items:center; justify-content:center;
+  }
+  .info-btn:hover{background:var(--sky);}
+  .builder-caption{font-size:.78rem; color:var(--ink-muted); margin:6px 0 8px 0;}
+  .slot-warning{display:none; font-size:.78rem; color:var(--red); font-weight:600; margin-bottom:8px;}
+  .slot-warning.show{display:block;}
+
+  .control-row{display:flex; align-items:stretch; gap:8px;}
+  .input-wrap{position:relative; flex:0 0 92px;}
+  .input-wrap input{
+    width:100%; height:100%; box-sizing:border-box; padding:9px 26px 9px 10px;
+    border:1.5px solid var(--navy); border-radius:4px; font-family:'IBM Plex Mono',monospace;
+    font-size:16px; text-transform:uppercase; letter-spacing:1px; color:var(--navy); background:#fff;
+  }
+  .clear-icon-btn{
+    position:absolute; right:5px; top:50%; transform:translateY(-50%);
+    width:19px; height:19px; padding:0; border-radius:50%; border:1.5px solid var(--rule);
+    background:#fff; color:var(--ink-muted); font-size:.6rem; line-height:1;
+    display:flex; align-items:center; justify-content:center; text-transform:none;
+  }
+  .clear-icon-btn:hover{border-color:var(--red); color:var(--red); background:#fff;}
+  .icon-btn{flex:0 0 auto; padding:0 14px; font-size:1rem;}
+  .control-row .btn-primary{flex:1; padding:0 8px; font-size:.78rem; letter-spacing:.2px; white-space:nowrap;}
+
+  /* mini honk-cell used in the logboek, reusing the slot-* positioning classes above */
+  .honk-cell.mini{width:44px; height:44px; border-width:1px; flex:0 0 auto;}
+  .honk-cell.mini, .honk-cell.sc-cell{
+    background-image:
+      linear-gradient(var(--navy-2), var(--navy-2)),
+      linear-gradient(var(--navy-2), var(--navy-2));
+    background-size: 100% 1px, 1px 100%;
+    background-position: center, center;
+    background-repeat: no-repeat;
+    opacity:1;
+  }
+  .honk-cell.mini .builder-text{font-size:.6rem; padding:1px; letter-spacing:0;}
+  .honk-cell.mini .builder-text.slot-any{font-size:.62rem;}
+  .honk-cell.mini .hist-text{font-size:.5rem; padding-top:2px;}
+
+
+  /* ============ KEYBOARD ============ */
+  .kb-group{margin-top:var(--space-3);}
+  .kb-group-title{
+    font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:1px;
+    color:var(--navy); margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid var(--rule-soft);
+  }
+  .kb-buttons{display:flex; flex-wrap:wrap; gap:7px;}
+  .kb-btn{
+    background:#fff; border:1px solid var(--rule); color:var(--ink); padding:7px 11px;
+    font-family:'IBM Plex Mono',monospace; font-size:.85rem; font-weight:600; border-radius:3px;
+    text-transform:none; letter-spacing:0;
+  }
+  .kb-btn:hover{background:var(--sky); border-color:var(--navy-2);}
+  .kb-btn small{display:block; font-weight:400; color:var(--ink-muted); font-size:.62rem; font-family:'Inter',sans-serif; margin-top:1px; text-transform:none;}
+  #grpPos{display:grid; grid-template-columns:repeat(3, 56px); gap:7px;}
+  .kb-pos{background:var(--navy); color:#fff; text-align:center; border-color:var(--navy); padding:8px 4px;}
+  .kb-pos:hover{background:var(--navy-2);}
+  .kb-pos small{color:rgba(255,255,255,.7);}
+  #keyboard{
+    margin-top:2px; overflow:hidden;
+    max-height:3000px; opacity:1;
+    transition:max-height .35s ease, opacity .25s ease, margin-top .35s ease;
+  }
+  #keyboard.kb-collapsed{max-height:0; opacity:0; margin-top:0;}
+  #keyboard.disabled{opacity:.35; pointer-events:none;}
+
+  /* Fold/accordion toggle for the keyboard panel */
+  .fold-toggle{
+    width:100%; display:flex; align-items:center; gap:7px; justify-content:flex-start;
+    background:var(--sky); border:1px solid var(--rule); color:var(--navy-2);
+    padding:9px 12px; margin-top:var(--space-2); border-radius:4px;
+    font-size:.78rem; text-transform:none; letter-spacing:0; font-weight:600;
+  }
+  .fold-toggle:hover{background:#dfe9f4;}
+  .fold-icon{display:inline-block; transition:transform .25s ease; font-size:.7rem; color:var(--navy);}
+  .fold-toggle[aria-expanded="true"] .fold-icon{transform:rotate(90deg);}
+
+  /* ============ FEEDBACK ============ */
+  .feedback{
+    margin-top:var(--space-3); padding:14px 16px; border-radius:3px; display:none;
+    background:#fff; border:1px solid var(--rule); border-left:5px solid var(--rule);
+  }
+  .feedback.show{display:block;}
+  .feedback.correct{border-left-color:var(--green);}
+  .feedback.wrong{border-left-color:var(--red);}
+  .feedback .verdict{font-family:'Source Serif 4',serif; font-weight:600; font-size:1.05rem; margin-bottom:6px;}
+  .feedback .verdict.correct{color:var(--green);}
+  .feedback .verdict.wrong{color:var(--red);}
+  .feedback .ref{color:var(--ink-muted); font-size:.82rem; margin-top:8px; letter-spacing:.2px;}
+  .feedback code{background:var(--sky); border:1px solid var(--rule); padding:1px 6px; border-radius:2px; font-family:'IBM Plex Mono',monospace;}
+
+  /* ============ LOG ============ */
+  #log{max-height:340px; overflow-y:auto; font-size:.82rem;}
+  .log-entry{padding:9px 2px; border-bottom:1px solid var(--rule-soft); display:flex; gap:10px; align-items:flex-start;}
+  .log-entry:last-child{border-bottom:none;}
+  .log-entry .mark{font-weight:700; width:14px; font-family:'IBM Plex Mono',monospace; padding-top:6px; flex:0 0 auto;}
+  .log-entry .mark.ok{color:var(--green);}
+  .log-entry .mark.no{color:var(--red);}
+  .log-grid-wrap{flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:2px;}
+  .log-grid-caption{font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.2px; color:var(--ink-muted);}
+  .log-grid-caption.state-correct{color:var(--green);}
+  .log-grid-caption.state-wrong{color:var(--red);}
+  .log-details{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; padding-top:2px;}
+  .log-entry .txt{color:var(--ink-muted); font-family:'Inter',sans-serif;}
+  .log-entry .codes{white-space:nowrap; font-weight:600; color:var(--navy); font-size:.8rem;}
+  #log:empty::before{content:'Nog geen situaties gescoord.'; color:var(--ink-muted); font-style:italic;}
+
+  footer{text-align:center; color:var(--ink-muted); font-size:.72rem; padding:8px 16px 30px; letter-spacing:.2px;}
+  footer a{color:var(--navy-2);}
+
+  /* Keyboard-mode toggle link */
+  .btn-link{
+    background:none; border:none; color:var(--navy-2); text-decoration:underline; padding:6px 0; margin-top:6px;
+    font-size:.78rem; text-transform:none; letter-spacing:0; font-weight:600; display:block;
+  }
+  .btn-link:hover{color:var(--navy);}
+
+  /* Multiple-choice quiz (inning-change lessons) */
+  .mc-wrap.hidden{display:none;}
+  .mc-options{display:flex; flex-direction:column; gap:8px;}
+  .mc-btn{
+    text-align:left; background:#fff; border:1.5px solid var(--rule); color:var(--ink); padding:11px 14px;
+    border-radius:4px; font-size:.88rem; font-weight:500; text-transform:none; letter-spacing:0; line-height:1.35;
+  }
+  .mc-btn:hover{border-color:var(--navy-2); background:var(--sky);}
+  .mc-btn.selected{border-color:var(--navy); background:var(--sky); font-weight:700;}
+  .mc-wrap.locked .mc-btn{pointer-events:none;}
+  .mc-wrap.locked .mc-btn.selected.correct-choice{border-color:var(--green); background:rgba(30,110,70,.1);}
+  .mc-wrap.locked .mc-btn.selected.wrong-choice{border-color:var(--red); background:rgba(164,32,45,.1);}
+  .mc-wrap.locked .mc-btn.reveal-correct{border-color:var(--green); background:rgba(30,110,70,.08);}
+
+  /* Full scorecard table — deliberately black/white/gray to resemble the real paper form */
+  .sc-card{background:#fff;}
+  .table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom:6px;}
+  table.scorecard-table{border-collapse:collapse; font-size:.85rem; white-space:nowrap; background:#fff;}
+  table.scorecard-table th, table.scorecard-table td{border:1px solid #999; text-align:center; padding:0;}
+  table.scorecard-table th{background:#fff; color:#000; font-weight:700; font-size:.72rem; text-transform:uppercase; border-bottom:2px solid #000; padding:6px 8px;}
+  table.scorecard-table td.sc-pos{color:#444; font-family:'IBM Plex Mono',monospace; padding:0;}
+  table.scorecard-table td.sc-name{text-align:left; font-weight:600; color:#000; font-family:'Inter',sans-serif; padding:6px 10px; min-width:130px;}
+  .ph-sub{font-weight:700; font-size:.72rem; color:#333;}
+  table.scorecard-table td.sc-lid{padding:6px 8px;}
+  table.scorecard-table td.sc-volg{padding:6px 2px; width:22px; max-width:22px; text-align:center; color:#000; font-weight:700; font-family:'IBM Plex Mono',monospace;}
+  .pos-grid{display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); width:100%; height:58px; margin:0;}
+  .pos-grid div{border-right:1px solid #000; border-bottom:1px solid #000; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:.68rem; color:#000;}
+  .pos-grid div:nth-child(3n){border-right:none;}
+  .pos-grid div:nth-child(n+7){border-bottom:none;}
+  table.scorecard-table td:not(.sc-pos):not(.sc-name):not(.sc-volg){min-width:64px;}
+  .honk-cell.sc-cell{width:100%; height:58px; margin:0; border:none; border-radius:0;}
+  .honk-cell.sc-cell{
+    background-image:
+      linear-gradient(#000, #000),
+      linear-gradient(#000, #000);
+    background-size: 100% 1px, 1px 100%;
+    background-position: center, center;
+    background-repeat: no-repeat;
+  }
+  .honk-cell.sc-cell .hist-text{font-size:.68rem; padding-top:3px; color:#000;}
+  .sc-out{
+    width:38px; height:38px; margin:0 auto; border-radius:50%; border:1.5px solid #000;
+    display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace;
+    font-size:.68rem; font-weight:700; color:#000;
+  }
+
+  table.sc-matchinfo-table{border-collapse:collapse; width:100%; max-width:480px; font-size:.8rem; margin-bottom:16px;}
+  table.sc-matchinfo-table td{border:1px solid #000; padding:5px 8px; color:#000;}
+  table.sc-matchinfo-table td.mi-label{font-weight:700; width:110px; white-space:nowrap;}
+  table.sc-matchinfo-table td.mi-colon{width:14px; text-align:center; color:#666;}
+  table.sc-matchinfo-table td.mi-value{text-align:center;}
+  .sc-footer-table{margin-top:0; max-width:none; border-top:none;}
+  .sc-footer-table td.mi-value{text-align:left;}
+  table.scorecard-table td.sc-endmark{position:relative;}
+  table.scorecard-table td.sc-endmark::after{
+    content:''; position:absolute; left:2px; right:2px; bottom:1px; height:2px; background:#000;
+    transform:rotate(-3deg);
+  }
+  table.scorecard-table td.sc-boatmark{position:relative;}
+  table.scorecard-table td.sc-boatmark::before{
+    content:''; position:absolute; left:4px; right:4px; top:1px; height:3px; background:#000; border-radius:1px;
+  }
+  table.scorecard-table td.sc-boatmark::after{
+    content:''; position:absolute; left:4px; right:4px; top:-4px; height:5px;
+    border-left:3px solid #000; border-right:3px solid #000;
+  }
+  table.scorecard-table tr.sc-total-row td{
+    font-weight:700; color:#000; background:#f0f0f0; font-family:'IBM Plex Mono',monospace; padding:6px 8px;
+  }
+  table.scorecard-table tr.sc-total-row td.sc-total-label{
+    text-align:right; font-family:'Inter',sans-serif; font-size:.68rem; text-transform:uppercase;
+  }
+  table.scorecard-table td.sc-lid{color:#777; font-size:.62rem;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-id">
+    <div class="crest" aria-hidden="true">
+      <svg viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r="18.5" fill="#fff"/>
+        <circle cx="20" cy="20" r="18.5" fill="none" stroke="#153458" stroke-width="1"/>
+        <path d="M8,10 Q13.5,20 8,30" stroke="#a4202d" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M32,10 Q26.5,20 32,30" stroke="#a4202d" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M9,14.2 l2.2,1.1 M9,25.8 l2.2,-1.1 M31,14.2 l-2.2,1.1 M31,25.8 l-2.2,-1.1" stroke="#a4202d" stroke-width="1" stroke-linecap="round"/>
+        <polygon points="20,10.5 29.5,20 20,29.5 10.5,20" fill="none" stroke="#153458" stroke-width="1.3"/>
+        <line x1="20" y1="10.5" x2="20" y2="29.5" stroke="#153458" stroke-width=".6"/>
+        <line x1="10.5" y1="20" x2="29.5" y2="20" stroke="#153458" stroke-width=".6"/>
+        <circle cx="20" cy="20" r="1.7" fill="#a4202d"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Scorer 1 — Oefentrainer</h1>
+      <div class="sub">KNBSB cursusmateriaal · januari 2024</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div id="headerStats" class="stats hidden">0 / 0</div>
+    <a href="https://www.knbsb.nl/kenniscentrum/opleidingen-officials/belangrijke-documenten-opleidingen/" target="_blank" rel="noopener" class="export-btn" title="Officiële cursus en spelregels op knbsb.nl">📖 Cursus &amp; regels</a>
+    <button id="exportBtn" class="export-btn" title="Exporteer huidige status als JSON (debug)">⬇ Export</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- SETUP SCREEN -->
+  <section id="setupScreen" class="card">
+    <p class="eyebrow">Voorbereiding</p>
+    <h2>Nieuwe oefenwedstrijd</h2>
+    <p>Er wordt een wedstrijd gesimuleerd tussen <b>Honkvast</b> en <b>Bal op het dak</b> (dezelfde teams als in het voorbeeld uit het document). Bij elke slagbeurt of honkloper-actie zie je een beschrijving van de speelsituatie. Jij bouwt het juiste scoreteken op met het toetsenbord en controleert je antwoord.</p>
+    <div class="setup-row">
+      <label>Sport:</label>
+      <div class="sport-toggle" id="sportToggle">
+        <button type="button" class="sport-btn active" data-sport="Honkbal">⚾ Honkbal</button>
+        <button type="button" class="sport-btn" data-sport="Softbal">🥎 Softbal</button>
+      </div>
+    </div>
+    <div class="setup-row">
+      <label for="inningsSelect">Aantal innings:</label>
+      <select id="inningsSelect">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3" selected>3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="9">9</option>
+      </select>
+    </div>
+    <button class="btn-primary" id="startBtn">Start training ▶</button>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <section id="gameScreen" class="hidden">
+
+    <div class="card scoreboard">
+      <p class="eyebrow">Stand</p>
+      <div class="team-names">
+        <span class="away serif" id="awayName">Honkvast</span>
+        <span class="vs">–</span>
+        <span class="home serif" id="homeName">Bal op het dak</span>
+      </div>
+      <div class="team-score">
+        <span class="tally away" id="awayScore">0</span>
+        <span class="tally sep">–</span>
+        <span class="tally home" id="homeScore">0</span>
+      </div>
+      <div class="meta" id="inningMeta">Inning 1 (boven)</div>
+      <table class="innings" id="inningsTable"></table>
+    </div>
+
+    <div class="card">
+      <p class="eyebrow">Veld</p>
+      <h2>Honken &amp; uit</h2>
+      <div class="field-row">
+        <div class="diamond-wrap">
+          <svg viewBox="0 0 200 200" width="140" height="140">
+            <polygon points="100,25 175,100 100,175 25,100" fill="none" stroke="var(--navy)" stroke-width="3"/>
+            <circle class="base" id="base2dot" cx="100" cy="25" r="14"></circle>
+            <text class="basenum" x="100" y="30" text-anchor="middle">2</text>
+            <circle class="base" id="base3dot" cx="25" cy="100" r="14"></circle>
+            <text class="basenum" x="25" y="105" text-anchor="middle">3</text>
+            <circle class="base" id="base1dot" cx="175" cy="100" r="14"></circle>
+            <text class="basenum" x="175" y="105" text-anchor="middle">1</text>
+            <rect class="homeplate" x="90" y="163" width="20" height="20" transform="rotate(45 100 175)"></rect>
+          </svg>
+        </div>
+        <div>
+          <div class="outs">Uit:
+            <span class="out-dot" id="out0"></span>
+            <span class="out-dot" id="out1"></span>
+          </div>
+          <div class="batter-info" id="batterInfo"></div>
+          <div class="runner-list" id="runnerList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="eyebrow">Speelsituatie</p>
+      <h2>Wat gebeurt er?</h2>
+      <div class="narrative" id="narrativeText"></div>
+    </div>
+
+    <div class="card">
+      <p class="eyebrow">Jouw antwoord</p>
+      <h2>Bouw het scoreteken</h2>
+
+      <div class="builder-wrap" id="builderWrap">
+        <div class="honk-cell" id="builderBox">
+          <button type="button" class="qbtn q-3e" data-slot="3e">3e honk</button>
+          <button type="button" class="qbtn q-2e" data-slot="2e">2e honk</button>
+          <button type="button" class="qbtn q-thuis" data-slot="thuis">Thuis</button>
+          <button type="button" class="qbtn q-1e" data-slot="1e">1e honk</button>
+          <button type="button" class="qbtn q-any" data-slot="any" aria-label="Vrije ruimte (bij een uit)">•</button>
+          <span class="hist-text q-1e" id="hist1e"></span>
+          <span class="hist-text q-2e" id="hist2e"></span>
+          <span class="hist-text q-3e" id="hist3e"></span>
+          <span class="hist-text q-thuis" id="histthuis"></span>
+          <div class="q-highlight slot-any" id="qHighlight"></div>
+          <span class="builder-text slot-any" id="builderText">&nbsp;</span>
+          <span class="honk-dot hidden" id="liveDot" title="Punt gescoord"></span>
+        </div>
+        <div class="builder-side">
+          <div class="hint-row">
+            <div class="quadrant-hint" id="quadrantHint">Kies eerst een vakje →</div>
+            <button type="button" class="info-btn" id="infoBtn" aria-label="Hoe werkt dit?" title="Hoe werkt dit?">ⓘ</button>
+          </div>
+          <div class="builder-caption hidden" id="builderCaption">Klik op het honk waar dit teken hoort (of de stip in het midden bij een uit), typ het scoreteken en controleer.</div>
+          <div class="slot-warning" id="slotWarning">Kies eerst een vakje in de scorekaart hiernaast.</div>
+        </div>
+      </div>
+
+      <div class="mc-wrap hidden" id="mcWrap">
+        <div class="slot-warning" id="mcWarning">Kies eerst een antwoord.</div>
+        <div class="mc-options" id="mcOptions"></div>
+      </div>
+
+      <div class="control-row" id="controlRow">
+        <div class="input-wrap" id="inputWrap">
+          <input type="text" id="systemInput" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="code">
+          <button type="button" id="clearBtn" class="clear-icon-btn" aria-label="Wis alles" title="Wis alles">✕</button>
+        </div>
+        <button class="btn-secondary icon-btn" id="delBtn" aria-label="Wis laatste teken" title="Wis laatste teken">⌫</button>
+        <button class="btn-primary" id="submitBtn">✓ Check</button>
+      </div>
+
+      <button type="button" class="fold-toggle" id="toggleKeyboardBtn" aria-expanded="false">
+        <span class="fold-icon">▸</span> Toon toetsenbord
+      </button>
+      <div id="keyboard" class="kb-collapsed">
+        <div class="kb-group">
+          <div class="kb-group-title">Slagman bereikt honk</div>
+          <div class="kb-buttons" id="grpReach"></div>
+        </div>
+        <div class="kb-group">
+          <div class="kb-group-title">Slagman gaat uit</div>
+          <div class="kb-buttons" id="grpOut"></div>
+        </div>
+        <div class="kb-group">
+          <div class="kb-group-title">Speciale situaties</div>
+          <div class="kb-buttons" id="grpSpecial"></div>
+        </div>
+        <div class="kb-group">
+          <div class="kb-group-title">Honkloper</div>
+          <div class="kb-buttons" id="grpRunner"></div>
+        </div>
+        <div class="kb-group">
+          <div class="kb-group-title">Veldposities</div>
+          <div class="kb-buttons" id="grpPos"></div>
+        </div>
+        <div class="kb-group">
+          <div class="kb-group-title">Extra</div>
+          <div class="kb-buttons" id="grpExtra"></div>
+        </div>
+      </div>
+
+      <div class="feedback" id="feedbackBox">
+        <div class="verdict" id="verdictText"></div>
+        <div id="explainText"></div>
+        <div class="ref" id="quadrantFeedback"></div>
+        <div class="ref" id="refText"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="eyebrow">Overzicht</p>
+      <h2>Logboek</h2>
+      <div id="log"></div>
+    </div>
+
+    <div class="card sc-card">
+      <p class="eyebrow">Volledig scoreformulier</p>
+      <div class="sc-matchinfo" id="scMatchInfo"></div>
+      <h2><span id="scAwayName">Team A</span></h2>
+      <div class="table-scroll" id="scorecard-away"></div>
+      <h2 style="margin-top:18px;"><span id="scHomeName">Team B</span></h2>
+      <div class="table-scroll" id="scorecard-home"></div>
+      <table class="sc-matchinfo-table sc-footer-table">
+        <tr><td class="mi-label">Scheidsrechters</td><td class="mi-colon">:</td><td class="mi-value"></td></tr>
+        <tr><td class="mi-label">Scorer</td><td class="mi-colon">:</td><td class="mi-value"></td></tr>
+        <tr><td class="mi-label">Aanvangstijd</td><td class="mi-colon">:</td><td class="mi-value" id="scStartTime"></td></tr>
+        <tr><td class="mi-label">Opmerkingen scheidsrechter</td><td class="mi-colon">:</td><td class="mi-value"></td></tr>
+      </table>
+    </div>
+
+  </section>
+
+  <!-- END SCREEN -->
+  <section id="endScreen" class="card hidden">
+    <p class="eyebrow">Eindstand</p>
+    <h2>Wedstrijd afgelopen!</h2>
+    <p id="endSummary"></p>
+    <button class="btn-primary" id="restartBtn">Nieuwe wedstrijd</button>
+  </section>
+
+</main>
+
+<footer>
+  Oefentrainer o.b.v. het cursusmateriaal "Scorer 1" (KNBSB, januari 2024) — geen officieel KNBSB-product.<br>
+  Voor de officiële cursusdocumenten en vervolgopleidingen (Scorer 2 &amp; 3): <a href="https://www.knbsb.nl/kenniscentrum/opleidingen-officials/belangrijke-documenten-opleidingen/" target="_blank" rel="noopener">knbsb.nl — Belangrijke documenten opleidingen</a>
+</footer>
+
+<script>
+"use strict";
+
+/* ============ SCORING DATA ============ */
+const POS_NAMES = {1:'Werper',2:'Achtervanger',3:'Eerste honkman',4:'Tweede honkman',5:'Derde honkman',6:'Korte stop',7:'Linksvelder',8:'Midvelder',9:'Rechtsvelder'};
+const POS_SHORT = {1:'P',2:'C',3:'1B',4:'2B',5:'3B',6:'SS',7:'LF',8:'CF',9:'RF'};
+const QUADRANT_LABEL = {
+  '1e':'1e honk-vakje (hoe de slagman het eerste honk bereikt)',
+  '2e':'2e honk-vakje (wat er tussen het 1e en 2e honk gebeurt)',
+  '3e':'3e honk-vakje (wat er tussen het 2e en 3e honk gebeurt)',
+  'thuis':'thuishonk-vakje (wat er tussen het 3e honk en thuis gebeurt)',
+  'any':'vrije ruimte in het vak (bij een uit mag je alle beschikbare ruimte gebruiken)',
+};
+const QUADRANT_SHORT = {'1e':'1e honk','2e':'2e honk','3e':'3e honk','thuis':'thuishonk','any':'vrije ruimte'};
+const IDX_TO_QUADRANT = {0:'1e',1:'2e',2:'3e'};
+const N_TO_QUADRANT = {1:'1e',2:'2e',3:'3e'};
+
+const TEAM_HONKVAST = {
+  name:'Honkvast',
+  lineup:[
+    {name:'Jan Jansen',pos:5},{name:'Kees van Kreek',pos:6},{name:'Leo van Leende',pos:7},
+    {name:'Max van Made',pos:2},{name:'Nico van Nijnsel',pos:8},{name:'Oscar van Oirschot',pos:3},
+    {name:'Piet van Poeldonk',pos:9},{name:'Quirijn Quik',pos:4},{name:'Rutger van Rucphen',pos:1},
+  ],
+  bench:[{name:'Sander van Sprundel'}],
+};
+const TEAM_BALOPHETDAK = {
+  name:'Bal op het dak',
+  lineup:[
+    {name:'Albert van Asten',pos:9},{name:'Bas van Boxtel',pos:8},{name:'Corné van Cromvoirt',pos:7},
+    {name:'Daan van Dommelen',pos:6},{name:'Erik van Eersel',pos:5},{name:'Fred van Fijnaart',pos:4},
+    {name:'Gerrit van Gemert',pos:3},{name:'Hans van Haaren',pos:2},{name:'Ian van Iersel',pos:1},
+  ],
+  bench:[{name:'Wouter van Waalre'}],
+};
+
+let G = null;
+
+function initGame(maxInnings, sport){
+  const now = new Date();
+  G = {
+    maxInnings: maxInnings,
+    sport: sport || 'Honkbal',
+    inning:1, half:'top', outs:0,
+    bases:[null,null,null],
+    score:{away:0, home:0},
+    battingIdx:{away:0, home:0},
+    away: TEAM_HONKVAST, home: TEAM_BALOPHETDAK,
+    inningRuns:{away:[], home:[]},
+    currentHalfRuns:0,
+    correctCount:0, totalCount:0,
+    currentEvent:null, gameOver:false,
+    history:[], pendingEvents:[],
+    scorecard:{
+      away: Array.from({length:9},()=>({})),
+      home: Array.from({length:9},()=>({})),
+    },
+    endMarker:{away:{}, home:{}},
+    slotEvents:{away:Array.from({length:9},()=>[]), home:Array.from({length:9},()=>[])},
+    boatMarkers:{away:{}, home:{}},
+    matchDate: now.toLocaleDateString('nl-NL'),
+    matchTime: now.toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'}),
+  };
+}
+
+function battingKey(){ return G.half==='top' ? 'away' : 'home'; }
+function fieldingKey(){ return G.half==='top' ? 'home' : 'away'; }
+function battingTeam(){ return G[battingKey()]; }
+
+function currentPos(teamKey, slot){
+  const events = G.slotEvents[teamKey][slot];
+  for(let i=events.length-1;i>=0;i--){ if(events[i].type==='pos') return events[i].pos; }
+  return G[teamKey].lineup[slot].pos;
+}
+
+function currentBatterName(teamKey, slot){
+  const events = G.slotEvents[teamKey][slot];
+  for(let i=events.length-1;i>=0;i--){ if(events[i].type==='sub' || events[i].type==='pitcher') return events[i].name; }
+  return G[teamKey].lineup[slot].name;
+}
+
+function cloneBases(b){ return b.map(x=>x?Object.assign({},x):null); }
+
+function commitToScorecard(teamKey, battingSlot, inning, hist){
+  if(battingSlot===undefined || battingSlot===null || !hist) return;
+  const col = G.scorecard[teamKey][battingSlot];
+  col[inning] = Object.assign({}, col[inning], hist);
+}
+
+function hitAdvance(oldBases, batterName, n, code, battingSlot){
+  const nb=[null,null,null];
+  let runs=0;
+  const advanced=[];
+  for(let i=0;i<3;i++){
+    if(oldBases[i]){
+      const dest=i+n;
+      if(dest>=3){ runs++; advanced.push({name:oldBases[i].name, toIdx:'home'}); }
+      else { nb[dest]=oldBases[i]; advanced.push({name:oldBases[i].name, toIdx:dest}); }
+    }
+  }
+  if(n<=3){ nb[n-1] = {name:batterName, arrivedVia:code, history:{[N_TO_QUADRANT[n]]:code}, battingSlot}; } else { runs++; }
+  return {bases:nb, runs, advanced};
+}
+
+function forcedWalk(oldBases, batterName, code, battingSlot){
+  const b0=oldBases[0], b1=oldBases[1], b2=oldBases[2];
+  const nb=[null,null,null];
+  let runs=0;
+  const advanced=[];
+  nb[0] = {name:batterName, arrivedVia:code, history:{'1e':code}, battingSlot};
+  if(b0){
+    nb[1]=b0; advanced.push({name:b0.name, toIdx:1});
+    if(b1){
+      nb[2]=b1; advanced.push({name:b1.name, toIdx:2});
+      if(b2){ runs++; advanced.push({name:b2.name, toIdx:'home'}); }
+    } else {
+      nb[2]=b2;
+    }
+  } else {
+    nb[1]=b1; nb[2]=b2;
+  }
+  return {bases:nb, runs, advanced};
+}
+
+function advanceAllByOne(oldBases, label){
+  const nb=[null,null,null];
+  let runs=0;
+  const advanced=[];
+  for(let i=0;i<3;i++){
+    if(oldBases[i]){
+      const dest=i+1;
+      if(dest>=3){ runs++; advanced.push({name:oldBases[i].name, toIdx:'home'}); }
+      else if(label){
+        const newHist = Object.assign({}, oldBases[i].history, {[IDX_TO_QUADRANT[dest]]:label});
+        nb[dest] = Object.assign({}, oldBases[i], {arrivedVia:label, history:newHist});
+        advanced.push({name:oldBases[i].name, toIdx:dest});
+      } else {
+        nb[dest] = oldBases[i];
+        advanced.push({name:oldBases[i].name, toIdx:dest});
+      }
+    }
+  }
+  return {bases:nb, runs, advanced};
+}
+
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function weightedPick(pool){
+  const total = pool.reduce((s,p)=>s+p.w,0);
+  let r = Math.random()*total;
+  for(const p of pool){ if(r<p.w) return p.key; r-=p.w; }
+  return pool[pool.length-1].key;
+}
+
+function generateEvent(){
+  const bases=G.bases;
+  const anyRunner = !!(bases[0]||bases[1]||bases[2]);
+  if(anyRunner && Math.random()<0.05){
+    const runner = bases[2] || bases[1] || bases[0];
+    return buildPinchRunnerQuizEvent(runner, battingKey());
+  }
+  if(anyRunner && Math.random()<0.25){
+    const re = generateRunnerEvent();
+    if(re) return re;
+  }
+  return generateBatterEvent();
+}
+
+function generateBatterEvent(){
+  const teamKey = battingKey();
+  const team = battingTeam();
+  const idx = G.battingIdx[teamKey] % 9;
+  const batter = Object.assign({}, team.lineup[idx], {name: currentBatterName(teamKey, idx)});
+  const outs = G.outs;
+  const b0=G.bases[0], b1=G.bases[1], b2=G.bases[2];
+
+  let pool = [
+    {key:'1B', w:14},{key:'2B', w:6},{key:'3B', w:2},{key:'HR', w:2},
+    {key:'BB', w:8},{key:'HP', w:3},{key:'INT', w:1},{key:'K', w:14},
+    {key:'GO', w:10},{key:'GOU', w:4},
+    {key:'F', w:10},{key:'L', w:4},{key:'FF', w:3},
+    {key:'E', w:7},{key:'EEXTRA', w:2},
+  ];
+  if(!b0 || outs===2){ pool.push({key:'KWP', w:2},{key:'KPB', w:2}); }
+  if(b0){ pool.push({key:'FC', w:5}); }
+  if(b0||b1||b2){ pool.push({key:'IBB', w:1}); if(outs<2) pool.push({key:'SH', w:3}); }
+  if(b2 && outs<2){ pool.push({key:'SF', w:3}); }
+  if(b0 && b1 && outs<2){ pool.push({key:'IF', w:2}); }
+  if(b0 && outs<2){ pool.push({key:'DP', w:4}); }
+
+  const key = weightedPick(pool);
+  return buildBatterEvent(key, batter, G.bases, idx);
+}
+
+function buildBatterEvent(key, batter, bases, battingSlot){
+  const P = pos=>POS_NAMES[pos];
+  let ev = {forBatter:true, outsDelta:0, targetQuadrant:'any'};
+  switch(key){
+    case '1B':
+      ev.narrative = `<b>${batter.name}</b> slaat een gave honkslag.`;
+      ev.code='1B'; ev.refs=['Honkslagen — p.9']; ev.targetQuadrant='1e';
+      ev.explain='Een honkslag waarbij de slagman veilig het eerste honk bereikt, noteer je met code <code>1B</code>.';
+      ev.applyBases = bases=>hitAdvance(bases, batter.name, 1, ev.code, battingSlot);
+      break;
+    case '2B':
+      ev.narrative = `<b>${batter.name}</b> slaat de bal diep de hoek in: een tweehonkslag.`;
+      ev.code='2B'; ev.refs=['Honkslagen — p.9']; ev.targetQuadrant='2e';
+      ev.explain='Een tweehonkslag noteer je met code <code>2B</code>.';
+      ev.applyBases = bases=>hitAdvance(bases, batter.name, 2, ev.code, battingSlot);
+      break;
+    case '3B':
+      ev.narrative = `<b>${batter.name}</b> raakt de bal vol en sprint naar het derde honk: driehonkslag!`;
+      ev.code='3B'; ev.refs=['Honkslagen — p.9']; ev.targetQuadrant='3e';
+      ev.explain='Een driehonkslag noteer je met code <code>3B</code>.';
+      ev.applyBases = bases=>hitAdvance(bases, batter.name, 3, ev.code, battingSlot);
+      break;
+    case 'HR':
+      ev.narrative = `<b>${batter.name}</b> slaat de bal over de afrastering: homerun!`;
+      ev.code='HR'; ev.refs=['Honkslagen — p.9']; ev.targetQuadrant='thuis';
+      ev.explain='Een homerun noteer je met code <code>HR</code> (plus een punt voor het gescoorde punt).';
+      ev.applyBases = bases=>hitAdvance(bases, batter.name, 4, ev.code, battingSlot);
+      break;
+    case 'BB':
+      ev.narrative = `De werper werpt vier ballen buiten de slagzone. <b>${batter.name}</b> krijgt een vrije loop naar het eerste honk.`;
+      ev.code='BB'; ev.refs=['Base on balls — p.10, Scoreregel 9.14.a']; ev.targetQuadrant='1e';
+      ev.explain='Vier wijd noteer je met code <code>BB</code>.';
+      ev.applyBases = bases=>forcedWalk(bases, batter.name, ev.code, battingSlot);
+      break;
+    case 'IBB':
+      ev.narrative = `De manager van het veldteam laat <b>${batter.name}</b> opzettelijk vier wijd geven.`;
+      ev.code='IBB'; ev.refs=['Intentional base on balls — p.10, Scoreregel 9.14.b']; ev.targetQuadrant='1e';
+      ev.explain='Opzettelijk vier wijd noteer je met code <code>IBB</code>.';
+      ev.applyBases = bases=>forcedWalk(bases, batter.name, ev.code, battingSlot);
+      break;
+    case 'HP':
+      ev.narrative = `<b>${batter.name}</b> wordt geraakt door een geworpen bal.`;
+      ev.code='HP'; ev.refs=['Hit by pitch — p.10']; ev.targetQuadrant='1e';
+      ev.explain='Geraakt door de werper noteer je met code <code>HP</code>.';
+      ev.applyBases = bases=>forcedWalk(bases, batter.name, ev.code, battingSlot);
+      break;
+    case 'INT': {
+      const isSoftbal = G.sport === 'Softbal';
+      const code = isSoftbal ? 'OB' : 'INT';
+      ev.narrative = isSoftbal
+        ? `<b>${batter.name}</b> wordt gehinderd door de achtervanger bij het slaan van de bal: obstructie!`
+        : `<b>${batter.name}</b> wordt gehinderd door de achtervanger bij het slaan van de bal.`;
+      ev.code=code; ev.targetQuadrant='1e';
+      ev.refs=[isSoftbal ? 'Obstruction tegen de slagman — p.12' : 'Interference tegen de slagman — p.12'];
+      ev.explain = isSoftbal
+        ? 'Hinderen door de veldpartij kan bij softbal reglementair niet — dit heet obstructie en wordt genoteerd met code <code>OB</code>. De slagman krijgt een vrije loop naar het eerste honk; dit telt als fout voor de achtervanger.'
+        : 'Hinderen van de slagman door de achtervanger noteer je met code <code>INT</code>. De slagman krijgt een vrije loop naar het eerste honk; dit telt als fout voor de achtervanger. (Bij softbal heet dit obstructie: code <code>OB</code>.)';
+      ev.applyBases = bases=>forcedWalk(bases, batter.name, code, battingSlot);
+      break; }
+    case 'K':
+      ev.narrative = `<b>${batter.name}</b> zwaait door een derde slagbal: drie slag!`;
+      ev.code='K'; ev.refs=['Drie slag — p.16, Scoreregel 9.15'];
+      ev.explain='Drie slag noteer je met code <code>K</code>.';
+      ev.applyBases = bases=>({bases, runs:0});
+      ev.outsDelta=1;
+      break;
+    case 'KWP':
+      ev.narrative = `<b>${batter.name}</b> gaat met drie slag, maar de bal schiet er bij de achtervanger volledig langs. ${batter.name} sprint naar het eerste honk.`;
+      ev.code='KWP'; ev.refs=['Third strike Wild Pitch — p.11']; ev.targetQuadrant='1e';
+      ev.explain='Drie slag waarbij de slagman toch het eerste honk bereikt door een wilde worp: noteer zowel <code>K</code> als <code>WP</code>.';
+      ev.applyBases = bases=>forcedWalk(bases, batter.name, ev.code, battingSlot);
+      break;
+    case 'KPB':
+      ev.narrative = `<b>${batter.name}</b> gaat met drie slag, maar de achtervanger kan de bal niet onder controle krijgen. ${batter.name} bereikt het eerste honk.`;
+      ev.code='KPB'; ev.refs=['Third strike Passed Ball — p.11']; ev.targetQuadrant='1e';
+      ev.explain='Drie slag waarbij de slagman het eerste honk bereikt door een doorgeschoten bal: noteer zowel <code>K</code> als <code>PB</code>.';
+      ev.applyBases = bases=>forcedWalk(bases, batter.name, ev.code, battingSlot);
+      break;
+    case 'GO': {
+      const combos=[[6,3],[4,3],[5,3],[1,3],[2,3]];
+      const c = pick(combos);
+      ev.narrative = (c[0]===2)
+        ? `<b>${batter.name}</b> tikt een balletje vlak voor de thuisplaat. De ${P(c[0])} pakt de bal op en gooit naar de ${P(c[c.length-1])}.`
+        : `<b>${batter.name}</b> slaat een grondbal naar de ${P(c[0])}, die aangooit naar de ${P(c[c.length-1])}.`;
+      ev.code = c.join(''); ev.refs=['Uit door aangooi — p.16'];
+      ev.explain=`Eerst de positie die de aangooi doet, dan de positie die het honk aanraakt: code <code>${c.join('')}</code>.`;
+      ev.applyBases = bases=>({bases, runs:0}); ev.outsDelta=1;
+      break; }
+    case 'GOU': {
+      const p2 = pick([1,3]);
+      ev.narrative = `<b>${batter.name}</b> slaat een zwakke bal recht naar de ${P(p2)}, die zelf het honk aanraakt.`;
+      ev.code = String(p2); ev.refs=['Uit door aangooi — p.16'];
+      ev.explain=`Zonder aangooi noteer je alleen het nummer van de veldpositie: code <code>${p2}</code>.`;
+      ev.applyBases = bases=>({bases, runs:0}); ev.outsDelta=1;
+      break; }
+    case 'F': {
+      const p2 = pick([3,4,5,6,7,7,8,8,9,9]);
+      ev.narrative = `<b>${batter.name}</b> slaat een hoge bal, gevangen door de ${P(p2)}.`;
+      ev.code = 'F'+p2; ev.refs=['Fly — p.17'];
+      ev.explain=`Een gevangen hoge bal noteer je met code <code>F${p2}</code>.`;
+      ev.applyBases = bases=>({bases, runs:0}); ev.outsDelta=1;
+      break; }
+    case 'L': {
+      const p2 = pick([1,3,4,5,6]);
+      ev.narrative = `<b>${batter.name}</b> slaat een harde line drive, recht in de handschoen van de ${P(p2)}.`;
+      ev.code = 'L'+p2; ev.refs=['Line drive — p.17'];
+      ev.explain=`Een rechtstreeks gevangen line drive noteer je met code <code>L${p2}</code>.`;
+      ev.applyBases = bases=>({bases, runs:0}); ev.outsDelta=1;
+      break; }
+    case 'FF': {
+      const p2 = pick([2,3,5]);
+      ev.narrative = `<b>${batter.name}</b> slaat een hoge bal in het foutgebied, gevangen door de ${P(p2)}.`;
+      ev.code = 'FF'+p2; ev.refs=['Foul fly — p.17'];
+      ev.explain=`Een vangbal op fout gebied noteer je met code <code>FF${p2}</code>.`;
+      ev.applyBases = bases=>({bases, runs:0}); ev.outsDelta=1;
+      break; }
+    case 'IF': {
+      const p2 = pick([3,4,5,6]);
+      ev.narrative = `<b>${batter.name}</b> slaat een goed geslagen hoge bal in het binnenveld. De scheidsrechter roept binnenhoog af. De ${P(p2)} vangt de bal.`;
+      ev.code = 'IF'+p2; ev.refs=['Infield fly — p.17'];
+      ev.explain=`Binnenhoog noteer je met code <code>IF${p2}</code>.`;
+      ev.applyBases = bases=>({bases, runs:0}); ev.outsDelta=1;
+      break; }
+    case 'E': {
+      const variant = pick(['','','T','T','F']);
+      let p2, text, refs;
+      if(variant===''){
+        // fielding/muff error on a ground ball: infielders only
+        p2 = pick([1,2,3,4,5,6]);
+        text=`<b>${batter.name}</b> slaat een grondbal naar de ${P(p2)}, die de bal laat gaan. Fout!`;
+        refs=["Error bij het 'fielden' van de bal — p.11"];
+      } else if(variant==='T'){
+        // throwing error to first: exclude the first baseman himself (can't throw to his own base)
+        p2 = pick([1,2,4,5,6]);
+        text=`<b>${batter.name}</b> slaat een grondbal; de ${P(p2)} gooit onzuiver over naar het eerste honk. Fout!`;
+        refs=['Error bij het aangooien naar een honk — p.11'];
+      } else {
+        // dropped fly ball: any fielder who can reasonably catch a fly ball
+        p2 = pick([3,4,5,6,7,8,9]);
+        text=`<b>${batter.name}</b> slaat een hoge bal die de ${P(p2)} laat vallen. Fout!`;
+        refs=['Error on fly ball — p.12'];
+      }
+      ev.narrative=text; ev.refs=refs;
+      ev.code = 'E'+p2+variant; ev.targetQuadrant='1e';
+      ev.explain=`Een fout noteer je met <code>E</code> gevolgd door de veldpositie${variant?(variant==='T'?' plus <code>T</code> (aangooifout)':' plus <code>F</code> (vangfout)'):''}: code <code>E${p2}${variant}</code>.`;
+      ev.applyBases = bases=>hitAdvance(bases, batter.name, 1, ev.code, battingSlot);
+      break; }
+    case 'EEXTRA': {
+      const p2 = pick([1,2,4,5,6]);
+      ev.narrative = `<b>${batter.name}</b> slaat een grondbal naar de ${P(p2)}, die de bal laat gaan. Door de fout loopt hij meteen door naar het tweede honk.`;
+      ev.code = 'E'+p2; ev.refs=['Extra base error — p.12']; ev.targetQuadrant='1e';
+      ev.explain=`Wanneer een fout de slagman twee honken oplevert in plaats van één, schrijft je de foutcode toch in het eerste honk-vakje (code <code>E${p2}</code>), en zet je een pijltje in het tweede honk-vakje om aan te geven dat het om dezelfde, doorlopende actie gaat.`;
+      ev.extraBaseErrorCode = 'E'+p2;
+      ev.applyBases = bases=>{
+        const result = hitAdvance(bases, batter.name, 2, ev.code, battingSlot);
+        const battersPos = result.bases[1];
+        if(battersPos && battersPos.name===batter.name){
+          battersPos.history = {'1e': ev.code};
+        }
+        return result;
+      };
+      break; }
+    case 'FC': {
+      const b1occ = !!bases[1], b2occ = !!bases[2];
+      let fielder, code;
+      if(b1occ && b2occ){
+        // bases loaded: defense chooses the force at home instead of first
+        const leadRunner = bases[2];
+        fielder = pick([1,3,4,5,6]);
+        code = 'FC'+fielder+'2';
+        ev.narrative = `<b>${batter.name}</b> slaat een grondbal naar de ${P(fielder)}. Deze gooit naar de achtervanger bij thuis, die <b>${leadRunner.name}</b> (gedwongen naar het thuishonk) daar uit maakt in plaats van de slagman op het eerste honk.`;
+        ev.explain = `Bij velderskeus noteer je <code>FC</code> gevolgd door de aangooi: code <code>${code}</code>. De loper die gedwongen naar thuis moest is uit (geen punt); de honken achter hem schuiven wél gedwongen op. Voor de slagman wordt geen honkslag genoteerd.`;
+        ev.applyBases = b=>{
+          const b0=b[0], bb1=b[1], bb2=b[2];
+          const nb=[{name:batter.name, arrivedVia:code, history:{'1e':code}, battingSlot}, null, null];
+          nb[1] = b0;
+          nb[2] = Object.assign({}, bb1, {arrivedVia:code, history:Object.assign({}, bb1.history, {'3e':code})});
+          const advanced=[{name:b0.name, toIdx:1},{name:bb1.name, toIdx:2}];
+          const outRunner = {battingSlot: bb2.battingSlot, history: Object.assign({}, bb2.history, {thuis:code})};
+          return {bases:nb, runs:0, advanced, outRunner};
+        };
+      } else if(b1occ){
+        // 1st and 2nd occupied: defense forces out the lead runner at third instead
+        const leadRunner = bases[1];
+        fielder = pick([1,4,5,6]);
+        code = (fielder===5) ? 'FC5' : 'FC'+fielder+'5';
+        const howNar = (fielder===5)
+          ? `die zelf het derde honk aanraakt en daarmee`
+          : `en gooit naar de Derde honkman op het derde honk, die`;
+        ev.narrative = `<b>${batter.name}</b> slaat een grondbal naar de ${P(fielder)}, ${howNar} <b>${leadRunner.name}</b> (gedwongen naar het derde honk) daar uit maakt, in plaats van de slagman op het eerste honk.`;
+        ev.explain = `Bij velderskeus noteer je <code>FC</code> gevolgd door de aangooi: code <code>${code}</code>. De loper die gedwongen naar het derde honk moest is uit; de loper van het eerste honk schuift wél gedwongen door naar twee. Voor de slagman wordt geen honkslag genoteerd.`;
+        ev.applyBases = b=>{
+          const b0=b[0], bb1=b[1];
+          const nb=[{name:batter.name, arrivedVia:code, history:{'1e':code}, battingSlot}, null, null];
+          nb[1] = b0;
+          const advanced=[{name:b0.name, toIdx:1}];
+          const outRunner = {battingSlot: bb1.battingSlot, history: Object.assign({}, bb1.history, {'3e':code})};
+          return {bases:nb, runs:0, advanced, outRunner};
+        };
+      } else {
+        // classic case: only 1st occupied, force out at second
+        const leadRunner = bases[0];
+        fielder = pick([3,4,5,6]);
+        const options=[4,6].filter(x=>x!==fielder);
+        const receiver = options.length? pick(options) : 4;
+        code = 'FC'+fielder+receiver;
+        ev.narrative = `<b>${batter.name}</b> slaat een grondbal naar de ${P(fielder)}. Deze gooit naar de ${P(receiver)} op het tweede honk, die <b>${leadRunner.name}</b> daar uit maakt in plaats van de slagman op het eerste honk.`;
+        ev.explain = `Bij velderskeus noteer je <code>FC</code> gevolgd door de aangooi: code <code>${code}</code>. Voor de slagman wordt geen honkslag genoteerd.`;
+        ev.applyBases = b=>{
+          const nb=cloneBases(b);
+          const outRunner = {battingSlot: nb[0].battingSlot, history: Object.assign({}, nb[0].history, {'2e':code})};
+          const finalBases=[{name:batter.name, arrivedVia:code, history:{'1e':code}, battingSlot}, null, nb[2]];
+          return {bases:finalBases, runs:0, outRunner};
+        };
+      }
+      ev.code = code; ev.refs=['Velderskeus — p.10']; ev.targetQuadrant='1e';
+      ev.outsDelta=1;
+      break; }
+    case 'SH': {
+      const fielder = pick([1,2,5,4]);
+      ev.narrative = `<b>${batter.name}</b> legt een stootslag neer. De ${P(fielder)} gooit naar het eerste honk.`;
+      ev.code = 'SH'+fielder+'3'; ev.refs=['Sacrifice hit — p.17, Scoreregel 9.08'];
+      ev.explain=`Een opofferingsstootslag noteer je met <code>SH</code> gevolgd door de actie: code <code>SH${fielder}3</code>.`;
+      ev.applyBases = bases=>{
+        const nb = cloneBases(bases);
+        let runs=0;
+        const advanced=[];
+        for(let i=2;i>=0;i--){
+          if(nb[i]){
+            if(i===2){ runs++; advanced.push({name:nb[i].name, toIdx:'home'}); nb[2]=null; }
+            else if(!nb[i+1]){ advanced.push({name:nb[i].name, toIdx:i+1}); nb[i+1]=nb[i]; nb[i]=null; }
+            break;
+          }
+        }
+        return {bases:nb, runs, advanced};
+      };
+      ev.outsDelta=1;
+      break; }
+    case 'SF': {
+      const p2 = pick([7,8,9]);
+      ev.narrative = `<b>${batter.name}</b> slaat een hoge bal naar het buitenveld, gevangen door de ${P(p2)}. De loper van het derde honk rent naar huis.`;
+      ev.code = 'SF'+p2; ev.refs=['Sacrifice fly — p.18, Scoreregel 9.08'];
+      ev.explain=`Een opofferingsslag in het buitenveld noteer je met code <code>SF${p2}</code>.`;
+      ev.applyBases = bases=>{
+        const nb=cloneBases(bases);
+        const advanced=[{name:nb[2].name, toIdx:'home'}];
+        nb[2]=null;
+        return {bases:nb, runs:1, advanced};
+      };
+      ev.outsDelta=1;
+      break; }
+    case 'DP': {
+      const combos=[[6,4,3],[4,6,3],[5,4,3]];
+      const c = pick(combos);
+      const code = c.join('');
+      const b1occ = !!bases[1];
+      ev.narrative = `<b>${batter.name}</b> slaat een grondbal. ${P(c[0])} naar ${P(c[1])} naar ${P(c[2])}: dubbelspel!`
+        + (b1occ ? ' De loper van het tweede honk wordt daardoor ook gedwongen door te lopen.' : '');
+      ev.code = code; ev.refs=['Dubbelspel — p.19'];
+      ev.explain=`Twee nullen in één ononderbroken actie noteer je als code <code>${code}</code> (de volledige aangooiketen).`;
+      ev.applyBases = b=>{
+        const b0=b[0], b1=b[1], b2=b[2];
+        const nb=[null,null,null];
+        let runs=0;
+        const advanced=[];
+        const outRunner = b0 ? {battingSlot:b0.battingSlot, history:Object.assign({}, b0.history, {'2e':code})} : null;
+        if(b1){
+          if(b2){ runs++; advanced.push({name:b2.name, toIdx:'home'}); }
+          nb[2] = Object.assign({}, b1, {arrivedVia:code, history:Object.assign({}, b1.history, {'3e':code})});
+          advanced.push({name:b1.name, toIdx:2});
+        } else if(b2){
+          nb[2] = b2;
+        }
+        return {bases:nb, runs, advanced, outRunner};
+      };
+      ev.outsDelta=2;
+      break; }
+  }
+  return ev;
+}
+
+function generateRunnerEvent(){
+  const b0=G.bases[0], b1=G.bases[1], b2=G.bases[2];
+  let pool=[];
+  if(b0 && !b1) pool.push({key:'SB1',w:5},{key:'CS1',w:3},{key:'CS1E',w:1},{key:'PO1',w:2});
+  if(b1 && !b2) pool.push({key:'SB2',w:4},{key:'CS2',w:2},{key:'CS2E',w:1});
+  if(b0||b1||b2) pool.push({key:'WP',w:3},{key:'PB',w:2},{key:'BK',w:1});
+  if(b0 && !b1) pool.push({key:'OB1',w:1});
+  if(pool.length===0) return null;
+  const key = weightedPick(pool);
+  return buildRunnerEvent(key);
+}
+
+function buildRunnerEvent(key){
+  const P = pos=>POS_NAMES[pos];
+  const bases = G.bases;
+  let ev = {forBatter:false, outsDelta:0, targetQuadrant:'any'};
+  switch(key){
+    case 'SB1': {
+      const r = bases[0];
+      ev.narrative = `<b>${r.name}</b> steelt het tweede honk.`;
+      ev.code='SB'; ev.refs=['Stolen base — p.13, Scoreregel 9.07']; ev.targetQuadrant='2e';
+      ev.priorHistory = Object.assign({}, r.history);
+      ev.explain='Een gestolen honk, op eigen kracht bereikt, noteer je met code <code>SB</code>.';
+      ev.applyBases = b=>{ const nb=cloneBases(b); nb[1]=Object.assign({},nb[0],{arrivedVia:'SB', history:Object.assign({},nb[0].history,{'2e':'SB'})}); nb[0]=null; return {bases:nb, runs:0}; };
+      break; }
+    case 'SB2': {
+      const r = bases[1];
+      ev.narrative = `<b>${r.name}</b> steelt het derde honk.`;
+      ev.code='SB'; ev.refs=['Stolen base — p.13, Scoreregel 9.07']; ev.targetQuadrant='3e';
+      ev.priorHistory = Object.assign({}, r.history);
+      ev.explain='Een gestolen honk noteer je met code <code>SB</code>.';
+      ev.applyBases = b=>{ const nb=cloneBases(b); nb[2]=Object.assign({},nb[1],{arrivedVia:'SB', history:Object.assign({},nb[1].history,{'3e':'SB'})}); nb[1]=null; return {bases:nb, runs:0}; };
+      break; }
+    case 'CS1': {
+      const r = bases[0]; const seq=pick([[2,4],[2,6]]);
+      ev.narrative = `<b>${r.name}</b> probeert het tweede honk te stelen. De achtervanger gooit naar de ${P(seq[1])}, die hem net op tijd tikt.`;
+      ev.code='CS'+seq.join(''); ev.refs=['Caught stealing — p.14, Scoreregel 9.07']; ev.targetQuadrant='2e';
+      ev.priorHistory = Object.assign({}, r.history);
+      ev.explain=`Uit bij stelen noteer je met <code>CS</code> gevolgd door de aangooi (achtervanger → ${P(seq[1])}): code <code>CS${seq.join('')}</code>.`;
+      ev.applyBases = b=>{ const nb=cloneBases(b); const outRunner={battingSlot:nb[0].battingSlot, history:Object.assign({},nb[0].history,{'2e':ev.code})}; nb[0]=null; return {bases:nb, runs:0, outRunner}; };
+      ev.outsDelta=1;
+      break; }
+    case 'CS1E': {
+      const r = bases[0]; const seq=pick([[2,4],[2,6]]);
+      const code = 'CS'+seq.join('')+'E'+seq[1];
+      ev.narrative = `<b>${r.name}</b> probeert het tweede honk te stelen. De achtervanger gooit naar de ${P(seq[1])}, maar die laat de bal vallen bij het tikken — <b>${r.name}</b> blijft veilig op het tweede honk.`;
+      ev.code=code; ev.refs=['Caught stealing — p.14, Scoreregel 9.07', 'Fouten — p.11, Scoreregel 9.12']; ev.targetQuadrant='2e';
+      ev.priorHistory = Object.assign({}, r.history);
+      ev.explain=`Zonder de fout was dit een uit bij stelen geweest, dus schrijf je toch <code>CS${seq.join('')}</code> — met daarachter de foutcode <code>E${seq[1]}</code>, zodat duidelijk is dat hij dankzij de fout veilig bleef. Er wordt hier geen nul genoteerd: de loper blijft gewoon op het honk staan.`;
+      ev.applyBases = b=>{ const nb=cloneBases(b); nb[1]=Object.assign({},nb[0],{arrivedVia:code, history:Object.assign({},nb[0].history,{'2e':code})}); nb[0]=null; return {bases:nb, runs:0}; };
+      break; }
+    case 'CS2': {
+      const r = bases[1]; const seq=[2,5];
+      ev.narrative = `<b>${r.name}</b> probeert het derde honk te stelen. De achtervanger gooit naar de ${P(seq[1])}, die hem net op tijd tikt.`;
+      ev.code='CS'+seq.join(''); ev.refs=['Caught stealing — p.14, Scoreregel 9.07']; ev.targetQuadrant='3e';
+      ev.priorHistory = Object.assign({}, r.history);
+      ev.explain=`Uit bij stelen noteer je met <code>CS</code> gevolgd door de aangooi (achtervanger → ${P(seq[1])}): code <code>CS${seq.join('')}</code>.`;
+      ev.applyBases = b=>{ const nb=cloneBases(b); const outRunner={battingSlot:nb[1].battingSlot, history:Object.assign({},nb[1].history,{'3e':ev.code})}; nb[1]=null; return {bases:nb, runs:0, outRunner}; };
+      ev.outsDelta=1;
+      break; }
+    case 'CS2E': {
+      const r = bases[1]; const seq=[2,5];
+      const code = 'CS'+seq.join('')+'E'+seq[1];
+      ev.narrative = `<b>${r.name}</b> probeert het derde honk te stelen. De achtervanger gooit naar de ${P(seq[1])}, maar de aangooi is onzuiver — <b>${r.name}</b> blijft veilig op het derde honk.`;
+      ev.code=code; ev.refs=['Caught stealing — p.14, Scoreregel 9.07', 'Fouten — p.11, Scoreregel 9.12']; ev.targetQuadrant='3e';
+      ev.priorHistory = Object.assign({}, r.history);
+      ev.explain=`Zonder de fout was dit een uit bij stelen geweest, dus schrijf je toch <code>CS${seq.join('')}</code> — met daarachter de foutcode <code>E${seq[1]}</code>, zodat duidelijk is dat hij dankzij de fout veilig bleef. Er wordt hier geen nul genoteerd: de loper blijft gewoon op het honk staan.`;
+      ev.applyBases = b=>{ const nb=cloneBases(b); nb[2]=Object.assign({},nb[1],{arrivedVia:code, history:Object.assign({},nb[1].history,{'3e':code})}); nb[1]=null; return {bases:nb, runs:0}; };
+      break; }
+    case 'PO1': {
+      const r = bases[0]; const seq=[1,3];
+      ev.narrative = `<b>${r.name}</b> staat los van het eerste honk. De werper gooit naar de eerste honkman: te laat terug!`;
+      ev.code='PO'+seq.join(''); ev.refs=['Pick off — p.19']; ev.targetQuadrant='2e';
+      ev.priorHistory = Object.assign({}, r.history);
+      ev.explain=`Uitgemaakt door een verrassende aangooi op het honk noteer je met <code>PO</code> gevolgd door de aangooi (werper → eerste honkman): code <code>PO${seq.join('')}</code>.`;
+      ev.applyBases = b=>{ const nb=cloneBases(b); const outRunner={battingSlot:nb[0].battingSlot, history:Object.assign({},nb[0].history,{'2e':ev.code})}; nb[0]=null; return {bases:nb, runs:0, outRunner}; };
+      ev.outsDelta=1;
+      break; }
+    case 'WP': {
+      const lead = bases[2] || bases[1] || bases[0];
+      const runnerCount = [bases[0],bases[1],bases[2]].filter(Boolean).length;
+      const moveNar = runnerCount>1 ? `De honklopers schuiven op.` : `<b>${lead.name}</b> schuift op.`;
+      ev.narrative = `De werper gooit een wilde worp, hoog over de achtervanger. ${moveNar}`;
+      ev.code='WP'; ev.refs=['Wild Pitch — p.14, Scoreregel 9.13'];
+      ev.targetQuadrant = bases[2] ? 'thuis' : (bases[1] ? '3e' : '2e');
+      ev.priorHistory = Object.assign({}, lead.history);
+      ev.explain='Een wilde worp noteer je bij elke opschuivende loper met code <code>WP</code> (ieder in zijn eigen honk-vakje).';
+      ev.applyBases = b=>advanceAllByOne(b,'WP');
+      ev.runnerAdvanceLabel = 'WP'; ev.leadRunnerName = lead.name;
+      break; }
+    case 'PB': {
+      const lead = bases[2] || bases[1] || bases[0];
+      const runnerCount = [bases[0],bases[1],bases[2]].filter(Boolean).length;
+      const moveNar = runnerCount>1 ? `De honklopers schuiven op.` : `<b>${lead.name}</b> schuift op.`;
+      ev.narrative = `De achtervanger kan de bal niet vasthouden: doorgeschoten bal. ${moveNar}`;
+      ev.code='PB'; ev.refs=['Passed Ball — p.15, Scoreregel 9.13'];
+      ev.targetQuadrant = bases[2] ? 'thuis' : (bases[1] ? '3e' : '2e');
+      ev.priorHistory = Object.assign({}, lead.history);
+      ev.explain='Een doorgeschoten bal noteer je bij elke opschuivende loper met code <code>PB</code> (ieder in zijn eigen honk-vakje).';
+      ev.applyBases = b=>advanceAllByOne(b,'PB');
+      ev.runnerAdvanceLabel = 'PB'; ev.leadRunnerName = lead.name;
+      break; }
+    case 'BK': {
+      const lead = bases[2] || bases[1] || bases[0];
+      const runnerCount = [bases[0],bases[1],bases[2]].filter(Boolean).length;
+      const isSoftbal = G.sport === 'Softbal';
+      const code = isSoftbal ? 'IP' : 'BK';
+      const moveNar = runnerCount>1 ? `Alle honklopers mogen een honk opschuiven.` : `<b>${lead.name}</b> mag een honk opschuiven.`;
+      ev.narrative = isSoftbal
+        ? `De werper maakt een onreglementaire werpbeweging: illegal pitch! ${moveNar}`
+        : `De werper maakt een onreglementaire beweging: schijn! ${moveNar}`;
+      ev.code=code; ev.refs=[isSoftbal ? 'Illegal pitch — p.15' : 'BalK — p.15'];
+      ev.targetQuadrant = bases[2] ? 'thuis' : (bases[1] ? '3e' : '2e');
+      ev.priorHistory = Object.assign({}, lead.history);
+      ev.explain = isSoftbal
+        ? 'Bij softbal heet dit een illegal pitch, genoteerd met code <code>IP</code> (ieder bij zijn eigen honk-vakje) — bij honkbal is dit <code>BK</code> (schijn).'
+        : 'Schijn (balk) noteer je met code <code>BK</code> (ieder bij zijn eigen honk-vakje) — bij softbal heet dit een illegal pitch, code <code>IP</code>.';
+      ev.applyBases = b=>advanceAllByOne(b,code);
+      ev.runnerAdvanceLabel = code; ev.leadRunnerName = lead.name;
+      break; }
+    case 'OB1': {
+      const r=bases[0];
+      ev.narrative = `De korte stop, die de bal niet in bezit heeft, hindert <b>${r.name}</b> bij het aflopen van de honken. Obstructie!`;
+      ev.code='OB6'; ev.refs=['Obstruction — p.14']; ev.targetQuadrant='2e';
+      ev.priorHistory = Object.assign({}, r.history);
+      ev.explain='Obstructie tegen een honkloper noteer je met <code>OB</code> gevolgd door de veldpositie die de obstructie pleegde.';
+      ev.applyBases = b=>{ const nb=cloneBases(b); nb[1]=Object.assign({},nb[0],{arrivedVia:'OB6', history:Object.assign({},nb[0].history,{'2e':'OB6'})}); nb[0]=null; return {bases:nb, runs:0}; };
+      break; }
+  }
+  return ev;
+}
+
+function shuffleMcOptions(options, correctIndex){
+  const order = options.map((_,i)=>i);
+  for(let i=order.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return { options: order.map(i=>options[i]), correctIndex: order.indexOf(correctIndex) };
+}
+
+function buildEndOfInningQuizEvent(){
+  const shuffled = shuffleMcOptions([
+    'Een schuine streep onder de slagbeurt van de laatste slagman.',
+    'Een cirkel om de laatste drie honkvakjes samen.',
+    'Niets — je gaat gewoon verder op de volgende regel.',
+    'Een dikke stip boven aan de kolom.'
+  ], 0);
+  return {
+    type:'mc', forBatter:false, outsDelta:0,
+    narrative: `Er zijn nu drie spelers uitgemaakt: de slagbeurt is afgelopen. Hoe geef je dit aan op de scorekaart?`,
+    options: shuffled.options,
+    correctIndex: shuffled.correctIndex,
+    refs:['De scorekaart — p.8'],
+    explain: 'Bij drie uit trek je een schuine streep onder de slagbeurt van de laatste slagman. De speler die daaronder staat, is de eerstvolgende slagman in de volgende inning.',
+    applyBases: b=>({bases:b, runs:0}),
+  };
+}
+
+function buildPinchRunnerQuizEvent(runner, teamKey){
+  const subName = G[teamKey].bench[0].name;
+  const shuffled = shuffleMcOptions([
+    'Met de afkorting "PR" (pinch runner) in de positiekolom, en een streepje tussen de honken op het moment van wisselen.',
+    'Met de afkorting "PH" (pinch hitter) in de positiekolom.',
+    'Met een "bootje" in de slagkolom.',
+    'Dit hoeft niet apart genoteerd te worden, de naam blijft gewoon staan.'
+  ], 0);
+  return {
+    type:'mc', forBatter:false, outsDelta:0,
+    narrative: `<b>${runner.name}</b> wordt op het honk vervangen door invaller <b>${subName}</b>, die verder rent.`,
+    options: shuffled.options,
+    correctIndex: shuffled.correctIndex,
+    refs:['Verandering van werper, slagman en veldspeler — p.21'],
+    explain: `Een vervangende honkloper (pinch runner) noteer je met de afkorting <code>PR</code> in de positiekolom. Tussen de honken zet je een streepje op het punt waar de wissel plaatsvond, en <b>${subName}</b> rent vanaf nu verder als loper.`,
+    applyBases: b=>{
+      const idx = b.findIndex(x=>x && x.name===runner.name);
+      if(idx>=0) b[idx] = Object.assign({}, b[idx], {name:subName});
+      return {bases:b, runs:0};
+    },
+    lineupChange: {teamKey, slot:runner.battingSlot, newName:subName, subType:'PR'},
+  };
+}
+
+function buildPositionChangeQuizEvent(fieldingTeamKey){
+  const team = G[fieldingTeamKey];
+  const slotA = Math.floor(Math.random()*9);
+  const playerA = team.lineup[slotA];
+  const curPosA = currentPos(fieldingTeamKey, slotA);
+  const otherSlots = [0,1,2,3,4,5,6,7,8].filter(s=>s!==slotA && currentPos(fieldingTeamKey,s)!==curPosA);
+  const slotB = pick(otherSlots);
+  const playerB = team.lineup[slotB];
+  const curPosB = currentPos(fieldingTeamKey, slotB);
+  const halfLabel = String(G.inning);
+  const shuffled = shuffleMcOptions([
+    `In het volgende positievakje van beide spelers, met het inningnummer erachter (bijv. "${curPosB}/${halfLabel}" bij ${playerA.name}).`,
+    'Met de letters "PR" in de kolom.',
+    'Met een schuine streep in het honkvakje.',
+    'Dit hoeft niet apart genoteerd te worden.'
+  ], 0);
+  return {
+    type:'mc', forBatter:false, outsDelta:0,
+    narrative: `<b>${playerA.name}</b> (nu ${POS_NAMES[curPosA]}) en <b>${playerB.name}</b> (nu ${POS_NAMES[curPosB]}) wisselen onderling van positie.`,
+    options: shuffled.options,
+    correctIndex: shuffled.correctIndex,
+    refs:['Verandering van werper, slagman en veldspeler — p.20'],
+    explain: `Een positiewissel van spelers die blijven spelen noteer je bij ieder van hen in het volgende positievakje, met het inningnummer erachter: <b>${playerA.name}</b> krijgt <code>${curPosB}/${halfLabel}</code>, <b>${playerB.name}</b> krijgt <code>${curPosA}/${halfLabel}</code>.`,
+    applyBases: b=>({bases:b, runs:0}),
+    posChange: {teamKey:fieldingTeamKey, swaps:[{slot:slotA, newPos:curPosB}, {slot:slotB, newPos:curPosA}]},
+  };
+}
+
+function buildPinchHitterQuizEvent(teamKey){
+  const team = G[teamKey];
+  const slot = Math.floor(Math.random()*9);
+  const originalName = currentBatterName(teamKey, slot);
+  const subName = team.bench[0].name;
+  const halfLabel = String(G.inning);
+  const shuffled = shuffleMcOptions([
+    `Met de afkorting "PH" in de positiekolom, en de naam van ${subName} eronder met "${halfLabel}" als moment van wisselen.`,
+    'Met de afkorting "PR" (pinch runner) in de positiekolom.',
+    'Met een "bootje" in de slagkolom.',
+    'Door zijn naam gewoon te doorstrepen.'
+  ], 0);
+  return {
+    type:'mc', forBatter:false, outsDelta:0,
+    narrative: `<b>${originalName}</b> (slagvolgorde ${slot+1}) wordt vervangen door invaller <b>${subName}</b>, die in zijn plaats gaat slaan.`,
+    options: shuffled.options,
+    correctIndex: shuffled.correctIndex,
+    refs:['De scorekaart — p.7'],
+    explain: `Een vervangende slagman (pinch hitter) noteer je met de afkorting <code>PH</code> in de positiekolom, met de naam van <b>${subName}</b> en het moment van wisselen (inning ${halfLabel}) erbij.`,
+    applyBases: b=>({bases:b, runs:0}),
+    lineupChange: {teamKey, slot, newName: subName, subType:'PH'},
+  };
+}
+
+function findCurrentPitcherSlot(teamKey){
+  for(let s=0; s<9; s++){ if(currentPos(teamKey, s) === 1) return s; }
+  return null;
+}
+
+function buildPitcherChangeQuizEvent(fieldingTeamKey){
+  const slot = findCurrentPitcherSlot(fieldingTeamKey);
+  if(slot === null) return null;
+  const team = G[fieldingTeamKey];
+  const curName = currentBatterName(fieldingTeamKey, slot);
+  const subName = team.bench[0].name;
+  const shuffled = shuffleMcOptions([
+    'Met een dikke horizontale streep met opstaande uiteinden (het "bootje") in de slagkolom van de tegenstander.',
+    'Met de letters "PH" bij de naam van de nieuwe werper.',
+    'Door de oude werper van de kaart te schrappen.',
+    'Dit hoeft niet apart genoteerd te worden.'
+  ], 0);
+  return {
+    type:'mc', forBatter:false, outsDelta:0,
+    narrative: `Bij <b>${team.name}</b> wordt werper <b>${curName}</b> vervangen door <b>${subName}</b>.`,
+    options: shuffled.options,
+    correctIndex: shuffled.correctIndex,
+    refs:['Verandering van werper, slagman en veldspeler — p.20-21'],
+    explain: `Bij een werperwissel plaats je aan de kant van de slagpartij (dus op de scorekaart van de tegenstander) een dikke horizontale streep met de uiteinden een stukje omhoog: het "bootje". Na het bootje kun je desgewenst met een andere kleur verder werken om het overzicht te bewaren. <b>${subName}</b> neemt vanaf nu het werpen over van <b>${curName}</b>.`,
+    applyBases: b=>({bases:b, runs:0}),
+    pitcherChange: {teamKey:fieldingTeamKey, slot, newName:subName},
+  };
+}
+
+const DEST_LABEL = {'2e':'het tweede honk', '3e':'het derde honk', 'thuis':'huis — hij scoort een punt!'};
+
+function buildExtraBaseArrowEvent(batterName, errorCode){
+  return {
+    forBatter:false, outsDelta:0, targetQuadrant:'2e',
+    code:'PIJL',
+    priorHistory: {'1e': errorCode},
+    narrative: `Omdat <b>${batterName}</b> dankzij dezelfde fout meteen doorliep naar het tweede honk, geef je dat aan in het tweede honk-vakje.`,
+    refs:['Extra base error — p.12'],
+    explain: 'Een pijltje (↑) in het volgende honk-vakje laat zien dat de loper dankzij dezelfde, doorlopende actie nog een honk verder kwam — er komt geen aparte foutcode in dit vakje. Typ hier <code>PIJL</code> om dat pijltje te noteren.',
+    applyBases: b=>{
+      const idx = b.findIndex(x=>x && x.name===batterName);
+      if(idx>=0){
+        b[idx] = Object.assign({}, b[idx], {history: Object.assign({}, b[idx].history, {'2e':'↑'})});
+      }
+      return {bases:b, runs:0};
+    },
+  };
+}
+
+const CREDIT_TRIGGER_LABEL = {
+  'HR':'de homerun van', '3B':'de driehonkslag van', '2B':'de tweehonkslag van', '1B':'de honkslag van',
+  'BB':'de vrije loop van', 'IBB':'de opzettelijke vrije loop van', 'HP':'het geraakt worden van',
+  'SF':'de offervlieg van', 'SH':'de stootslag van',
+};
+
+function buildAdvanceCreditEvent(adv, battingOrderNum, batterName, priorHistory, battingSlot, teamKey, triggerCode){
+  let quadrant;
+  if(adv.toIdx==='home') quadrant='thuis';
+  else if(adv.toIdx===1) quadrant='2e';
+  else if(adv.toIdx===2) quadrant='3e';
+  else quadrant='2e';
+  const triggerLabel = CREDIT_TRIGGER_LABEL[triggerCode]
+    || (triggerCode && triggerCode[0]==='E' ? 'de fout na de slag van' : 'de slagbeurt van');
+  return {
+    forBatter:false, outsDelta:0, targetQuadrant:quadrant,
+    code:String(battingOrderNum),
+    priorHistory: priorHistory || {},
+    narrative:`<b>${adv.name}</b> schuift door naar ${DEST_LABEL[quadrant]} dankzij ${triggerLabel} <b>${batterName}</b> (nr. ${battingOrderNum} in de slagvolgorde).`,
+    refs:['Door de volgende slagman — p.13'],
+    explain:`Wanneer een honkloper opschuift dankzij een vólgende slagman, schrijf je niet diens honkslagcode, maar het nummer van die slagman uit de slagvolgorde: code <code>${battingOrderNum}</code>. Let op: bij een 2B/3B/HR schuift een bestaande loper net zo veel honken door als de slagman zelf haalt — niet per se maar één honk.`,
+    applyBases: b=>{
+      const finalHist = Object.assign({}, priorHistory, {[quadrant]:String(battingOrderNum)}, quadrant==='thuis'?{scored:true}:{});
+      if(quadrant==='thuis'){
+        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, G.inning, finalHist);
+      } else {
+        const idx = b.findIndex(x=>x && x.name===adv.name);
+        if(idx>=0){
+          b[idx] = Object.assign({}, b[idx], {arrivedVia:String(battingOrderNum), history:finalHist});
+        }
+        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, G.inning, finalHist);
+      }
+      return {bases:b, runs:0};
+    },
+  };
+}
+
+const RUNNER_LABEL_REFS = {
+  'WP': ['Wild Pitch — p.14, Scoreregel 9.13'],
+  'PB': ['Passed Ball — p.15, Scoreregel 9.13'],
+  'BK': ['BalK — p.15'],
+  'IP': ['Illegal pitch — p.15'],
+};
+const RUNNER_LABEL_DESC = {
+  'WP': 'de wilde worp',
+  'PB': 'de doorgeschoten bal',
+  'BK': 'de schijn',
+  'IP': 'de illegal pitch',
+};
+function buildRunnerFollowUpEvent(adv, label, priorHistory, battingSlot, teamKey){
+  let quadrant;
+  if(adv.toIdx==='home') quadrant='thuis';
+  else if(adv.toIdx===1) quadrant='2e';
+  else if(adv.toIdx===2) quadrant='3e';
+  else quadrant='2e';
+  return {
+    forBatter:false, outsDelta:0, targetQuadrant:quadrant,
+    code:label,
+    priorHistory: priorHistory || {},
+    narrative:`Ook <b>${adv.name}</b> schuift door dankzij ${RUNNER_LABEL_DESC[label]}.`,
+    refs: RUNNER_LABEL_REFS[label],
+    explain:`Ook deze loper noteer je met code <code>${label}</code> in zíjn eigen honk-vakje.`,
+    applyBases: b=>{
+      const finalHist = Object.assign({}, priorHistory, {[quadrant]:label}, quadrant==='thuis'?{scored:true}:{});
+      if(quadrant==='thuis'){
+        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, G.inning, finalHist);
+      } else {
+        const idx = b.findIndex(x=>x && x.name===adv.name);
+        if(idx>=0){
+          b[idx] = Object.assign({}, b[idx], {arrivedVia:label, history:finalHist});
+        }
+        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, G.inning, finalHist);
+      }
+      return {bases:b, runs:0};
+    },
+  };
+}
+
+function applyEventToState(ev){
+  const teamKey = battingKey();
+  const battingOrderNum = (G.battingIdx[teamKey] % 9) + 1;
+  const battingSlotNow = G.battingIdx[teamKey] % 9;
+  const batterName = currentBatterName(teamKey, battingSlotNow);
+  const oldBasesSnapshot = G.bases;
+  const result = ev.applyBases(G.bases);
+  G.bases = result.bases;
+  if(result.runs>0){
+    G.score[teamKey]+=result.runs;
+    G.currentHalfRuns+=result.runs;
+  }
+  G.outs += ev.outsDelta;
+  if(ev.forBatter){ G.battingIdx[teamKey]++; }
+
+  if(ev.forBatter && result.advanced && result.advanced.length){
+    result.advanced.forEach(adv=>{
+      if(adv.toIdx==='home'){
+        const orig = oldBasesSnapshot.find(x=>x && x.name===adv.name);
+        const priorHistory = orig ? Object.assign({}, orig.history) : {};
+        G.pendingEvents.push(buildAdvanceCreditEvent(adv, battingOrderNum, batterName, priorHistory, orig ? orig.battingSlot : undefined, teamKey, ev.code));
+        return;
+      }
+      const runnerObj = (G.bases[adv.toIdx] && G.bases[adv.toIdx].name===adv.name) ? G.bases[adv.toIdx] : null;
+      const priorHistory = runnerObj ? Object.assign({}, runnerObj.history) : {};
+      G.pendingEvents.push(buildAdvanceCreditEvent(adv, battingOrderNum, batterName, priorHistory, runnerObj ? runnerObj.battingSlot : undefined, teamKey, ev.code));
+    });
+  }
+
+  // HR: the batter scores immediately and never occupies a base, so there's no other commit hook for them.
+  if(ev.forBatter && ev.code === 'HR'){
+    commitToScorecard(teamKey, battingSlotNow, G.inning, {thuis:'HR', scored:true});
+  }
+
+  if(ev.posChange){
+    const {teamKey:pcTeam, swaps} = ev.posChange;
+    swaps.forEach(({slot:pcSlot, newPos})=>{
+      G.slotEvents[pcTeam][pcSlot].push({type:'pos', pos:newPos, inning:G.inning, half:G.half});
+    });
+  }
+
+  if(ev.lineupChange){
+    const {teamKey:lcTeam, slot:lcSlot, newName, subType} = ev.lineupChange;
+    G.slotEvents[lcTeam][lcSlot].push({type:'sub', name:newName, label:subType||'PH', inning:G.inning, half:G.half});
+  }
+
+  if(ev.pitcherChange){
+    const {teamKey:pTeam, slot:pSlot, newName} = ev.pitcherChange;
+    G.slotEvents[pTeam][pSlot].push({type:'pitcher', name:newName, inning:G.inning, half:G.half});
+    const oppTeam = pTeam==='away' ? 'home' : 'away';
+    const oppSlot = G.battingIdx[oppTeam] % 9;
+    if(!G.boatMarkers[oppTeam][oppSlot]) G.boatMarkers[oppTeam][oppSlot] = [];
+    G.boatMarkers[oppTeam][oppSlot].push(G.inning);
+  }
+
+  if(ev.forBatter && ev.extraBaseErrorCode){
+    G.pendingEvents.push(buildExtraBaseArrowEvent(batterName, ev.extraBaseErrorCode));
+  }
+
+  if(!ev.forBatter && ev.runnerAdvanceLabel && result.advanced && result.advanced.length){
+    result.advanced.slice().reverse().forEach(adv=>{
+      if(adv.name === ev.leadRunnerName) return; // this one is already the main question for this turn
+      const orig = oldBasesSnapshot.find(x=>x && x.name===adv.name);
+      const priorHistory = orig ? Object.assign({}, orig.history) : {};
+      G.pendingEvents.push(buildRunnerFollowUpEvent(adv, ev.runnerAdvanceLabel, priorHistory, orig ? orig.battingSlot : undefined, teamKey));
+    });
+  }
+
+  // The lead runner of a WP/PB/BK turn (this turn's own subject) scoring at home has no other commit hook.
+  if(!ev.forBatter && ev.runnerAdvanceLabel && ev.targetQuadrant === 'thuis' && ev.leadRunnerName){
+    const orig = oldBasesSnapshot.find(x=>x && x.name===ev.leadRunnerName);
+    if(orig){
+      const finalHist = Object.assign({}, ev.priorHistory, {thuis: ev.runnerAdvanceLabel, scored:true});
+      commitToScorecard(teamKey, orig.battingSlot, G.inning, finalHist);
+    }
+  }
+
+  // A defensive play put a non-batter runner out (FC/DP/CS/PO) — commit their final line to the scorecard.
+  if(result.outRunner){
+    commitToScorecard(teamKey, result.outRunner.battingSlot, G.inning, result.outRunner.history);
+  }
+
+  // Sync any still-active runner's current progress to the scorecard now that this turn has been checked,
+  // so the card never waits until a runner scores/is out/is stranded to show what's already been confirmed.
+  G.bases.forEach(occ=>{
+    if(occ && occ.battingSlot!==undefined){
+      commitToScorecard(teamKey, occ.battingSlot, G.inning, occ.history);
+    }
+  });
+
+  // The batter made an out without ever reaching a base (K, fly/ground out, SH/SF/DP's own out, ...).
+  if(ev.forBatter){
+    const reachedBase = result.bases[0] && result.bases[0].name === batterName;
+    if(!reachedBase && ev.outsDelta > 0){
+      commitToScorecard(teamKey, battingSlotNow, G.inning, {out: ev.code});
+    }
+  }
+
+  if(G.outs>=3){ endHalfInning(); }
+}
+
+function endHalfInning(){
+  const key = battingKey();
+  G.inningRuns[key].push(G.currentHalfRuns);
+  G.currentHalfRuns=0;
+  G.bases.forEach(occ=>{ if(occ) commitToScorecard(key, occ.battingSlot, G.inning, occ.history); });
+  const lastSlot = (G.battingIdx[key] - 1 + 9) % 9;
+  if(!G.endMarker[key]) G.endMarker[key] = {};
+  G.endMarker[key][G.inning] = lastSlot;
+  G.outs=0;
+  G.bases=[null,null,null];
+  G.pendingEvents.push(buildEndOfInningQuizEvent());
+  if(Math.random()<0.2){ const pc = buildPitcherChangeQuizEvent(key); if(pc) G.pendingEvents.push(pc); }
+  if(Math.random()<0.2){ G.pendingEvents.push(buildPositionChangeQuizEvent(key)); }
+  if(Math.random()<0.2){ G.pendingEvents.push(buildPinchHitterQuizEvent(fieldingKey())); }
+  if(G.half==='top'){ G.half='bottom'; }
+  else { G.half='top'; G.inning++; }
+  if(G.inning>G.maxInnings){ G.gameOver=true; }
+}
+
+/* ============ NORMALIZATION / CHECKING ============ */
+function normalize(s){ return (s||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+function checkAnswer(userStr, ev){ return normalize(userStr) === normalize(ev.code); }
+
+/* ============ UI WIRING ============ */
+let builderStr = '';
+let selectedSlot = null;
+let useSystemKeyboard = true;
+
+const REACH_BUTTONS = [
+  {label:'1B', sub:'honkslag', val:'1B'},
+  {label:'2B', sub:'honkslag', val:'2B'},
+  {label:'3B', sub:'honkslag', val:'3B'},
+  {label:'HR', sub:'homerun', val:'HR'},
+  {label:'BB', sub:'vier wijd', val:'BB'},
+  {label:'IBB', sub:'opzettelijk 4wijd', val:'IBB'},
+  {label:'HP', sub:'geraakt', val:'HP'},
+  {label:'INT', sub:'hinderen slagman (honkbal)', val:'INT'},
+];
+const OUT_BUTTONS = [
+  {label:'K', sub:'drie slag', val:'K'},
+  {label:'F', sub:'fly', val:'F'},
+  {label:'L', sub:'line drive', val:'L'},
+  {label:'IF', sub:'infield fly', val:'IF'},
+];
+const SPECIAL_BUTTONS = [
+  {label:'E', sub:'fout (error)', val:'E'},
+  {label:'FC', sub:'velderskeus', val:'FC'},
+  {label:'SH', sub:'offerstootslag', val:'SH'},
+  {label:'SF', sub:'offervlieg', val:'SF'},
+];
+const RUNNER_BUTTONS = [
+  {label:'SB', sub:'gestolen honk', val:'SB'},
+  {label:'CS', sub:'uit bij stelen', val:'CS'},
+  {label:'WP', sub:'wilde worp', val:'WP'},
+  {label:'PB', sub:'doorgeschoten bal', val:'PB'},
+  {label:'BK', sub:'schijn (honkbal)', val:'BK'},
+  {label:'IP', sub:'illegal pitch (softbal)', val:'IP'},
+  {label:'PO', sub:'pick off', val:'PO'},
+  {label:'OB', sub:'obstructie', val:'OB'},
+];
+const EXTRA_BUTTONS = [
+  {label:'T', sub:'aangooifout', val:'T'},
+  {label:'FF', sub:'foul fly', val:'FF'},
+  {label:'PIJL', sub:'pijltje (extra honk)', val:'PIJL'},
+];
+
+function makeButtons(container, list, extraClass){
+  container.innerHTML='';
+  list.forEach(item=>{
+    const b = document.createElement('button');
+    b.className = 'kb-btn ' + (extraClass||'');
+    b.innerHTML = item.label + (item.sub? `<small>${item.sub}</small>` : '');
+    b.addEventListener('click', ()=>{ appendToken(item.val); });
+    container.appendChild(b);
+  });
+}
+
+function appendToken(v){ builderStr += v; renderBuilder(); }
+function renderBuilder(){
+  const el = document.getElementById('builderText');
+  const upper = (builderStr||'').toUpperCase();
+  if(upper){
+    el.innerHTML = renderCodeDisplay(upper);
+  } else {
+    el.textContent = '\u00A0';
+  }
+  const si = document.getElementById('systemInput');
+  if(si && si.value !== builderStr) si.value = builderStr;
+}
+
+function setupKeyboard(){
+  makeButtons(document.getElementById('grpReach'), REACH_BUTTONS);
+  makeButtons(document.getElementById('grpOut'), OUT_BUTTONS);
+  makeButtons(document.getElementById('grpSpecial'), SPECIAL_BUTTONS);
+  makeButtons(document.getElementById('grpRunner'), RUNNER_BUTTONS);
+  makeButtons(document.getElementById('grpExtra'), EXTRA_BUTTONS);
+  const posContainer = document.getElementById('grpPos');
+  posContainer.innerHTML='';
+  for(let i=1;i<=9;i++){
+    const b = document.createElement('button');
+    b.className='kb-btn kb-pos';
+    b.innerHTML = i + `<small>${POS_SHORT[i]}</small>`;
+    b.addEventListener('click', ()=>{ appendToken(String(i)); });
+    posContainer.appendChild(b);
+  }
+}
+
+function renderScoreboard(){
+  document.getElementById('awayName').textContent = G.away.name;
+  document.getElementById('homeName').textContent = G.home.name;
+  document.getElementById('awayScore').textContent = G.score.away;
+  document.getElementById('homeScore').textContent = G.score.home;
+  document.getElementById('inningMeta').textContent =
+    `Inning ${G.inning} (${G.half==='top'?'boven':'onder'}) — max ${G.maxInnings} innings`;
+
+  const table = document.getElementById('inningsTable');
+  let headerCells = '<th>Team</th>';
+  for(let i=1;i<=G.maxInnings;i++) headerCells += `<th>${i}</th>`;
+  headerCells += '<th>Tot</th>';
+  let awayRow = `<td class="teamname">${G.away.name}</td>`;
+  let homeRow = `<td class="teamname">${G.home.name}</td>`;
+  for(let i=0;i<G.maxInnings;i++){
+    awayRow += `<td>${G.inningRuns.away[i] !== undefined ? G.inningRuns.away[i] : ''}</td>`;
+    homeRow += `<td>${G.inningRuns.home[i] !== undefined ? G.inningRuns.home[i] : ''}</td>`;
+  }
+  awayRow += `<td><b>${G.score.away}</b></td>`;
+  homeRow += `<td><b>${G.score.home}</b></td>`;
+  table.innerHTML = `<tr>${headerCells}</tr><tr>${awayRow}</tr><tr>${homeRow}</tr>`;
+}
+
+function honkslagMarkHTML(n){
+  const positions = {1:[.18], 2:[.06,.34], 3:[-.06,.16,.38]}[n] || [];
+  let html = '<span class="hs-mark">';
+  positions.forEach(pos=>{ html += `<span class="hs-tick" style="top:${pos}em"></span>`; });
+  html += '</span>';
+  return html;
+}
+
+function renderCodeDisplay(code){
+  if(code === '1B') return honkslagMarkHTML(1);
+  if(code === '2B') return honkslagMarkHTML(2);
+  if(code === '3B') return honkslagMarkHTML(3);
+  if(/^(CS|PO)\d+$/.test(code)) return `<span class="out-circle-inner">${code}</span>`;
+  return code;
+}
+
+function renderScorecardCellHTML(cell){
+  if(!cell) return '<div class="honk-cell sc-cell"></div>';
+  if(cell.out){
+    return `<div class="honk-cell sc-cell"><span class="builder-text slot-any out-mark">${cell.out}</span></div>`;
+  }
+  let html = `<div class="honk-cell sc-cell">`;
+  ['1e','2e','3e','thuis'].forEach(q=>{
+    if(cell[q]) html += `<span class="hist-text q-${q}">${renderCodeDisplay(cell[q])}</span>`;
+  });
+  if(cell.scored) html += `<span class="honk-dot" title="Punt gescoord"></span>`;
+  html += `</div>`;
+  return html;
+}
+
+function renderFullScorecard(){
+  document.getElementById('scAwayName').textContent = G.away.name;
+  document.getElementById('scHomeName').textContent = G.home.name;
+  document.getElementById('scMatchInfo').innerHTML =
+    `<table class="sc-matchinfo-table">
+      <tr><td class="mi-label">Sport</td><td class="mi-colon">:</td><td class="mi-value" colspan="3">${G.sport}</td></tr>
+      <tr><td class="mi-label">Wedstrijd</td><td class="mi-colon">:</td><td class="mi-value" colspan="3">${G.away.name} – ${G.home.name}</td></tr>
+      <tr><td class="mi-label">Gespeeld te</td><td class="mi-colon">:</td><td class="mi-value" colspan="3">—</td></tr>
+      <tr><td class="mi-label">Datum</td><td class="mi-colon">:</td><td class="mi-value">${G.matchDate}</td><td class="mi-label">Wedstrijdnummer</td><td class="mi-value">—</td></tr>
+    </table>`;
+  document.getElementById('scStartTime').textContent = G.matchTime + ' uur';
+
+  ['away','home'].forEach(teamKey=>{
+    const team = G[teamKey];
+    const container = document.getElementById('scorecard-'+teamKey);
+    let header = `<tr><th>Pos</th><th>${team.name}</th><th></th>`;
+    for(let i=1;i<=G.maxInnings;i++) header += `<th>${i}</th>`;
+    header += '</tr>';
+    let rows = '';
+    for(let slot=0; slot<9; slot++){
+      const player = team.lineup[slot];
+      let cells = '';
+      for(let inn=1; inn<=G.maxInnings; inn++){
+        const data = G.scorecard[teamKey][slot] ? G.scorecard[teamKey][slot][inn] : null;
+        const isEnd = G.endMarker[teamKey] && G.endMarker[teamKey][inn] === slot;
+        const isBoat = G.boatMarkers[teamKey][slot] && G.boatMarkers[teamKey][slot].includes(inn);
+        const cls = [isEnd?'sc-endmark':'', isBoat?'sc-boatmark':''].filter(Boolean).join(' ');
+        cells += `<td class="${cls}">${renderScorecardCellHTML(data)}</td>`;
+      }
+      const events = G.slotEvents[teamKey][slot] || [];
+      const posEntries = [player.pos, ...events.filter(e=>e.type!=='pitcher').map(e=> e.type==='pos' ? e.pos : e.label)];
+      const posCells = Array.from({length:9},(_,i)=> posEntries[i]!==undefined ? `<div>${posEntries[i]}</div>` : '<div></div>').join('');
+      const posGrid = `<div class="pos-grid">${posCells}</div>`;
+      const curName = currentBatterName(teamKey, slot);
+      const lastSub = events.filter(e=>e.type==='sub').pop();
+      const nameHTML = (curName !== player.name && lastSub)
+        ? `${player.name}<br><span class="ph-sub">${lastSub.label}: ${curName}</span>`
+        : player.name;
+      rows += `<tr><td class="sc-pos">${posGrid}</td><td class="sc-name">${nameHTML}</td><td class="sc-volg">${slot+1}</td>${cells}</tr>`;
+    }
+    let totalPerInning = '<tr class="sc-total-row"><td colspan="3" class="sc-total-label">Per inning</td>';
+    let totalCum = '<tr class="sc-total-row"><td colspan="3" class="sc-total-label">Totaal</td>';
+    let cum = 0;
+    for(let i=1;i<=G.maxInnings;i++){
+      const r = G.inningRuns[teamKey][i-1];
+      totalPerInning += `<td>${r!==undefined ? r : ''}</td>`;
+      if(r!==undefined){ cum += r; totalCum += `<td>${cum}</td>`; } else { totalCum += `<td></td>`; }
+    }
+    totalPerInning += '</tr>';
+    totalCum += '</tr>';
+    container.innerHTML = `<table class="scorecard-table">${header}${rows}${totalPerInning}${totalCum}</table>`;
+  });
+}
+
+function renderField(){
+  document.getElementById('base1dot').classList.toggle('occupied', !!G.bases[0]);
+  document.getElementById('base2dot').classList.toggle('occupied', !!G.bases[1]);
+  document.getElementById('base3dot').classList.toggle('occupied', !!G.bases[2]);
+
+  document.getElementById('out0').classList.toggle('filled', G.outs>=1);
+  document.getElementById('out1').classList.toggle('filled', G.outs>=2);
+
+  const team = battingTeam();
+  const idx = G.battingIdx[battingKey()] % 9;
+  const batter = team.lineup[idx];
+  document.getElementById('batterInfo').innerHTML =
+    `Aan slag: <b>${currentBatterName(battingKey(), idx)}</b> (${POS_NAMES[batter.pos]}, ${team.name})`;
+
+  const names = ['1e honk','2e honk','3e honk'].map((label,i)=>{
+    if(!G.bases[i]) return null;
+    const via = G.bases[i].arrivedVia ? ` <span class="via">(${G.bases[i].arrivedVia})</span>` : '';
+    return `${label}: <b>${G.bases[i].name}</b>${via}`;
+  }).filter(Boolean);
+  document.getElementById('runnerList').innerHTML = names.length ? 'Honklopers — ' + names.join(' &middot; ') : 'Honklopers: geen';
+}
+
+function renderHeaderStats(){
+  const el = document.getElementById('headerStats');
+  el.classList.remove('hidden');
+  el.textContent = `${G.correctCount} / ${G.totalCount} juist`;
+}
+
+function addMcLogEntry(ev, selectedIdx, correct){
+  const log = document.getElementById('log');
+  const div = document.createElement('div');
+  div.className = 'log-entry';
+  const cleanNarrative = ev.narrative.replace(/<[^>]+>/g,'');
+  div.innerHTML = `<span class="mark ${correct?'ok':'no'}">${correct?'✓':'✗'}</span>
+    <div class="log-details" style="flex:1;">
+      <span class="txt">${cleanNarrative}</span>
+      <span class="codes">${ev.options[selectedIdx]} → ${ev.options[ev.correctIndex]}</span>
+    </div>`;
+  log.insertBefore(div, log.firstChild);
+}
+
+function addLogEntry(ev, userStr, slot, codeOK, slotOK, fullyCorrect){
+  const log = document.getElementById('log');
+  const div = document.createElement('div');
+  div.className = 'log-entry';
+  const cleanNarrative = ev.narrative.replace(/<[^>]+>/g,'');
+  const stateCls = slotOK ? 'state-correct' : 'state-wrong';
+  const slotCls = 'slot-' + (slot || 'any');
+  const slotLabel = QUADRANT_SHORT[slot] || slot || '—';
+  const hist = ev.priorHistory || {};
+  const histSpans = ['1e','2e','3e','thuis'].map(q=>{
+    if(q === slot || !hist[q]) return '';
+    return `<span class="hist-text q-${q}">${renderCodeDisplay(hist[q])}</span>`;
+  }).join('');
+  const userUpper = (userStr||'').toUpperCase();
+  const userDisplay = userUpper ? renderCodeDisplay(userUpper) : '·';
+  div.innerHTML = `<span class="mark ${fullyCorrect?'ok':'no'}">${fullyCorrect?'✓':'✗'}</span>
+    <div class="log-grid-wrap">
+      <div class="honk-cell mini">
+        ${histSpans}
+        <div class="q-highlight ${slotCls} ${stateCls}"></div>
+        <span class="builder-text ${slotCls} ${stateCls}">${userDisplay}</span>
+        ${slot==='thuis' ? '<span class="honk-dot" title="Punt gescoord"></span>' : ''}
+      </div>
+      <div class="log-grid-caption ${stateCls}">${slotLabel}</div>
+    </div>
+    <div class="log-details">
+      <span class="txt">${cleanNarrative}</span>
+      <span class="codes">${userStr || '(leeg)'} → ${ev.code}</span>
+    </div>`;
+  log.insertBefore(div, log.firstChild);
+}
+
+function selectSlot(slot){
+  if(document.getElementById('builderBox').classList.contains('locked')) return;
+  selectedSlot = slot;
+  const text = document.getElementById('builderText');
+  const hl = document.getElementById('qHighlight');
+  ['slot-1e','slot-2e','slot-3e','slot-thuis','slot-any'].forEach(c=>{ text.classList.remove(c); hl.classList.remove(c); });
+  const cls = 'slot-' + slot;
+  text.classList.add(cls); hl.classList.add(cls);
+  hl.classList.remove('state-correct','state-wrong'); hl.classList.add('state-selected');
+  text.classList.remove('state-correct','state-wrong');
+  document.getElementById('quadrantHint').textContent = 'Gekozen vakje: ' + (QUADRANT_SHORT[slot] || slot);
+  document.getElementById('slotWarning').classList.remove('show');
+}
+
+function resetSlotSelector(){
+  selectedSlot = null;
+  const text = document.getElementById('builderText');
+  const hl = document.getElementById('qHighlight');
+  ['slot-1e','slot-2e','slot-3e','slot-thuis','state-selected','state-correct','state-wrong'].forEach(c=>{ text.classList.remove(c); hl.classList.remove(c); });
+  text.classList.add('slot-any'); hl.classList.add('slot-any');
+  document.getElementById('quadrantHint').textContent = 'Kies eerst een vakje →';
+  document.getElementById('slotWarning').classList.remove('show');
+  document.getElementById('builderBox').classList.remove('locked');
+  document.getElementById('liveDot').classList.add('hidden');
+}
+
+function renderPriorHistory(ev){
+  const hist = ev.priorHistory || {};
+  const current = ev.targetQuadrant || 'any';
+  ['1e','2e','3e','thuis'].forEach(q=>{
+    const el = document.getElementById('hist'+q);
+    if(!el) return;
+    el.innerHTML = (q===current) ? '' : (hist[q] ? renderCodeDisplay(hist[q]) : '');
+  });
+}
+
+let selectedMc = null;
+
+function renderMcOptions(ev){
+  selectedMc = null;
+  document.getElementById('mcWarning').classList.remove('show');
+  const container = document.getElementById('mcOptions');
+  container.innerHTML = '';
+  ev.options.forEach((opt, idx)=>{
+    const b = document.createElement('button');
+    b.className = 'mc-btn';
+    b.textContent = opt;
+    b.addEventListener('click', ()=>{
+      if(document.getElementById('mcWrap').classList.contains('locked')) return;
+      selectedMc = idx;
+      container.querySelectorAll('.mc-btn').forEach(x=>x.classList.remove('selected'));
+      b.classList.add('selected');
+    });
+    container.appendChild(b);
+  });
+}
+
+function nextTurn(){
+  if(G.gameOver){
+    while(G.pendingEvents && G.pendingEvents.length){
+      const leftover = G.pendingEvents.shift();
+      if(leftover && typeof leftover.applyBases === 'function'){
+        leftover.applyBases(G.bases);
+      }
+    }
+    renderFullScorecard();
+    showEndScreen();
+    return;
+  }
+  const ev = (G.pendingEvents && G.pendingEvents.length) ? G.pendingEvents.shift() : generateEvent();
+  G.currentEvent = ev;
+  document.getElementById('narrativeText').innerHTML = ev.narrative;
+  renderScoreboard();
+  renderField();
+  renderFullScorecard();
+  document.getElementById('feedbackBox').classList.remove('show','correct','wrong');
+  awaitingNext = false;
+  document.getElementById('submitBtn').textContent = '✓ Check';
+  document.getElementById('submitBtn').disabled = false;
+
+  if(ev.type === 'mc'){
+    document.getElementById('builderWrap').classList.add('hidden');
+    document.getElementById('keyboard').classList.add('kb-collapsed');
+    document.getElementById('toggleKeyboardBtn').classList.add('hidden');
+    document.getElementById('mcWrap').classList.remove('hidden');
+    document.getElementById('mcWrap').classList.remove('locked');
+    document.getElementById('inputWrap').classList.add('hidden');
+    document.getElementById('delBtn').classList.add('hidden');
+    renderMcOptions(ev);
+  } else {
+    document.getElementById('builderWrap').classList.remove('hidden');
+    document.getElementById('toggleKeyboardBtn').classList.remove('hidden');
+    document.getElementById('keyboard').classList.toggle('kb-collapsed', useSystemKeyboard);
+    document.getElementById('mcWrap').classList.add('hidden');
+    document.getElementById('inputWrap').classList.remove('hidden');
+    document.getElementById('delBtn').classList.remove('hidden');
+    builderStr = '';
+    renderBuilder();
+    resetSlotSelector();
+    renderPriorHistory(ev);
+    document.getElementById('keyboard').classList.remove('disabled');
+    document.getElementById('systemInput').disabled = false;
+  }
+}
+
+function submitAnswer(){
+  const ev = G.currentEvent;
+  if(!ev) return;
+
+  if(ev.type === 'mc'){
+    if(selectedMc === null){
+      document.getElementById('mcWarning').classList.add('show');
+      return;
+    }
+    const correct = selectedMc === ev.correctIndex;
+    G.totalCount++;
+    if(correct) G.correctCount++;
+    renderHeaderStats();
+
+    const box = document.getElementById('feedbackBox');
+    box.classList.add('show', correct?'correct':'wrong');
+    box.classList.toggle('correct', correct);
+    box.classList.toggle('wrong', !correct);
+    const verdict = document.getElementById('verdictText');
+    verdict.className = 'verdict ' + (correct?'correct':'wrong');
+    verdict.textContent = correct ? '✓ Correct!' : '✗ Niet helemaal — zie de toelichting.';
+    document.getElementById('explainText').innerHTML = ev.explain;
+    document.getElementById('quadrantFeedback').innerHTML = '';
+    document.getElementById('refText').textContent = 'Zie: ' + ev.refs.join(' · ');
+
+    const container = document.getElementById('mcOptions');
+    const btns = container.querySelectorAll('.mc-btn');
+    btns.forEach((b,idx)=>{
+      if(idx===selectedMc) b.classList.add(correct?'correct-choice':'wrong-choice');
+      if(idx===ev.correctIndex && !correct) b.classList.add('reveal-correct');
+    });
+    document.getElementById('mcWrap').classList.add('locked');
+    awaitingNext = true;
+    document.getElementById('submitBtn').textContent = 'Volgende ▶';
+
+    addMcLogEntry(ev, selectedMc, correct);
+    applyEventToState(ev);
+    renderScoreboard(); renderField(); renderFullScorecard();
+    return;
+  }
+
+  if(!selectedSlot){
+    document.getElementById('slotWarning').classList.add('show');
+    return;
+  }
+
+  const codeOK = checkAnswer(builderStr, ev);
+  const wantedSlot = ev.targetQuadrant || 'any';
+  const slotOK = selectedSlot === wantedSlot;
+  const fullyCorrect = codeOK && slotOK;
+
+  document.getElementById('liveDot').classList.toggle('hidden', wantedSlot !== 'thuis');
+
+  G.totalCount++;
+  if(fullyCorrect) G.correctCount++;
+  renderHeaderStats();
+
+  // recolor the honk-cell to reflect whether the chosen vakje was correct
+  const text = document.getElementById('builderText');
+  const hl = document.getElementById('qHighlight');
+  text.classList.remove('state-selected','state-correct','state-wrong');
+  hl.classList.remove('state-selected','state-correct','state-wrong');
+  const stateCls = slotOK ? 'state-correct' : 'state-wrong';
+  text.classList.add(stateCls); hl.classList.add(stateCls);
+
+  const box = document.getElementById('feedbackBox');
+  box.classList.add('show', fullyCorrect?'correct':'wrong');
+  box.classList.toggle('correct', fullyCorrect);
+  box.classList.toggle('wrong', !fullyCorrect);
+
+  const verdict = document.getElementById('verdictText');
+  verdict.className = 'verdict ' + (fullyCorrect?'correct':'wrong');
+  if(fullyCorrect){
+    verdict.textContent = '✓ Correct — teken én vakje kloppen!';
+  } else if(codeOK && !slotOK){
+    verdict.textContent = `✗ Het scoreteken klopt, maar het vakje niet. Juiste vakje: ${QUADRANT_SHORT[wantedSlot]}.`;
+  } else if(!codeOK && slotOK){
+    verdict.textContent = `✗ Het vakje klopt, maar het scoreteken niet. Juiste code: ${ev.code}.`;
+  } else {
+    verdict.textContent = `✗ Niet helemaal. Juiste code: ${ev.code} — juiste vakje: ${QUADRANT_SHORT[wantedSlot]}.`;
+  }
+
+  document.getElementById('explainText').innerHTML = ev.explain;
+  document.getElementById('quadrantFeedback').innerHTML = 'Plek op de kaart: <b>' + (QUADRANT_LABEL[wantedSlot]) + '</b>';
+  document.getElementById('refText').textContent = 'Zie: ' + ev.refs.join(' · ');
+
+  document.getElementById('keyboard').classList.add('disabled');
+  document.getElementById('builderBox').classList.add('locked');
+  document.getElementById('systemInput').disabled = true;
+  awaitingNext = true;
+  document.getElementById('submitBtn').textContent = 'Volgende ▶';
+
+  addLogEntry(ev, builderStr, selectedSlot, codeOK, slotOK, fullyCorrect);
+
+  // apply the real outcome to game state regardless of user's answer
+  applyEventToState(ev);
+  renderScoreboard();
+  renderField();
+  renderFullScorecard();
+}
+
+function showEndScreen(){
+  document.getElementById('gameScreen').classList.add('hidden');
+  document.getElementById('endScreen').classList.remove('hidden');
+  const pct = G.totalCount ? Math.round(100*G.correctCount/G.totalCount) : 0;
+  document.getElementById('endSummary').innerHTML =
+    `Eindstand: <b>${G.away.name} ${G.score.away} – ${G.score.home} ${G.home.name}</b><br>
+     Jouw score: <b>${G.correctCount}/${G.totalCount}</b> correcte scoretekens (${pct}%).`;
+}
+
+/* ============ EVENT LISTENERS ============ */
+let selectedSport = 'Honkbal';
+document.querySelectorAll('.sport-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.sport-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedSport = btn.dataset.sport;
+  });
+});
+
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  const innings = parseInt(document.getElementById('inningsSelect').value, 10);
+  initGame(innings, selectedSport);
+  setupKeyboard();
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('endScreen').classList.add('hidden');
+  document.getElementById('gameScreen').classList.remove('hidden');
+  document.getElementById('log').innerHTML='';
+  renderHeaderStats();
+  nextTurn();
+});
+
+document.getElementById('restartBtn').addEventListener('click', ()=>{
+  document.getElementById('endScreen').classList.add('hidden');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  document.getElementById('headerStats').classList.add('hidden');
+});
+
+document.getElementById('delBtn').addEventListener('click', ()=>{
+  builderStr = builderStr.slice(0,-1);
+  renderBuilder();
+});
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  builderStr = '';
+  renderBuilder();
+});
+let awaitingNext = false;
+function handleMainButtonClick(){
+  if(awaitingNext){ nextTurn(); } else { submitAnswer(); }
+}
+document.getElementById('submitBtn').addEventListener('click', handleMainButtonClick);
+document.getElementById('infoBtn').addEventListener('click', ()=>{
+  document.getElementById('builderCaption').classList.toggle('hidden');
+});
+document.querySelectorAll('.qbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{ selectSlot(btn.dataset.slot); });
+});
+
+document.getElementById('systemInput').addEventListener('input', (e)=>{
+  builderStr = e.target.value.toUpperCase();
+  renderBuilder();
+});
+document.getElementById('toggleKeyboardBtn').addEventListener('click', ()=>{
+  useSystemKeyboard = !useSystemKeyboard;
+  const btn = document.getElementById('toggleKeyboardBtn');
+  document.getElementById('keyboard').classList.toggle('kb-collapsed', useSystemKeyboard);
+  btn.setAttribute('aria-expanded', useSystemKeyboard ? 'false' : 'true');
+  btn.innerHTML = useSystemKeyboard
+    ? '<span class="fold-icon">▸</span> Toon toetsenbord'
+    : '<span class="fold-icon">▸</span> Verberg toetsenbord';
+  if(useSystemKeyboard){
+    document.getElementById('systemInput').focus();
+  }
+});
+
+function getTextSafe(id){
+  const el = document.getElementById(id);
+  return el ? el.textContent : null;
+}
+
+function exportDebugData(){
+  if(!G){
+    alert('Er is nog geen wedstrijd gestart — start eerst een training, speel tot het punt waar iets vreemd lijkt, en klik dan pas op Export.');
+    return;
+  }
+  const snapshot = {
+    exportedAt: new Date().toISOString(),
+    gameState: G,
+    uiState: {
+      builderStr, selectedSlot, selectedMc, useSystemKeyboard,
+    },
+    renderedOnScreen: {
+      narrativeText: getTextSafe('narrativeText'),
+      quadrantHint: getTextSafe('quadrantHint'),
+      hist1e: getTextSafe('hist1e'),
+      hist2e: getTextSafe('hist2e'),
+      hist3e: getTextSafe('hist3e'),
+      histthuis: getTextSafe('histthuis'),
+      builderText: getTextSafe('builderText'),
+      runnerList: getTextSafe('runnerList'),
+      batterInfo: getTextSafe('batterInfo'),
+      inningMeta: getTextSafe('inningMeta'),
+    },
+  };
+  let json;
+  try{
+    json = JSON.stringify(snapshot, (key, value) => (typeof value === 'function') ? undefined : value, 2);
+  } catch(e){
+    alert('Export mislukt: ' + e.message);
+    return;
+  }
+  const blob = new Blob([json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const stamp = snapshot.exportedAt.replace(/[:.]/g,'-');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `knbsb-trainer-debug-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+document.getElementById('exportBtn').addEventListener('click', exportDebugData);
+
+</script>
+</body>
+</html>
