@@ -133,13 +133,62 @@ describe("buildBatterEvent — fielded outs with a chosen position", () => {
     expect(ev.code).toMatch(/^FF[235]$/);
     expect(ev.outsDelta).toBe(1);
   });
+
+  it("FL: foul line-drive code FLx", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    stubRngConstant(dom, randomForPickIndex(0, 3));
+    const ev = dom.window.buildBatterEvent("FL", batter(), emptyBases(), 0);
+    commonShape(ev);
+    expect(ev.code).toMatch(/^FL[235]$/);
+    expect(ev.outsDelta).toBe(1);
+  });
+});
+
+describe("buildBatterEvent(AUTOOUT) — automatic outs credited to the catcher", () => {
+  it("is always a bare code 2, one out, no base reached", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    for (let i = 0; i < 4; i++) {
+      stubRngConstant(dom, i / 4);
+      const ev = dom.window.buildBatterEvent("AUTOOUT", batter(), emptyBases(), 0);
+      commonShape(ev);
+      expect(ev.code).toBe("2");
+      expect(ev.outsDelta).toBe(1);
+      const result = ev.applyBases(emptyBases());
+      expect(result.bases).toEqual([null, null, null]);
+    }
+  });
+
+  it("only picks the catcher-interference narrative when a runner is actually on base", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    stubRngConstant(dom, randomForPickIndex(3, 4));
+    const ev = dom.window.buildBatterEvent("AUTOOUT", batter(), emptyBases(), 0);
+    expect(ev.narrative).not.toMatch(/hindert de achtervanger/);
+  });
+});
+
+describe("buildBatterEvent(OBBATTER) — obstruction of the batter-runner", () => {
+  it("awards first base free, code OBx", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    stubRngConstant(dom, randomForPickIndex(0, 2));
+    const ev = dom.window.buildBatterEvent("OBBATTER", batter(), emptyBases(), 0);
+    commonShape(ev);
+    expect(ev.code).toMatch(/^OB[13]$/);
+    expect(ev.targetQuadrant).toBe("1e");
+    expect(ev.outsDelta).toBe(0);
+    const result = ev.applyBases(emptyBases());
+    expect(result.bases[0]).toMatchObject({ name: "Slagman", arrivedVia: ev.code });
+  });
 });
 
 describe("buildBatterEvent(E) — error variants", () => {
   it("fielding error (no suffix): Ex, batter reaches first", () => {
     const dom = loadApp();
     dom.window.initGame(3, "Honkbal", "1");
-    stubRngSequence(dom, [randomForPickIndex(0, 5), randomForPickIndex(0, 6)]);
+    stubRngSequence(dom, [randomForPickIndex(0, 6), randomForPickIndex(0, 6)]);
     const ev = dom.window.buildBatterEvent("E", batter(), emptyBases(), 0);
     commonShape(ev);
     expect(ev.code).toMatch(/^E[1-6]$/);
@@ -151,7 +200,7 @@ describe("buildBatterEvent(E) — error variants", () => {
   it("throwing error (T suffix): ExT", () => {
     const dom = loadApp();
     dom.window.initGame(3, "Honkbal", "1");
-    stubRngSequence(dom, [randomForPickIndex(2, 5), randomForPickIndex(0, 5)]);
+    stubRngSequence(dom, [randomForPickIndex(2, 6), randomForPickIndex(0, 5)]);
     const ev = dom.window.buildBatterEvent("E", batter(), emptyBases(), 0);
     commonShape(ev);
     expect(ev.code).toMatch(/^E[12456]T$/);
@@ -160,10 +209,21 @@ describe("buildBatterEvent(E) — error variants", () => {
   it("dropped-fly error (F suffix): ExF", () => {
     const dom = loadApp();
     dom.window.initGame(3, "Honkbal", "1");
-    stubRngSequence(dom, [randomForPickIndex(4, 5), randomForPickIndex(0, 7)]);
+    stubRngSequence(dom, [randomForPickIndex(4, 6), randomForPickIndex(0, 7)]);
     const ev = dom.window.buildBatterEvent("E", batter(), emptyBases(), 0);
     commonShape(ev);
     expect(ev.code).toMatch(/^E[3-9]F$/);
+  });
+
+  it("assisted throw then dropped by receiver (A variant): pXE3", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    stubRngSequence(dom, [randomForPickIndex(5, 6), randomForPickIndex(0, 4)]);
+    const ev = dom.window.buildBatterEvent("E", batter(), emptyBases(), 0);
+    commonShape(ev);
+    expect(ev.code).toMatch(/^[1456]E3$/);
+    expect(ev.targetQuadrant).toBe("1e");
+    expect(ev.refs).toEqual(["Error na een goed aangegooide bal, p.12"]);
   });
 });
 
@@ -252,6 +312,27 @@ describe("buildBatterEvent(FCFAIL)", () => {
   });
 });
 
+describe("buildBatterEvent(FCINT) — runner interference gives the batter FC, the runner an unassisted out", () => {
+  it("credits the hindered fielder directly (no assist chain) and keeps the batter safe", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    const bases = [{ name: "Loper1", battingSlot: 0, history: {} }, null, null];
+    stubRngConstant(dom, randomForPickIndex(0, 2));
+    const ev = dom.window.buildBatterEvent("FCINT", batter(), bases, 1);
+    commonShape(ev);
+    expect(ev.code).toMatch(/^FC[46]$/);
+    expect(ev.outsDelta).toBe(1);
+    expect(ev.targetQuadrant).toBe("1e");
+    const result = ev.applyBases(bases);
+    expect(result.bases[0]).toMatchObject({ name: "Slagman" });
+    expect(result.outRunner).toMatchObject({ name: "Loper1", battingSlot: 0, quadrant: "2e" });
+    // the runner's own code is the bare fielder digit, not the batter's FCx code
+    expect(result.outRunner.code).toMatch(/^[46]$/);
+    expect(Array.isArray(result.outRunner.refs)).toBe(true);
+    expect(typeof result.outRunner.explain).toBe("string");
+  });
+});
+
 describe("buildBatterEvent — sacrifice and double plays", () => {
   it("SH: sacrifice hit advances the lead runner one base and is an out", () => {
     const dom = loadApp();
@@ -333,7 +414,8 @@ describe("buildBatterEvent — sanity across every key with fuzzed base states",
   // occupied; buildBatterEvent itself trusts that precondition and doesn't re-check it.
   const GENERAL_KEYS = [
     "1B", "2B", "3B", "HR", "BB", "IBB", "HP", "INT", "K", "KWP", "KPB", "KTHROW",
-    "GO", "GOU", "F", "L", "FF", "IF", "E", "EEXTRA", "SH", "SHE", "DP",
+    "GO", "GOU", "F", "L", "FF", "FL", "IF", "E", "EEXTRA", "SH", "SHE", "DP",
+    "AUTOOUT", "OBBATTER",
   ];
   const BASE_STATES = [
     [null, null, null],
@@ -365,10 +447,10 @@ describe("buildBatterEvent — sanity across every key with fuzzed base states",
     }
   });
 
-  it("FC / FCFAIL never throw, for every base state where 1st is occupied", () => {
+  it("FC / FCFAIL / FCINT never throw, for every base state where 1st is occupied", () => {
     const dom = loadApp();
     dom.window.initGame(3, "Honkbal", "1");
-    for (const key of ["FC", "FCFAIL"]) {
+    for (const key of ["FC", "FCFAIL", "FCINT"]) {
       for (const bases of BASE_STATES_WITH_FIRST) {
         for (let i = 0; i < 8; i++) {
           stubRngConstant(dom, i / 8);

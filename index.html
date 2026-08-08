@@ -943,11 +943,12 @@ function generateBatterEvent(){
     {key:'1B', w:14},{key:'2B', w:6},{key:'3B', w:2},{key:'HR', w:2},
     {key:'BB', w:8},{key:'HP', w:3},{key:'INT', w:1},{key:'K', w:14},
     {key:'GO', w:10},{key:'GOU', w:4},
-    {key:'F', w:10},{key:'L', w:4},{key:'FF', w:3},
+    {key:'F', w:10},{key:'L', w:4},{key:'FF', w:3},{key:'FL', w:1},
     {key:'E', w:7},{key:'EEXTRA', w:6},
+    {key:'AUTOOUT', w:1},{key:'OBBATTER', w:1},
   ];
   if(!b0 || outs===2){ pool.push({key:'KWP', w:2},{key:'KPB', w:2},{key:'KTHROW', w:2}); }
-  if(b0){ pool.push({key:'FC', w:5}); if(!b1) pool.push({key:'FCFAIL', w:2}); }
+  if(b0){ pool.push({key:'FC', w:5}); if(!b1) pool.push({key:'FCFAIL', w:2}); pool.push({key:'FCINT', w:1}); }
   if(b0||b1||b2){ pool.push({key:'IBB', w:1}); if(outs<2) pool.push({key:'SH', w:3},{key:'SHE', w:1}); }
   if(b2 && outs<2){ pool.push({key:'SF', w:3},{key:'SFE', w:1}); }
   if(b0 && b1 && outs<2){ pool.push({key:'IF', w:2}); }
@@ -957,19 +958,19 @@ function generateBatterEvent(){
   return buildBatterEvent(key, batter, G.bases, idx);
 }
 
-function buildForcedOutFollowUpEvent(runnerName, quadrant, code, priorHistory, battingSlot, teamKey, contextLabel, alsoOut){
+function buildForcedOutFollowUpEvent(runnerName, quadrant, code, priorHistory, battingSlot, teamKey, contextLabel, alsoOut, customRefs, customExplain){
   const narrative = alsoOut
     ? `Ook <b>${runnerName}</b> is uit door dezelfde actie${contextLabel||''}. Noteer dit in zíjn eigen honk-vakje.`
     : `<b>${runnerName}</b> is uit door deze actie${contextLabel||''} (de slagman is intussen veilig). Noteer dit in zíjn eigen honk-vakje.`;
-  const explain = alsoOut
+  const explain = customExplain || (alsoOut
     ? `Bij een dubbelspel noteer je bij allebei de spelers dezelfde aangooiketen: ook <b>${runnerName}</b> krijgt code <code>${code}</code>, in zijn eigen honk-vakje, met een cirkel omdat hij ook uit is.`
-    : `Bij een velderskeus is het niet de slagman maar de voorgaande loper die uit gaat. <b>${runnerName}</b> krijgt in zijn eigen honk-vakje dezelfde aangooiketen als de slagman: code <code>${code}</code>, met een cirkel omdat hij hier de enige is die uit is.`;
+    : `Bij een velderskeus is het niet de slagman maar de voorgaande loper die uit gaat. <b>${runnerName}</b> krijgt in zijn eigen honk-vakje dezelfde aangooiketen als de slagman: code <code>${code}</code>, met een cirkel omdat hij hier de enige is die uit is.`);
   return {
     forBatter:false, outsDelta:0, targetQuadrant:quadrant,
     code:code,
     priorHistory: priorHistory || {},
     narrative,
-    refs:['Velderskeus, p.10', 'Dubbelspel, p.19'],
+    refs: customRefs || ['Velderskeus, p.10', 'Dubbelspel, p.19'],
     explain,
     applyBases: b=>{
       if(battingSlot!==undefined && teamKey){
@@ -1113,27 +1114,39 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       ev.applyBases = bases=>({bases, runs:0}); ev.outsDelta=1;
       break; }
     case 'E': {
-      const variant = pick(['','','T','T','F']);
-      let p2, text, refs;
+      const variant = pick(['','','T','T','F','A']);
+      let p2, text, refs, code;
       if(variant===''){
         // fielding/muff error on a ground ball: infielders only
         p2 = pick([1,2,3,4,5,6]);
         text=`<b>${batter.name}</b> slaat een grondbal naar de ${P(p2)}, die de bal laat gaan. Fout!`;
         refs=["Error bij het 'fielden' van de bal, p.11"];
+        code = 'E'+p2+variant;
       } else if(variant==='T'){
         // throwing error to first: exclude the first baseman himself (can't throw to his own base)
         p2 = pick([1,2,4,5,6]);
         text=`<b>${batter.name}</b> slaat een grondbal; de ${P(p2)} gooit onzuiver over naar het eerste honk. Fout!`;
         refs=['Error bij het aangooien naar een honk, p.12'];
-      } else {
+        code = 'E'+p2+variant;
+      } else if(variant==='F'){
         // dropped fly ball: any fielder who can reasonably catch a fly ball
         p2 = pick([3,4,5,6,7,8,9]);
         text=`<b>${batter.name}</b> slaat een hoge bal die de ${P(p2)} laat vallen. Fout!`;
         refs=['Error on fly ball, p.12'];
+        code = 'E'+p2+variant;
+      } else {
+        // 'A': the throw itself is good, but the receiving fielder at first drops it (p.12: "Error na een goed aangegooide bal")
+        p2 = pick([1,4,5,6]);
+        const p3 = 3;
+        text=`<b>${batter.name}</b> slaat een grondbal naar de ${P(p2)}, die goed aangooit naar de ${P(p3)} op het eerste honk — maar deze laat de bal vallen. Fout!`;
+        refs=['Error na een goed aangegooide bal, p.12'];
+        code = p2+'E'+p3;
       }
       ev.narrative=text; ev.refs=refs;
-      ev.code = 'E'+p2+variant; ev.targetQuadrant='1e';
-      ev.explain=`Een fout noteer je met <code>E</code> gevolgd door de veldpositie${variant?(variant==='T'?' plus <code>T</code> (aangooifout)':' plus <code>F</code> (vangfout)'):''}: code <code>E${p2}${variant}</code>.`;
+      ev.code = code; ev.targetQuadrant='1e';
+      ev.explain = (variant==='A')
+        ? `Is de aangooi zelf goed, maar laat de ontvangende veldspeler de bal vallen, dan schrijf je eerst wie gooide, dan <code>E</code>, dan wie de bal liet vallen: code <code>${code}</code>.`
+        : `Een fout noteer je met <code>E</code> gevolgd door de veldpositie${variant?(variant==='T'?' plus <code>T</code> (aangooifout)':' plus <code>F</code> (vangfout)'):''}: code <code>E${p2}${variant}</code>.`;
       ev.applyBases = bases=>hitAdvance(bases, batter.name, 1, ev.code, battingSlot);
       break; }
     case 'EEXTRA': {
@@ -1320,6 +1333,54 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       };
       ev.outsDelta=2;
       break; }
+    case 'AUTOOUT': {
+      const anyRunner = !!(bases[0]||bases[1]||bases[2]);
+      const variants = [
+        `<b>${batter.name}</b> raakt de bal terwijl hij met een voet buiten het slagperk staat: onreglementair slaan!`,
+        `<b>${batter.name}</b> wordt geraakt door zijn eigen, net geslagen bal.`,
+        `<b>${batter.name}</b> blijkt niet in de juiste slagvolgorde aan slag te zijn gekomen.`,
+      ];
+      if(anyRunner) variants.push(`<b>${batter.name}</b> hindert de achtervanger, die net een honkloper probeert uit te maken.`);
+      ev.narrative = pick(variants);
+      ev.code='2'; ev.refs=['De slagman gaat uit, automatisch uit, p.18'];
+      ev.explain='Dit soort "automatisch uit"-gevallen (onreglementair slaan, geraakt door de eigen geslagen bal, hinderen van de achtervanger, niet op de juiste plek in de slagvolgorde) noteer je in Scorer 1 allemaal met hetzelfde eenvoudige teken: een nul voor de achtervanger, code <code>2</code>. (Scorer 2 leert precieze eigen tekens per situatie.)';
+      ev.applyBases = bases=>({bases, runs:0});
+      ev.outsDelta=1;
+      break; }
+    case 'FL': {
+      const p2 = pick([2,3,5]);
+      ev.narrative = `<b>${batter.name}</b> slaat een harde line drive in het foutgebied, recht in de handschoen van de ${P(p2)}.`;
+      ev.code = 'FL'+p2; ev.refs=['Foul fly, p.17'];
+      ev.explain=`Een gevangen line drive in fout gebied noteer je met code <code>FL${p2}</code> (de F van foul, plus de L van line drive).`;
+      ev.applyBases = bases=>({bases, runs:0}); ev.outsDelta=1;
+      break; }
+    case 'OBBATTER': {
+      const fielder = pick([1,3]);
+      const code = 'OB'+fielder;
+      ev.narrative = `<b>${batter.name}</b> slaat de bal en rent naar het eerste honk. De ${P(fielder)}, die de bal niet in bezit heeft en niet probeert de bal te spelen, hindert hem bij het aflopen: obstructie!`;
+      ev.code = code; ev.refs=['Obstruction tegen de slagman-honkloper, p.12']; ev.targetQuadrant='1e';
+      ev.explain = `Obstructie tegen de slagman-honkloper noteer je met <code>OB</code> gevolgd door de veldpositie die de obstructie pleegde: code <code>${code}</code>. De slagman-honkloper krijgt een vrije loop naar het eerste honk; dit telt als fout voor die veldspeler, al schrijf je geen <code>E</code>.`;
+      ev.applyBases = bases=>forcedWalk(bases, batter.name, code, battingSlot);
+      break; }
+    case 'FCINT': {
+      const fielder = pick([4,6]);
+      const code = 'FC'+fielder;
+      ev.narrative = `<b>${batter.name}</b> slaat een grondbal. De loper van het eerste honk hindert daarbij de ${P(fielder)} bij het verwerken van de bal. De scheidsrechter geeft de loper uit wegens hinderen; de slagman is intussen 'safe' op het eerste honk.`;
+      ev.code = code; ev.refs=['Velderskeus, p.10', 'De honkloper gaat uit, automatisch uit, p.19']; ev.targetQuadrant='1e';
+      ev.explain = `Hindert een honkloper een veldspeler, dan is de loper automatisch uit; je noteert de nul voor de gehinderde veldspeler (geen aangooiketen, dus alleen code <code>${fielder}</code> in zíjn eigen honk-vakje). Voor de slagman noteer je velderskeus: code <code>${code}</code>.`;
+      ev.applyBases = b=>{
+        const nb=cloneBases(b);
+        const outRunner = {
+          name: nb[0].name, battingSlot: nb[0].battingSlot, quadrant:'2e', code:String(fielder),
+          priorHistory:Object.assign({}, nb[0].history),
+          refs:['De honkloper gaat uit, automatisch uit, p.19'],
+          explain:`Een honkloper die een veldspeler hindert, is automatisch uit. Je noteert de nul voor de gehinderde veldspeler, zonder aangooiketen: code <code>${fielder}</code>.`,
+        };
+        const finalBases=[{name:batter.name, arrivedVia:code, history:{'1e':code}, battingSlot}, null, nb[2]];
+        return {bases:finalBases, runs:0, outRunner};
+      };
+      ev.outsDelta=1;
+      break; }
   }
   return ev;
 }
@@ -1327,9 +1388,12 @@ function buildBatterEvent(key, batter, bases, battingSlot){
 function generateRunnerEvent(){
   const b0=G.bases[0], b1=G.bases[1], b2=G.bases[2];
   let pool=[];
-  if(b0 && !b1) pool.push({key:'SB1',w:5},{key:'CS1',w:3},{key:'CS1E',w:1},{key:'PO1',w:2});
+  if(b0 && !b1) pool.push({key:'SB1',w:5},{key:'CS1',w:3},{key:'CS1E',w:1},{key:'PO1',w:2},{key:'EVADE1',w:1});
   if(b0 && !b1 && !b2) pool.push({key:'SB1E',w:1});
   if(b1 && !b2) pool.push({key:'SB2',w:4},{key:'CS2',w:2},{key:'CS2E',w:1});
+  if(b1) pool.push({key:'PO2',w:1},{key:'EVADE2',w:1});
+  if(b2) pool.push({key:'SB3',w:2},{key:'CS3',w:2},{key:'PO3',w:1});
+  if(b0 && b1) pool.push({key:'PASS1',w:1});
   if(b0||b1||b2) pool.push({key:'WP',w:3},{key:'PB',w:2},{key:'BK',w:1});
   if(b0 && !b1) pool.push({key:'OB1',w:1});
   if(pool.length===0) return null;
@@ -1489,6 +1553,105 @@ function buildRunnerEvent(key){
       ev.priorHistory = Object.assign({}, r.history);
       ev.explain='Obstructie tegen een honkloper noteer je met <code>OB</code> gevolgd door de veldpositie die de obstructie pleegde.';
       ev.applyBases = b=>{ const nb=cloneBases(b); nb[1]=Object.assign({},nb[0],{arrivedVia:'OB6', history:Object.assign({},nb[0].history,{'2e':'OB6'})}); nb[0]=null; return {bases:nb, runs:0}; };
+      break; }
+    case 'SB3': {
+      const r = bases[2];
+      ev.narrative = `<b>${r.name}</b> steelt het thuishonk!`;
+      ev.code='SB'; ev.refs=['Stolen base, p.13, Scoreregel 9.07']; ev.targetQuadrant='thuis';
+      ev.priorHistory = Object.assign({}, r.history);
+      ev.explain='Ook het stelen van het thuishonk noteer je met code <code>SB</code>, nu in het thuis-vakje: de loper scoort een punt.';
+      ev.applyBases = b=>{ const nb=cloneBases(b); nb[2]=null; return {bases:nb, runs:1}; };
+      ev.runnerAdvanceLabel = 'SB'; ev.leadRunnerName = r.name;
+      break; }
+    case 'CS3': {
+      const r = bases[2];
+      ev.narrative = `<b>${r.name}</b> probeert het thuishonk te stelen. De achtervanger vangt de worp en tikt hem uit bij de thuisplaat.`;
+      ev.code='CS2'; ev.refs=['Caught stealing, p.14, Scoreregel 9.07']; ev.targetQuadrant='thuis';
+      ev.priorHistory = Object.assign({}, r.history);
+      ev.explain='Uit bij stelen van het thuishonk noteer je met <code>CS</code> gevolgd door de veldpositie die de tik maakt. Hier vangt en tikt de achtervanger zelf, zonder aangooi: code <code>CS2</code>.';
+      ev.applyBases = b=>{
+        const nb=cloneBases(b);
+        const finalHist = Object.assign({}, nb[2].history, {'thuis':ev.code, _outQ:'thuis'});
+        commitToScorecard(battingKey(), nb[2].battingSlot, G.inning, finalHist);
+        nb[2]=null;
+        return {bases:nb, runs:0};
+      };
+      ev.outsDelta=1;
+      break; }
+    case 'PO2': {
+      const r = bases[1]; const seq=pick([[1,4],[1,6]]);
+      ev.narrative = `<b>${r.name}</b> staat los van het tweede honk. De werper gooit snel naar de ${P(seq[1])}: te laat terug!`;
+      ev.code='PO'+seq.join(''); ev.refs=['Pick off, p.19']; ev.targetQuadrant='3e';
+      ev.priorHistory = Object.assign({}, r.history);
+      ev.explain=`Uitgemaakt door een verrassende aangooi op het honk noteer je met <code>PO</code> gevolgd door de aangooi (werper → ${P(seq[1])}): code <code>PO${seq.join('')}</code>.`;
+      ev.applyBases = b=>{
+        const nb=cloneBases(b);
+        const finalHist = Object.assign({}, nb[1].history, {'3e':ev.code, _outQ:'3e'});
+        commitToScorecard(battingKey(), nb[1].battingSlot, G.inning, finalHist);
+        nb[1]=null;
+        return {bases:nb, runs:0};
+      };
+      ev.outsDelta=1;
+      break; }
+    case 'PO3': {
+      const r = bases[2]; const seq=[1,5];
+      ev.narrative = `<b>${r.name}</b> staat los van het derde honk. De werper gooit snel naar de derde honkman: te laat terug!`;
+      ev.code='PO'+seq.join(''); ev.refs=['Pick off, p.19']; ev.targetQuadrant='thuis';
+      ev.priorHistory = Object.assign({}, r.history);
+      ev.explain=`Uitgemaakt door een verrassende aangooi op het honk noteer je met <code>PO</code> gevolgd door de aangooi (werper → derde honkman): code <code>PO${seq.join('')}</code>.`;
+      ev.applyBases = b=>{
+        const nb=cloneBases(b);
+        const finalHist = Object.assign({}, nb[2].history, {'thuis':ev.code, _outQ:'thuis'});
+        commitToScorecard(battingKey(), nb[2].battingSlot, G.inning, finalHist);
+        nb[2]=null;
+        return {bases:nb, runs:0};
+      };
+      ev.outsDelta=1;
+      break; }
+    case 'EVADE1': {
+      const r = bases[0]; const p2 = pick([3,4,6]);
+      ev.narrative = `<b>${r.name}</b> rent van het eerste honk richting het tweede honk, maar wordt onderschept door de ${P(p2)}. Om de tik te ontlopen wijkt hij ver buiten de honkenlijn uit: uitgemaakt!`;
+      ev.code=String(p2); ev.refs=['De honkloper gaat uit, automatisch uit, p.19']; ev.targetQuadrant='2e';
+      ev.priorHistory = Object.assign({}, r.history);
+      ev.explain=`Wijkt een loper te ver uit om een tik te ontlopen, dan noteer je de nul voor de veldspeler die hij ontweek, zonder aangooiketen: code <code>${p2}</code>.`;
+      ev.applyBases = b=>{
+        const nb=cloneBases(b);
+        const finalHist = Object.assign({}, nb[0].history, {'2e':ev.code, _outQ:'2e'});
+        commitToScorecard(battingKey(), nb[0].battingSlot, G.inning, finalHist);
+        nb[0]=null;
+        return {bases:nb, runs:0};
+      };
+      ev.outsDelta=1;
+      break; }
+    case 'EVADE2': {
+      const r = bases[1]; const p2 = pick([4,5,6]);
+      ev.narrative = `<b>${r.name}</b> rent van het tweede honk richting het derde honk, maar wordt onderschept door de ${P(p2)}. Om de tik te ontlopen wijkt hij ver buiten de honkenlijn uit: uitgemaakt!`;
+      ev.code=String(p2); ev.refs=['De honkloper gaat uit, automatisch uit, p.19']; ev.targetQuadrant='3e';
+      ev.priorHistory = Object.assign({}, r.history);
+      ev.explain=`Wijkt een loper te ver uit om een tik te ontlopen, dan noteer je de nul voor de veldspeler die hij ontweek, zonder aangooiketen: code <code>${p2}</code>.`;
+      ev.applyBases = b=>{
+        const nb=cloneBases(b);
+        const finalHist = Object.assign({}, nb[1].history, {'3e':ev.code, _outQ:'3e'});
+        commitToScorecard(battingKey(), nb[1].battingSlot, G.inning, finalHist);
+        nb[1]=null;
+        return {bases:nb, runs:0};
+      };
+      ev.outsDelta=1;
+      break; }
+    case 'PASS1': {
+      const trailing = bases[0]; const lead = bases[1]; const p2 = pick([4,6]);
+      ev.narrative = `Bij een worp die alle kanten op stuitert, rennen zowel <b>${lead.name}</b> als <b>${trailing.name}</b> door. In de verwarring passeert <b>${trailing.name}</b> zijn eigen voorloper <b>${lead.name}</b> op de honkenpaden: uitgemaakt!`;
+      ev.code=String(p2); ev.refs=['De honkloper gaat uit, automatisch uit, p.19']; ev.targetQuadrant='2e';
+      ev.priorHistory = Object.assign({}, trailing.history);
+      ev.explain=`Een honkloper die een andere loper voor hem passeert, is automatisch uit. Je noteert de nul voor de veldspeler die het dichtst bij die plek stond, zonder aangooiketen: code <code>${p2}</code>. De gepasseerde loper blijft gewoon op zijn honk staan.`;
+      ev.applyBases = b=>{
+        const nb=cloneBases(b);
+        const finalHist = Object.assign({}, nb[0].history, {'2e':ev.code, _outQ:'2e'});
+        commitToScorecard(battingKey(), nb[0].battingSlot, G.inning, finalHist);
+        nb[0]=null;
+        return {bases:nb, runs:0};
+      };
+      ev.outsDelta=1;
       break; }
   }
   return ev;
@@ -1956,7 +2119,7 @@ function applyEventToState(ev){
   if(result.outRunner){
     const orig = result.outRunner;
     const alsoOut = (ev.outsDelta || 0) >= 2;
-    G.pendingEvents.push(buildForcedOutFollowUpEvent(orig.name, orig.quadrant, orig.code, orig.priorHistory, orig.battingSlot, teamKey, null, alsoOut));
+    G.pendingEvents.push(buildForcedOutFollowUpEvent(orig.name, orig.quadrant, orig.code, orig.priorHistory, orig.battingSlot, teamKey, null, alsoOut, orig.refs, orig.explain));
   }
 
   // Sync any still-active runner's current progress to the scorecard now that this turn has been checked,

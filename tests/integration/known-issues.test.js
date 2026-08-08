@@ -12,18 +12,27 @@ import { getG, loadApp, startGame } from "../helpers/loadApp.js";
  * one visible `scored: true` flag for two actual runs, breaking the KNBSB scorecard invariant
  * that the total count of scored-dots must equal the final combined score.
  *
- * Confirmed, deterministic repro: matchNumber "100002", 3 innings, Honkbal, always-correct
- * answers. Inning 2 is a 10-run inning in which lineup slot 8 (away team) bats twice; both
- * at-bats' data land in G.scorecard.away[8][2], and the second `scored: true` write is a no-op
- * because the cell already reads true from the first at-bat — so the dot count under-reports by
- * one dot per such collision (here: 2 collisions relative to naive scorecard).
+ * Confirmed, deterministic repro: matchNumber "100165", 3 innings, Honkbal, always-correct
+ * answers. Inning 3 is a 10-run inning (home team) in which several lineup slots bat twice;
+ * e.g. lineup slot 3 both makes an out and later hits a scoring homer, and both at-bats' data
+ * land in G.scorecard.home[3][3]. Any pair of same-slot, same-inning at-bats that both score
+ * collides on the same `scored: true` write, which is a no-op after the first — so the dot
+ * count under-reports by one dot per such collision (here: 2 collisions relative to naive
+ * scorecard).
+ *
+ * (This matchNumber was re-pinned when new scoring events were added to the weighted event
+ * pools in generateBatterEvent/generateRunnerEvent — that changes the RNG draw sequence for
+ * every seeded match, so a previously-confirmed repro seed can stop reproducing the bug. If
+ * this test ever fails because a future pool change shifts the sequence again, look for a new
+ * matchNumber that still reproduces dots < totalScore with a genuine same-slot-same-inning
+ * double at-bat, the same way this one was found, rather than loosening the assertions.)
  *
  * This test pins down today's actual (imperfect) behavior so a future fix has a concrete
  * regression to flip green, and so nobody mistakes the gap for test flakiness.
  */
 describe("KNOWN ISSUE — scorecard dot-count can under-report when a lineup slot bats twice in one inning", () => {
-  it("matchNumber 100002 reproduces a scored-dot undercount despite every answer being correct", () => {
-    const dom = startGame(loadApp(), { innings: 3, sport: "Honkbal", matchNumber: "100002" });
+  it("matchNumber 100165 reproduces a scored-dot undercount despite every answer being correct", () => {
+    const dom = startGame(loadApp(), { innings: 3, sport: "Honkbal", matchNumber: "100165" });
     const { document } = dom.window;
     let turns = 0;
     while (document.getElementById("endScreen").classList.contains("hidden")) {
@@ -61,9 +70,10 @@ describe("KNOWN ISSUE — scorecard dot-count can under-report when a lineup slo
     expect(dots).toBe(15);
     expect(dots).toBeLessThan(totalScore);
 
-    // Sanity: the same lineup slot really did bat (and score) twice in the same inning —
-    // that's the actual mechanism, not a red herring.
-    expect(Object.keys(G.scorecard.away[8]).length).toBeGreaterThanOrEqual(1);
-    expect(G.inningRuns.away[1]).toBeGreaterThan(9); // inning 2 (index 1) is the big inning
+    // Sanity: the same lineup slot really did bat twice in the same inning — that's the actual
+    // mechanism, not a red herring. Home lineup slot 3's inning-3 cell shows both an "out" and a
+    // "thuis" (scoring) entry, which is only possible if that slot came to bat twice that inning.
+    expect(G.scorecard.home[3][3]).toMatchObject({ out: expect.any(String), thuis: expect.any(String) });
+    expect(G.inningRuns.home[2]).toBeGreaterThan(9); // inning 3 (index 2) is the big inning
   });
 });
