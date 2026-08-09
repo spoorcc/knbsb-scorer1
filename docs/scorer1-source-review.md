@@ -369,20 +369,27 @@ Two more passes on the same mark:
 streepje tussen de honken op het moment van wisselen" (p.21), but nothing
 ever drew it — the substitution only ever updated the base occupant's
 `.name` in place, so the outgoing/incoming split was purely narrative.
-Per the p.21 worked examples (VAN DONGEN/VAN ELST/VAN FELLENOORD), the
-mark is a short line under the existing notation in whichever honk-vakje
-quadrant the runner was standing on at the moment of the swap — sitting
-in the *outgoing* runner's own scorecard cell (their lineup slot keeps
-owning that inning's cell; the incoming PR gets their own new lineup row
-per p.21, but no marks of their own for the inning the swap happened in).
+The mark sits in the *outgoing* runner's own scorecard cell (their
+lineup slot keeps owning that inning's cell; the incoming PR gets their
+own new lineup row per p.21, but no marks of their own for the inning
+the swap happened in).
 
-Implementation: `generateEvent()` now computes which base (and therefore
+Geometry, cross-checked against a tight crop of the p.21 worked examples
+(VAN DOMMELEN/VAN DONGEN and VAN FIJNAART/VAN FELLENOORD): the thick line
+sits exactly on the honk-vakje's own grid line — the same divider that
+already separates the top row of quadrants (2e/3e) from the bottom row
+(1e/thuis) — not floating under the mark inside whichever quadrant the
+runner happened to occupy. First implementation drew a short underline
+inside the specific quadrant's own box; corrected to overlay the cell's
+actual central grid line instead, full width, regardless of which of the
+three bases the swap happened on.
+
+Implementation: `generateEvent()` computes which base (and therefore
 quadrant) the pinch-run candidate occupies and passes it through to
 `buildPinchRunnerQuizEvent`, which returns a `pinchRunnerMarker:
 {teamKey, battingSlot, quadrant}` field. `applyEventToState` commits
 `{_prQ: quadrant}` into that cell (same pattern as the existing `_outQ`
-double-play marker), and `renderScorecardCellHTML` adds a `sc-pr-swap`
-class to that quadrant's `.hist-text`, which draws a short line under the
-mark via `::after`. The `explain` text was also strengthened to point at
-the specific quadrant by name instead of just describing the convention
-in the abstract.
+double-play marker), and `renderScorecardCellHTML` adds a `.sc-pr-mark`
+element — a thick bar positioned at the cell's own 50% line — whenever
+`cell._prQ` is set. The `explain` text also names the specific quadrant
+instead of only describing the convention in the abstract.

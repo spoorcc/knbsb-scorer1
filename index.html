@@ -505,11 +505,12 @@
   }
   .honk-cell.sc-cell .hist-text{font-size:.68rem; padding-top:3px; color:#000;}
   .honk-cell.sc-cell .hist-text.sc-stint-b{color:#d21f1f;}
-  /* Pinch runner: "een streepje tussen de honken op het moment van wisselen" (p.21) — a short
-     line under the mark in the honk-vakje quadrant the runner stood on when swapped, splitting
-     what the outgoing runner earned from what the incoming pinch runner does from here on. */
-  .hist-text.sc-pr-swap::after{
-    content:''; position:absolute; left:20%; right:20%; bottom:34%; height:1.6px; background:currentColor;
+  /* Pinch runner: "een streepje tussen de honken op het moment van wisselen" (p.21) — a thick
+     line drawn exactly over the honk-vakje's own grid line, the one already separating the top
+     row of quadrants (2e/3e) from the bottom row (1e/thuis), not floating inside a quadrant. */
+  .sc-pr-mark{
+    position:absolute; left:0; right:0; top:50%; height:2.5px; margin-top:-1.25px;
+    background:#000; pointer-events:none;
   }
   .honk-cell.sc-cell .builder-text.slot-any.sc-stint-b{border-color:#d21f1f !important; color:#d21f1f !important;}
   .honk-dot.sc-stint-b{background:#d21f1f;}
@@ -2395,13 +2396,19 @@ function renderScorecardCellHTML(cell){
   ['1e','2e','3e','thuis'].forEach(q=>{
     if(cell[q]){
       const content = (cell._outQ === q) ? `<span class="out-circle-inner">${cell[q]}</span>` : renderCodeDisplay(cell[q]);
-      const qCls = (stints[q] ? ' sc-stint-b' : '') + (cell._prQ === q ? ' sc-pr-swap' : '');
+      const qCls = stints[q] ? ' sc-stint-b' : '';
       html += `<span class="hist-text q-${q}${qCls}">${content}</span>`;
     }
   });
   if(cell.scored){
     const dotCls = stints.thuis ? ' sc-stint-b' : '';
     html += `<span class="honk-dot${dotCls}" title="Punt gescoord"></span>`;
+  }
+  if(cell._prQ){
+    // Pinch runner (p.21): the streepje sits exactly on the honk-vakje's own grid line — the same
+    // divider that already separates the top row of quadrants (2e/3e) from the bottom row (1e/thuis)
+    // — not floating inside whichever quadrant the runner happened to be standing in.
+    html += `<span class="sc-pr-mark"></span>`;
   }
   html += `</div>`;
   return html;
