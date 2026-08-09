@@ -241,7 +241,13 @@
      the SVG's own internal coordinates already carry the correct margin around the ink, so
      the container itself should span (close to) the full quadrant, not add extra shrinkage. */
   .hist-text .hs-mark{width:100%; height:100%;}
-  /* Extra base error arrow: connects two honk-vakjes to show one continuous play */
+  /* Extra base error arrow (pijltje): on paper it starts in the honk-vakje the runner left
+     from and crosses into the one it arrived at (p.12's "E6" example: tail sits inside the
+     1e-honk quadrant, shaft crosses the shared line, arrowhead ends inside 2e-honk) — not a
+     self-contained icon in one quadrant. Default below is a plain self-contained fallback for
+     contexts with no quadrant to cross into (the live #builderText preview); the two
+     .hist-text.q-* overrides after it are the real, cross-quadrant-bleeding versions used
+     everywhere the mark actually sits inside a honk-vakje history cell. */
   .arrow-mark{position:relative; display:inline-block; width:.6em; height:1.15em; vertical-align:middle;}
   .arrow-mark::before{
     content:''; position:absolute; left:50%; top:.4em; bottom:0; width:.1em; background:currentColor; transform:translateX(-50%);
@@ -251,6 +257,36 @@
     border-left:.24em solid transparent; border-right:.24em solid transparent; border-bottom:.34em solid currentColor;
     transform:translateX(-50%);
   }
+  /* 1e -> 2e advance (arrow hosted in the 2e-honk quadrant, points up): tail bleeds down into
+     the 1e-honk quadrant below, arrowhead ends inside 2e-honk's own box. Proportions (24% of a
+     quadrant's height below the shared line, arrowhead ending 56% of the way up from it)
+     measured off p.12's "E6 + pijltje" example, not eyeballed. */
+  /* .hist-text itself establishes a stacking context (position + z-index), so a bleeding arrow
+     needs its *host* raised above the builder's center "any quadrant" button (.qbtn.q-any,
+     z-index:4) that otherwise sits right on top of the crossing point — z-index on .arrow-mark
+     alone can't escape its own parent's stacking context. Scoped to :has(.arrow-mark) so plain
+     text in these quadrants keeps its normal layering. */
+  .hist-text.q-2e:has(.arrow-mark), .hist-text.q-3e:has(.arrow-mark){z-index:5;}
+  .hist-text.q-2e .arrow-mark{
+    position:absolute; left:38%; right:38%; top:44%; bottom:-24%; width:auto; height:auto;
+    background-color:currentColor;
+    -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 100'%3E%3Cpolygon points='15,0 26,24 4,24'/%3E%3Crect x='11' y='22' width='8' height='78'/%3E%3C/svg%3E");
+    mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 100'%3E%3Cpolygon points='15,0 26,24 4,24'/%3E%3Crect x='11' y='22' width='8' height='78'/%3E%3C/svg%3E");
+    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-size:100% 100%; mask-size:100% 100%;
+  }
+  .hist-text.q-2e .arrow-mark::before, .hist-text.q-2e .arrow-mark::after{content:none;}
+  /* 2e -> 3e advance (arrow hosted in the 3e-honk quadrant, points left): tail bleeds right
+     into 2e-honk, arrowhead ends inside 3e-honk's own box. Same measured proportions as the
+     1e->2e case, mirrored onto the horizontal axis (no dedicated source example for this
+     specific pair, so it inherits the one case that was actually measured). */
+  .hist-text.q-3e .arrow-mark{
+    position:absolute; top:38%; bottom:38%; left:44%; right:-24%; width:auto; height:auto;
+    background-color:currentColor;
+    -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30'%3E%3Cpolygon points='0,15 24,4 24,26'/%3E%3Crect x='22' y='11' width='78' height='8'/%3E%3C/svg%3E");
+    mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30'%3E%3Cpolygon points='0,15 24,4 24,26'/%3E%3Crect x='22' y='11' width='78' height='8'/%3E%3C/svg%3E");
+    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-size:100% 100%; mask-size:100% 100%;
+  }
+  .hist-text.q-3e .arrow-mark::before, .hist-text.q-3e .arrow-mark::after{content:none;}
   .q-highlight.state-selected{background:rgba(21,52,88,.10);}
   .q-highlight.state-correct{background:rgba(30,110,70,.15);}
   .q-highlight.state-wrong{background:rgba(164,32,45,.15);}
@@ -2584,6 +2620,10 @@ function nextTurn(){
     renderBuilder();
     resetSlotSelector();
     renderPriorHistory(ev);
+    // "Vrije ruimte" (any quadrant) is only a real answer for outs; once a turn targets a
+    // specific quadrant (a hit, an advance, a follow-up for a runner already on base, ...)
+    // it can never be correct, so don't offer it as a slot to pick.
+    document.querySelector('.qbtn.q-any').classList.toggle('hidden', ev.targetQuadrant !== 'any');
     document.getElementById('keyboard').classList.remove('disabled');
     document.getElementById('systemInput').disabled = false;
   }

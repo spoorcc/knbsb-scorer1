@@ -287,3 +287,49 @@ script — not eyeballed):
 
 Verified against a live Playwright screenshot of the rendered scorecard,
 side by side with the same p.9 crop used for the measurements.
+
+## Follow-up: pijltje (arrow) now crosses honk-vakje quadrants like the source
+
+`.arrow-mark` was a small self-contained up-arrow icon living entirely
+inside whichever single quadrant hosted it. p.12's "E6 + pijltje" example
+shows something structurally different: the tail sits inside the departure
+quadrant (1e-honk, next to the "E6" error code) and the shaft crosses the
+shared boundary line, ending (arrowhead) inside the arrival quadrant
+(2e-honk) — the arrow *connects* two honk-vakje cells, it doesn't live in
+one. Measured the same way as the honkslag mark (pixel bounding box off
+p.12): tail sits ~24% of a quadrant-height below the shared line, arrowhead
+tip ends ~56% of the way up from it into the arrival quadrant.
+
+Rebuilt `.arrow-mark` as a `mask-image` shape (matching the existing
+`.sc-boatmark` bootje pattern) with `position:absolute` sizing that spans
+past its own quadrant's edge into the neighbor's, keyed off which quadrant
+actually hosts it: `.hist-text.q-2e .arrow-mark` points up and bleeds down
+into 1e-honk (the only case with a real source example); `.hist-text.q-3e
+.arrow-mark` points left and bleeds right into 2e-honk, mirroring the same
+measured proportions onto the horizontal axis since `SB1E`'s 2e→3e case is
+the only other quadrant pair the app ever draws a pijltje between (no
+dedicated source example exists for that specific pair). The plain
+self-contained icon stays as a fallback for the one context that isn't a
+real honk-vakje quadrant (the live `#builderText` preview while typing).
+
+One snag: `.hist-text` establishes its own stacking context (`position` +
+`z-index:2`), so the bleeding arrow was getting painted *under* the
+builder's center "any quadrant" button (`.qbtn.q-any`, `z-index:4`) —
+raising `.arrow-mark`'s own `z-index` couldn't escape that. Fixed by
+raising the *host* `.hist-text`'s `z-index` instead, scoped via
+`:has(.arrow-mark)` so quadrants showing plain text keep their normal
+layering.
+
+Verified with Playwright screenshots of both the small scorecard cells and
+the large interactive builder cell, for both the 1e→2e and 2e→3e cases.
+
+## Follow-up: "vrije ruimte" (any-quadrant) button hidden when it can't apply
+
+`.qbtn.q-any` — the center circle for placing an out anywhere in the cell
+— was always shown regardless of what the current turn actually asked for.
+It's only ever a valid answer when `ev.targetQuadrant === 'any'` (an out);
+for anything targeting a specific quadrant (a hit, an advance, a follow-up
+for a runner already safely on base, ...) it's not a real answer, it's an
+irrelevant fifth button, and once a runner has reached base it can never
+become relevant again for that at-bat. `nextTurn()` now toggles it hidden
+whenever `ev.targetQuadrant !== 'any'`.
