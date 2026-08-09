@@ -1010,6 +1010,10 @@ function buildForcedOutFollowUpEvent(runnerName, quadrant, code, priorHistory, b
   const explain = customExplain || (alsoOut
     ? `Bij een dubbelspel noteer je bij allebei de spelers dezelfde aangooiketen: ook <b>${runnerName}</b> krijgt code <code>${code}</code>, in zijn eigen honk-vakje, met een cirkel omdat hij ook uit is.`
     : `Bij een velderskeus is het niet de slagman maar de voorgaande loper die uit gaat. <b>${runnerName}</b> krijgt in zijn eigen honk-vakje dezelfde aangooiketen als de slagman: code <code>${code}</code>, met een cirkel omdat hij hier de enige is die uit is.`);
+  // Capture the inning the underlying play happened in now, at queue time — this question may not be
+  // answered until after the half-inning (and G.inning) has already moved on, e.g. when this follow-up's
+  // own out is what pushes the half-inning's out count to 3.
+  const playInning = G.inning;
   return {
     forBatter:false, outsDelta:0, targetQuadrant:quadrant,
     code:code,
@@ -1020,7 +1024,7 @@ function buildForcedOutFollowUpEvent(runnerName, quadrant, code, priorHistory, b
     applyBases: b=>{
       if(battingSlot!==undefined && teamKey){
         const finalHist = Object.assign({}, priorHistory, {[quadrant]:code, _outQ:quadrant});
-        commitToScorecard(teamKey, battingSlot, G.inning, finalHist);
+        commitToScorecard(teamKey, battingSlot, playInning, finalHist);
       }
       return {bases:b, runs:0};
     },
@@ -2008,6 +2012,8 @@ function buildAdvanceCreditEvent(adv, battingOrderNum, batterName, priorHistory,
   else quadrant='2e';
   const triggerLabel = CREDIT_TRIGGER_LABEL[triggerCode]
     || (triggerCode && triggerCode[0]==='E' ? 'de fout na de slag van' : 'de slagbeurt van');
+  // Capture now (see buildForcedOutFollowUpEvent) in case this credit question is answered after G.inning moves on.
+  const playInning = G.inning;
   return {
     forBatter:false, outsDelta:0, targetQuadrant:quadrant,
     code:String(battingOrderNum),
@@ -2018,13 +2024,13 @@ function buildAdvanceCreditEvent(adv, battingOrderNum, batterName, priorHistory,
     applyBases: b=>{
       const finalHist = Object.assign({}, priorHistory, {[quadrant]:String(battingOrderNum)}, quadrant==='thuis'?{scored:true}:{});
       if(quadrant==='thuis'){
-        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, G.inning, finalHist);
+        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, playInning, finalHist);
       } else {
         const idx = b.findIndex(x=>x && x.name===adv.name);
         if(idx>=0){
           b[idx] = Object.assign({}, b[idx], {arrivedVia:String(battingOrderNum), history:finalHist});
         }
-        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, G.inning, finalHist);
+        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, playInning, finalHist);
       }
       return {bases:b, runs:0};
     },
@@ -2049,6 +2055,8 @@ function buildRunnerFollowUpEvent(adv, label, priorHistory, battingSlot, teamKey
   else if(adv.toIdx===1) quadrant='2e';
   else if(adv.toIdx===2) quadrant='3e';
   else quadrant='2e';
+  // Capture now (see buildForcedOutFollowUpEvent) in case this follow-up is answered after G.inning moves on.
+  const playInning = G.inning;
   return {
     forBatter:false, outsDelta:0, targetQuadrant:quadrant,
     code:label,
@@ -2059,13 +2067,13 @@ function buildRunnerFollowUpEvent(adv, label, priorHistory, battingSlot, teamKey
     applyBases: b=>{
       const finalHist = Object.assign({}, priorHistory, {[quadrant]:label}, quadrant==='thuis'?{scored:true}:{});
       if(quadrant==='thuis'){
-        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, G.inning, finalHist);
+        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, playInning, finalHist);
       } else {
         const idx = b.findIndex(x=>x && x.name===adv.name);
         if(idx>=0){
           b[idx] = Object.assign({}, b[idx], {arrivedVia:label, history:finalHist});
         }
-        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, G.inning, finalHist);
+        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, playInning, finalHist);
       }
       return {bases:b, runs:0};
     },
