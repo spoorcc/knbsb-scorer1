@@ -67,6 +67,26 @@ describe("applyEventToState — batter events", () => {
     expect(followUp.narrative).toContain("First");
   });
 
+  it("a double play with runners on 1st and 2nd queues the forced-out runner's follow-up before the other runner's advance-credit", () => {
+    const dom = setup();
+    // With 2nd occupied too, the DP also forces that runner to 3rd — its own applyBases returns
+    // both `outRunner` (the runner forced out from 1st) and `advanced` (the runner forced from 2nd
+    // to 3rd) from the very same play. The forced-out follow-up's narrative only ever says "ook
+    // <naam> is uit door dezelfde actie" without re-describing the play, so it must be asked
+    // immediately after the main DP question — before the unrelated runner's advance-credit turn.
+    evalIn(dom, "G.bases = [{name:'First', battingSlot:4, history:{}}, {name:'Second', battingSlot:5, history:{}}, null]");
+    stubRngConstant(dom, 0); // pin the [6,4,3] combo deterministically
+    const ev = dom.window.buildBatterEvent("DP", { name: "Slagman" }, getG(dom).bases, 0);
+    dom.window.applyEventToState(ev);
+    const G = getG(dom);
+    expect(G.pendingEvents.length).toBeGreaterThanOrEqual(2);
+    expect(G.pendingEvents[0].targetQuadrant).toBe("2e");
+    expect(G.pendingEvents[0].code).toBe("64");
+    expect(G.pendingEvents[0].narrative).toContain("First");
+    expect(G.pendingEvents[1].targetQuadrant).toBe("3e");
+    expect(G.pendingEvents[1].narrative).toContain("Second");
+  });
+
   it("a double-play that itself ends the half-inning still commits the forced-out follow-up to the inning the play happened in", () => {
     const dom = setup();
     // Bottom of inning 1, home batting, already 1 out: this DP's outsDelta of 2 pushes the

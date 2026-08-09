@@ -2101,6 +2101,17 @@ function applyEventToState(ev){
     G.pendingEvents.push(buildExtraBaseArrowEvent(batterName, ev.extraBaseErrorCode, '1e', '2e'));
   }
 
+  // A defensive play put a non-batter runner out (FC/DP/CS/PO): this is the "second half" of the
+  // very same action the just-answered question described, and its own narrative only ever refers
+  // back to "dezelfde actie" without spelling it out again — so it must be queued (and asked) right
+  // after that question, before any OTHER runners' advance-credit turns from the same play (e.g. a
+  // DP with runners forced from 2nd/3rd on loaded bases), not stuck behind them.
+  if(result.outRunner){
+    const orig = result.outRunner;
+    const alsoOut = (ev.outsDelta || 0) >= 2;
+    G.pendingEvents.push(buildForcedOutFollowUpEvent(orig.name, orig.quadrant, orig.code, orig.priorHistory, orig.battingSlot, teamKey, null, alsoOut, orig.refs, orig.explain));
+  }
+
   if(ev.forBatter && result.advanced && result.advanced.length){
     result.advanced.forEach(adv=>{
       if(adv.toIdx==='home'){
@@ -2171,13 +2182,6 @@ function applyEventToState(ev){
       const finalHist = Object.assign({}, ev.priorHistory, {thuis: ev.runnerAdvanceLabel, scored:true});
       commitToScorecard(teamKey, orig.battingSlot, G.inning, finalHist);
     }
-  }
-
-  // A defensive play put a non-batter runner out (FC/DP/CS/PO): commit their final line to the scorecard.
-  if(result.outRunner){
-    const orig = result.outRunner;
-    const alsoOut = (ev.outsDelta || 0) >= 2;
-    G.pendingEvents.push(buildForcedOutFollowUpEvent(orig.name, orig.quadrant, orig.code, orig.priorHistory, orig.battingSlot, teamKey, null, alsoOut, orig.refs, orig.explain));
   }
 
   // Sync any still-active runner's current progress to the scorecard now that this turn has been checked,
