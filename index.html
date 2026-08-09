@@ -338,7 +338,10 @@
 
   .control-row{display:flex; align-items:stretch; gap:8px;}
   .input-wrap{position:relative; flex:1 1 140px;}
-  #submitBtn{flex:1 1 160px;}
+  /* Matches the input's own height (padding+border+line-height) so the button stays this tall
+     even in MC mode, where #inputWrap is hidden and it's the row's only flex child left to
+     stretch against. */
+  #submitBtn{flex:1 1 160px; min-height:39px;}
   .input-wrap input{
     width:100%; height:100%; box-sizing:border-box; padding:9px 26px 9px 10px;
     border:1.5px solid var(--navy); border-radius:4px; font-family:'IBM Plex Mono',monospace;
