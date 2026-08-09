@@ -236,6 +236,11 @@
      render of p.9/p.20 rather than eyeballed — see honkslagMarkHTML(). */
   .hs-mark{display:inline-block; width:1em; height:1em; vertical-align:middle;}
   .hs-mark svg{display:block; width:100%; height:100%; overflow:visible;}
+  /* Inside an actual honk-vakje quadrant (.hist-text), size the mark off the quadrant's own
+     box instead of font-size, so it fills the cell the way it fills a quadrant on paper —
+     the SVG's own internal coordinates already carry the correct margin around the ink, so
+     the container itself should span (close to) the full quadrant, not add extra shrinkage. */
+  .hist-text .hs-mark{width:100%; height:100%;}
   /* Extra base error arrow: connects two honk-vakjes to show one continuous play */
   .arrow-mark{position:relative; display:inline-block; width:.6em; height:1.15em; vertical-align:middle;}
   .arrow-mark::before{
