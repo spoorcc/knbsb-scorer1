@@ -1484,11 +1484,14 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       ev.outsDelta=2;
       break; }
     case 'AUTOOUT': {
+      // Only narrative variants that can genuinely be true in this simulator: the app always
+      // advances battingIdx in strict lineup order (substitutions take over their own slot, they
+      // never skip or reorder it), so a "batted out of turn" narrative would be a flat-out lie
+      // about the game state actually shown to the player — don't offer it here.
       const anyRunner = !!(bases[0]||bases[1]||bases[2]);
       const variants = [
         `<b>${batter.name}</b> raakt de bal terwijl hij met een voet buiten het slagperk staat: onreglementair slaan!`,
         `<b>${batter.name}</b> wordt geraakt door zijn eigen, net geslagen bal.`,
-        `<b>${batter.name}</b> blijkt niet in de juiste slagvolgorde aan slag te zijn gekomen.`,
       ];
       if(anyRunner) variants.push(`<b>${batter.name}</b> hindert de achtervanger, die net een honkloper probeert uit te maken.`);
       ev.narrative = pick(variants);
