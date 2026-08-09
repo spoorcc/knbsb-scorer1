@@ -236,11 +236,15 @@
      render of p.9/p.20 rather than eyeballed — see honkslagMarkHTML(). */
   .hs-mark{display:inline-block; width:1em; height:1em; vertical-align:middle;}
   .hs-mark svg{display:block; width:100%; height:100%; overflow:visible;}
-  /* Inside an actual honk-vakje quadrant (.hist-text), size the mark off the quadrant's own
-     box instead of font-size, so it fills the cell the way it fills a quadrant on paper —
-     the SVG's own internal coordinates already carry the correct margin around the ink, so
-     the container itself should span (close to) the full quadrant, not add extra shrinkage. */
-  .hist-text .hs-mark{width:100%; height:100%;}
+  /* Inside an actual honk-vakje quadrant, size the mark off the quadrant's own box instead of
+     font-size, so it fills the cell the way it fills a quadrant on paper — the SVG's own
+     internal coordinates already carry the correct margin around the ink, so the container
+     itself should span (close to) the full quadrant, not add extra shrinkage. .hist-text is
+     confirmed history (scorecard cells, the builder's own-history quadrants, mini log entries'
+     history); .builder-text is the live #builderText preview while typing and the mini log
+     entries' own submitted-answer display — both take on the exact quadrant shape/size once a
+     specific honk (not "any") is selected, via the .slot-1e/2e/3e/thuis classes. */
+  .hist-text .hs-mark, .builder-text .hs-mark{width:100%; height:100%;}
   /* Extra base error arrow (pijltje): on paper it starts in the honk-vakje the runner left
      from and crosses into the one it arrived at (p.12's "E6" example: tail sits inside the
      1e-honk quadrant, shaft crosses the shared line, arrowhead ends inside 2e-honk) — not a
