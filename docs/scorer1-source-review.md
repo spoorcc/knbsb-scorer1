@@ -166,3 +166,89 @@ the original FC/DP text so those two call sites are unchanged.
   narrated end-to-end example for self-study, not a rule to encode as a
   quiz — though it would make a good scripted `matchNumber` integration
   test if the team ever wants one.
+
+## Follow-up: symbol/glyph audit against the actual page renders
+
+The first pass above checked text codes and `refs:` citations, not the
+*drawn* scoretekens (honkslag tick-marks, arrow, dot, endmark, bootje). This
+pass rendered the actual PDF pages (via PyMuPDF, since `pdftoppm` isn't
+installable offline here) and the two fully worked-example scorecards on
+p.27–28, and compared them pixel-for-pixel against `index.html`'s CSS and
+against a live screenshot of the rendered app (Playwright + the repo's
+pre-installed Chromium).
+
+### Fixed in this pass
+
+- **Honkslag mark (1B/2B/3B) stroke direction was inverted.** The source
+  draws the base "schuine dikke streep" (p.9) as a diagonal stroke (~20°
+  off vertical) with near-horizontal cross-ticks — confirmed at high zoom
+  on p.9 and p.20. `index.html`'s `.hs-mark`/`.hs-tick` had this backwards:
+  a vertical main stroke with the *ticks* rotated -18°. Swapped the
+  rotations (`.hs-mark::before` now `rotate(20deg)`, `.hs-tick` now
+  `rotate(-6deg)`) and verified visually via a Playwright screenshot of the
+  rendered scorecard — now reads as a diagonal stroke with near-horizontal
+  crossbars, matching the source's style.
+- **Dubbelspel (double play) codes were wrong.** `buildBatterEvent`'s `DP`
+  case gave *both* players the identical full throw chain (e.g. both got
+  `643` for a 6-4-3 double play). Two independent dedicated examples in the
+  source — p.19 ("64" for the runner / "43" for the batter) and p.20 (an
+  unassisted "5" for the runner / "53" for the batter, where there's no
+  shared chain at all since the first out involves no throw) — both show
+  each player's cell holding *only their own portion* of the chain, up to
+  and including their own out, with the two out-circles connected by a
+  line to indicate they're one continuous play ("Daarom worden de twee
+  nullen met een streep aan elkaar verbonden," p.19). Split the code: the
+  forced-out runner now gets `combo[0]+combo[1]` (e.g. `64`), the batter
+  gets `combo[1]+combo[2]` (e.g. `43`). `buildForcedOutFollowUpEvent`'s
+  hardcoded refs/explain (already made overridable in the previous PR for
+  `FCINT`) now carries a DP-specific explanation of the split instead of
+  the old "you get the same code as the batter" text.
+
+### Confirmed correct (no change needed)
+
+- **Homerun**: dot at the exact 4-quadrant crosspoint + "HR" text in the
+  `thuis` quadrant — matches p.9's image exactly (`.honk-dot` is
+  positioned relative to the whole `.honk-cell`, not one quadrant).
+- **Pijltje (arrow)**: a plain upward arrow (vertical shaft + triangle
+  head) — matches the p.12 "E6 + ↑" example. `.arrow-mark` is correct as-is.
+- **Bootje (pitcher change)**: source draws a horizontal bar with both
+  ends curved/angled upward (p.21); `.sc-boatmark::before`'s SVG polyline
+  (`1,10 20,26 80,26 99,10`) draws the same U-with-upturned-ends shape.
+  The red/black "stint color" alternation after the bootje also matches
+  p.21's own black-vs-red side-by-side example exactly.
+- **Combined out-circles** (e.g. `K23`, `13`, `96`): the source circles the
+  *whole* multi-line code as one unit (confirmed at high zoom on p.27's
+  "K / 23" cell) — matches `renderScorecardCellHTML`'s single
+  `.builder-text.slot-any.out-mark` circle around the full `cell.out` text.
+- **"Door de volgende slagman" digit-credit** and **extra-base-error
+  E+pijltje placement**: spot-checked several cells in the p.27/28 worked
+  example (Van Made's `85`-then-`5` advance, Van Asten's `E6`+arrow
+  pattern) against the narrative on p.22–26 — both match the app's
+  existing implementation.
+
+### Still open (not fixed here — flagged for a future PR)
+
+- **No visual line connects the two DP out-circles across rows.** The
+  *codes* are now split correctly (see above), but the source's connecting
+  line between the runner's circle and the batter's circle (crossing
+  between two different lineup rows in the same inning column) isn't drawn
+  anywhere in `renderFullScorecard`. Doing this generally requires a
+  post-render measurement pass (the two rows can be arbitrarily far apart
+  if the runner reached base many batters earlier) — bigger scope than a
+  CSS tweak, left for its own PR.
+- **Pinch-runner "streepje tussen de honken" is taught but never
+  rendered.** `buildPinchRunnerQuizEvent`'s quiz text correctly explains
+  that a PR substitution gets a short tick mark between the two
+  honk-vakje quadrants where the swap happened (p.21), but nothing in
+  `applyEventToState`'s `lineupChange` handling or
+  `renderScorecardCellHTML` actually draws it in the runner's own cell.
+- **Verbindingsstreepje vs. pijltje nuance (lower confidence).** p.12 shows
+  two visually different connectors for "same continuous play": a plain
+  tick/line when a hit-code and a later error-code are already both
+  explicit in adjacent quadrants (the "1B then E8" example — no
+  arrowhead), versus the arrow/pijltje when the *entire* advance is
+  explained by one error alone with no separate hit code (the "E6 then ↑"
+  example, which is what `EEXTRA`/`buildExtraBaseArrowEvent` already model
+  correctly). This is based on only one example of each, and the source
+  never states the distinction in prose, so it's flagged rather than
+  changed — worth a second look before acting on it.

@@ -230,12 +230,12 @@
   .honk-cell.mini .honk-dot{width:5px; height:5px;}
   .honk-cell.sc-cell .honk-dot{width:7px; height:7px;}
 
-  /* Authentic honkslag tick-mark (1B/2B/3B): a stroke with 1/2/3 crossbars, per the course material */
+  /* Authentic honkslag tick-mark (1B/2B/3B): a diagonal stroke with 1/2/3 near-horizontal crossbars, per the course material's "schuine dikke streep" */
   .hs-mark{position:relative; display:inline-block; width:.6em; height:1.15em; vertical-align:middle;}
   .hs-mark::before{
-    content:''; position:absolute; left:50%; top:.18em; bottom:0; width:.1em; background:currentColor; transform:translateX(-50%);
+    content:''; position:absolute; left:50%; top:.05em; bottom:.05em; width:.1em; background:currentColor; transform:translateX(-50%) rotate(20deg);
   }
-  .hs-tick{position:absolute; left:50%; width:.62em; height:.1em; background:currentColor; transform:translateX(-50%) rotate(-18deg);}
+  .hs-tick{position:absolute; left:50%; width:.62em; height:.1em; background:currentColor; transform:translateX(-50%) rotate(-6deg);}
   /* Extra base error arrow: connects two honk-vakjes to show one continuous play */
   .arrow-mark{position:relative; display:inline-block; width:.6em; height:1.15em; vertical-align:middle;}
   .arrow-mark::before{
@@ -1310,21 +1310,26 @@ function buildBatterEvent(key, batter, bases, battingSlot){
     case 'DP': {
       const combos=[[6,4,3],[4,6,3],[5,4,3]];
       const c = pick(combos);
-      const code = c.join('');
+      const runnerCode = c[0]+''+c[1];
+      const batterCode = c[1]+''+c[2];
       const b1occ = !!bases[1];
       ev.narrative = `<b>${batter.name}</b> slaat een grondbal. ${P(c[0])} naar ${P(c[1])} naar ${P(c[2])}: dubbelspel!`
         + (b1occ ? ' De loper van het tweede honk wordt daardoor ook gedwongen door te lopen.' : '');
-      ev.code = code; ev.refs=['Dubbelspel, p.19'];
-      ev.explain=`Twee nullen in één ononderbroken actie noteer je als code <code>${code}</code> (de volledige aangooiketen).`;
+      ev.code = batterCode; ev.refs=['Dubbelspel, p.19'];
+      ev.explain=`Bij een dubbelspel krijgt elke uitgemaakte speler alléén zíjn eigen deel van de aangooiketen (de twee cirkels worden in de praktijk met een streep verbonden om te laten zien dat het één ononderbroken actie is): de loper krijgt code <code>${runnerCode}</code> (tot en met zíjn out), en jij als slagman code <code>${batterCode}</code> (het vervolg tot en met jóuw out).`;
       ev.applyBases = b=>{
         const b0=b[0], b1=b[1], b2=b[2];
         const nb=[null,null,null];
         let runs=0;
         const advanced=[];
-        const outRunner = b0 ? {name:b0.name, battingSlot:b0.battingSlot, quadrant:'2e', code:code, priorHistory:Object.assign({}, b0.history)} : null;
+        const outRunner = b0 ? {
+          name:b0.name, battingSlot:b0.battingSlot, quadrant:'2e', code:runnerCode, priorHistory:Object.assign({}, b0.history),
+          refs:['Dubbelspel, p.19'],
+          explain:`Bij een dubbelspel krijgt de loper alléén zíjn eigen deel van de aangooiketen, tot en met zíjn eigen out: code <code>${runnerCode}</code>. Samen met de code van de slagman (<code>${batterCode}</code>) en de verbindende streep tussen de twee cirkels vormen ze samen de volledige aangooiketen.`,
+        } : null;
         if(b1){
           if(b2){ runs++; advanced.push({name:b2.name, toIdx:'home'}); }
-          nb[2] = Object.assign({}, b1, {arrivedVia:code, history:Object.assign({}, b1.history, {'3e':code})});
+          nb[2] = Object.assign({}, b1, {arrivedVia:runnerCode, history:Object.assign({}, b1.history, {'3e':runnerCode})});
           advanced.push({name:b1.name, toIdx:2});
         } else if(b2){
           nb[2] = b2;

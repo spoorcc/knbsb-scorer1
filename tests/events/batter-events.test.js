@@ -393,7 +393,7 @@ describe("buildBatterEvent — sacrifice and double plays", () => {
     expect(result.bases[0]).toMatchObject({ name: "Slagman" });
   });
 
-  it("DP: removes two outs and forces the lead runner", () => {
+  it("DP: removes two outs and forces the lead runner, each with only their own portion of the throw chain", () => {
     const dom = loadApp();
     dom.window.initGame(3, "Honkbal", "1");
     const bases = [{ name: "Loper", battingSlot: 0, history: {} }, null, null];
@@ -402,8 +402,14 @@ describe("buildBatterEvent — sacrifice and double plays", () => {
     commonShape(ev);
     expect(ev.outsDelta).toBe(2);
     expect(ev.targetQuadrant).toBe("any");
+    // combo [6,4,3]: the runner's own out is the lead-in throw (64), the batter's own
+    // out is the continuation (43) — matching the source's convention of splitting the
+    // throw chain across the two players' cells rather than duplicating the full chain.
+    expect(ev.code).toBe("43");
     const result = ev.applyBases(bases);
-    expect(result.outRunner).toMatchObject({ name: "Loper", battingSlot: 0, quadrant: "2e", code: ev.code });
+    expect(result.outRunner).toMatchObject({ name: "Loper", battingSlot: 0, quadrant: "2e", code: "64" });
+    expect(Array.isArray(result.outRunner.refs)).toBe(true);
+    expect(typeof result.outRunner.explain).toBe("string");
     expect(result.bases).toEqual([null, null, null]);
   });
 });
