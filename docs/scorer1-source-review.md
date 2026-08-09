@@ -362,3 +362,27 @@ Two more passes on the same mark:
   bring it closer to center; verified visually rather than re-measuring
   the source for this one, since it's a legibility/balance call within an
   already-measured design rather than a fidelity correction.
+
+## Follow-up: pinch-runner streepje now actually renders on the scorecard
+
+`buildPinchRunnerQuizEvent`'s `explain` text always described "een
+streepje tussen de honken op het moment van wisselen" (p.21), but nothing
+ever drew it — the substitution only ever updated the base occupant's
+`.name` in place, so the outgoing/incoming split was purely narrative.
+Per the p.21 worked examples (VAN DONGEN/VAN ELST/VAN FELLENOORD), the
+mark is a short line under the existing notation in whichever honk-vakje
+quadrant the runner was standing on at the moment of the swap — sitting
+in the *outgoing* runner's own scorecard cell (their lineup slot keeps
+owning that inning's cell; the incoming PR gets their own new lineup row
+per p.21, but no marks of their own for the inning the swap happened in).
+
+Implementation: `generateEvent()` now computes which base (and therefore
+quadrant) the pinch-run candidate occupies and passes it through to
+`buildPinchRunnerQuizEvent`, which returns a `pinchRunnerMarker:
+{teamKey, battingSlot, quadrant}` field. `applyEventToState` commits
+`{_prQ: quadrant}` into that cell (same pattern as the existing `_outQ`
+double-play marker), and `renderScorecardCellHTML` adds a `sc-pr-swap`
+class to that quadrant's `.hist-text`, which draws a short line under the
+mark via `::after`. The `explain` text was also strengthened to point at
+the specific quadrant by name instead of just describing the convention
+in the abstract.

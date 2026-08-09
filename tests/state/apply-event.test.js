@@ -201,4 +201,18 @@ describe("applyEventToState — runner events", () => {
     expect(G.score.away).toBe(1);
     expect(G.scorecard.away[6][1]).toMatchObject({ "1e": "1B", "2e": "SB", thuis: "WP", scored: true });
   });
+
+  it("a pinch runner substitution marks the streepje on the outgoing runner's own scorecard cell", () => {
+    const dom = setup();
+    evalIn(dom, "G.bases = [null, {name:'Loper', battingSlot:6, history:{'1e':'1B','2e':'SB'}}, null]");
+    const runner = getG(dom).bases[1];
+    const ev = dom.window.buildPinchRunnerQuizEvent(runner, "away", "2e");
+    dom.window.applyEventToState(ev);
+    const G = getG(dom);
+    // the incoming sub takes over the physical base occupant, keeping the same battingSlot/history
+    expect(G.bases[1].name).not.toBe("Loper");
+    expect(G.bases[1].battingSlot).toBe(6);
+    // the streepje lands in the quadrant the runner was standing on (2e), on their own cell
+    expect(G.scorecard.away[6][1]).toMatchObject({ "1e": "1B", "2e": "SB", _prQ: "2e" });
+  });
 });

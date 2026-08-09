@@ -505,6 +505,12 @@
   }
   .honk-cell.sc-cell .hist-text{font-size:.68rem; padding-top:3px; color:#000;}
   .honk-cell.sc-cell .hist-text.sc-stint-b{color:#d21f1f;}
+  /* Pinch runner: "een streepje tussen de honken op het moment van wisselen" (p.21) — a short
+     line under the mark in the honk-vakje quadrant the runner stood on when swapped, splitting
+     what the outgoing runner earned from what the incoming pinch runner does from here on. */
+  .hist-text.sc-pr-swap::after{
+    content:''; position:absolute; left:20%; right:20%; bottom:34%; height:1.6px; background:currentColor;
+  }
   .honk-cell.sc-cell .builder-text.slot-any.sc-stint-b{border-color:#d21f1f !important; color:#d21f1f !important;}
   .honk-dot.sc-stint-b{background:#d21f1f;}
   .sc-out{
@@ -965,8 +971,8 @@ function generateEvent(){
     if(pc) return pc;
   }
   if(anyRunner && rng()<0.05){
-    const runner = bases[2] || bases[1] || bases[0];
-    const pr = buildPinchRunnerQuizEvent(runner, battingKey());
+    const idx = bases[2] ? 2 : (bases[1] ? 1 : 0);
+    const pr = buildPinchRunnerQuizEvent(bases[idx], battingKey(), IDX_TO_QUADRANT[idx]);
     if(pr) return pr;
   }
   if(anyRunner && rng()<0.25){
@@ -1859,7 +1865,7 @@ function getAvailableBenchPlayer(teamKey, pool){
   return list.find(b => !everUsed.has(b.name)) || null;
 }
 
-function buildPinchRunnerQuizEvent(runner, teamKey){
+function buildPinchRunnerQuizEvent(runner, teamKey, quadrant){
   const sub = getAvailableBenchPlayer(teamKey);
   if(!sub) return null;
   const subName = sub.name;
@@ -1875,13 +1881,14 @@ function buildPinchRunnerQuizEvent(runner, teamKey){
     options: shuffled.options,
     correctIndex: shuffled.correctIndex,
     refs:['Verandering van werper, slagman en veldspeler, p.21'],
-    explain: `Een vervangende honkloper (pinch runner) noteer je met de afkorting <code>PR</code> in de positiekolom. Tussen de honken zet je een streepje op het punt waar de wissel plaatsvond, en <b>${subName}</b> rent vanaf nu verder als loper.`,
+    explain: `Een vervangende honkloper (pinch runner) noteer je met de afkorting <code>PR</code> in de positiekolom. Tussen de honken zet je een streepje op het punt waar de wissel plaatsvond — in het ${QUADRANT_SHORT[quadrant]}-vakje op de scorekaart hierboven, ter hoogte van het honk waar <b>${runner.name}</b> nu staat — en <b>${subName}</b> rent vanaf nu verder als loper.`,
     applyBases: b=>{
       const idx = b.findIndex(x=>x && x.name===runner.name);
       if(idx>=0) b[idx] = Object.assign({}, b[idx], {name:subName});
       return {bases:b, runs:0};
     },
     lineupChange: {teamKey, slot:runner.battingSlot, newName:subName, subType:'PR'},
+    pinchRunnerMarker: {teamKey, battingSlot:runner.battingSlot, quadrant},
   };
 }
 
@@ -2150,6 +2157,14 @@ function applyEventToState(ev){
     G.subMarkers[lcTeam][lcSlot].push(G.inning);
   }
 
+  // A pinch runner takes over mid-basepath: the streepje marking the swap belongs in the outgoing
+  // runner's own scorecard cell (p.21), at the honk-vakje quadrant they were standing on when it
+  // happened — not in the incoming PR's own (otherwise blank) lineup row.
+  if(ev.pinchRunnerMarker){
+    const {teamKey:prTeam, battingSlot:prSlot, quadrant:prQ} = ev.pinchRunnerMarker;
+    commitToScorecard(prTeam, prSlot, G.inning, {_prQ: prQ});
+  }
+
   if(ev.pitcherChange){
     const {teamKey:pTeam, slot:pSlot, newName, halfLabel:pcHalf} = ev.pitcherChange;
     G.slotEvents[pTeam][pSlot].push({type:'sub', name:newName, posDisplay:'1', halfLabel:pcHalf, inning:G.inning, half:G.half});
@@ -2380,7 +2395,7 @@ function renderScorecardCellHTML(cell){
   ['1e','2e','3e','thuis'].forEach(q=>{
     if(cell[q]){
       const content = (cell._outQ === q) ? `<span class="out-circle-inner">${cell[q]}</span>` : renderCodeDisplay(cell[q]);
-      const qCls = stints[q] ? ' sc-stint-b' : '';
+      const qCls = (stints[q] ? ' sc-stint-b' : '') + (cell._prQ === q ? ' sc-pr-swap' : '');
       html += `<span class="hist-text q-${q}${qCls}">${content}</span>`;
     }
   });

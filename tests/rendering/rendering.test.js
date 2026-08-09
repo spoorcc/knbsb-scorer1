@@ -75,6 +75,15 @@ describe("renderFullScorecard", () => {
     const cell = dom.window.document.querySelectorAll("#scorecard-away td.sc-endmark");
     expect(cell.length).toBeGreaterThan(0);
   });
+
+  it("draws the pinch-runner streepje (sc-pr-swap) on the honk-vakje quadrant the runner was replaced on", () => {
+    const dom = startGame(loadApp());
+    evalIn(dom, "G.scorecard.away[0][1] = {'1e':'1B','2e':'SB', _prQ:'2e'};");
+    dom.window.renderFullScorecard();
+    const html = dom.window.document.getElementById("scorecard-away").innerHTML;
+    expect(html).toContain('class="hist-text q-2e sc-pr-swap"');
+    expect(html).not.toContain('class="hist-text q-1e sc-pr-swap"');
+  });
 });
 
 describe("renderHeaderStats", () => {

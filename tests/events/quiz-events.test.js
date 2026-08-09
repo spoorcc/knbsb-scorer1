@@ -124,15 +124,19 @@ describe("buildPinchRunnerQuizEvent", () => {
     bench.forEach((b, i) => {
       evalIn(dom, `G.slotEvents.away[${i}].push({type:'sub', name:${JSON.stringify(b.name)}})`);
     });
-    expect(dom.window.buildPinchRunnerQuizEvent({ name: "Loper", battingSlot: 0 }, "away")).toBeNull();
+    expect(dom.window.buildPinchRunnerQuizEvent({ name: "Loper", battingSlot: 0 }, "away", "2e")).toBeNull();
   });
 
-  it("otherwise builds a valid MC event naming the runner and the substitute", () => {
+  it("otherwise builds a valid MC event naming the runner and the substitute, and marks the swap quadrant", () => {
     const dom = setup();
-    const ev = dom.window.buildPinchRunnerQuizEvent({ name: "Loper", battingSlot: 0 }, "away");
+    const ev = dom.window.buildPinchRunnerQuizEvent({ name: "Loper", battingSlot: 0 }, "away", "2e");
     commonMcShape(ev);
     expect(ev.narrative).toContain("Loper");
+    expect(ev.explain).toContain("2e honk");
     expect(ev.lineupChange).toMatchObject({ teamKey: "away", slot: 0, subType: "PR" });
+    // the streepje (p.21) belongs in the outgoing runner's own cell, at the honk-vakje quadrant
+    // they were standing on when the swap happened — not the incoming PR's own (blank) row.
+    expect(ev.pinchRunnerMarker).toEqual({ teamKey: "away", battingSlot: 0, quadrant: "2e" });
   });
 });
 
