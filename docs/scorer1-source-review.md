@@ -404,3 +404,20 @@ double-play marker), and `renderScorecardCellHTML` adds a `.sc-pr-mark
 CSS rule per quadrant positioning the bar over just that half-segment.
 The `explain` text also names the specific quadrant instead of only
 describing the convention in the abstract.
+
+### Follow-up: PR shouldn't also get the generic "dikke streep"
+
+`buildPinchRunnerQuizEvent` reuses the same `lineupChange` mechanism as
+`buildPinchHitterQuizEvent` to add the incoming sub's new lineup row —
+but that path also unconditionally marked every inning cell in the row
+with `sc-subline`, the generic "dikke streep" from p.20. That line is
+specifically about *batting* substitutions: "de streep komt altijd te
+staan boven de eerste slagman die aan slag komt na de wissel" — it marks
+where the new *batter's* own recorded turns begin. Nothing in p.21's PR
+section or its worked examples calls for that line in addition to the
+honk-vakje streepje; a tight crop of the VAN DOMMELEN/VAN DONGEN example
+confirms the cell only ever gets the one grid-segment mark, no full-width
+line above it. `applyEventToState` now skips the `subMarkers` push when
+`ev.lineupChange.subType === 'PR'`, leaving the row's own name-change
+annotation (`slotEvents`) intact but without the redundant/incorrect
+substitution line.

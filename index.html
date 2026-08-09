@@ -2156,8 +2156,13 @@ function applyEventToState(ev){
   if(ev.lineupChange){
     const {teamKey:lcTeam, slot:lcSlot, newName, subType} = ev.lineupChange;
     G.slotEvents[lcTeam][lcSlot].push({type:'sub', name:newName, posDisplay:subType||'PH', halfLabel:halfInningLabel(), inning:G.inning, half:G.half});
-    if(!G.subMarkers[lcTeam][lcSlot]) G.subMarkers[lcTeam][lcSlot] = [];
-    G.subMarkers[lcTeam][lcSlot].push(G.inning);
+    // The "dikke streep" (p.20) marks where a new BATTER's own recorded turns begin — it doesn't
+    // apply to a pinch runner (p.21), who gets only the honk-vakje streepje above, not a generic
+    // substitution line across their row's cells.
+    if(subType !== 'PR'){
+      if(!G.subMarkers[lcTeam][lcSlot]) G.subMarkers[lcTeam][lcSlot] = [];
+      G.subMarkers[lcTeam][lcSlot].push(G.inning);
+    }
   }
 
   // A pinch runner takes over mid-basepath: the streepje marking the swap belongs in the outgoing

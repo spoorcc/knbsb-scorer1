@@ -214,5 +214,9 @@ describe("applyEventToState — runner events", () => {
     expect(G.bases[1].battingSlot).toBe(6);
     // the streepje lands in the quadrant the runner was standing on (2e), on their own cell
     expect(G.scorecard.away[6][1]).toMatchObject({ "1e": "1B", "2e": "SB", _prQ: "2e" });
+    // the generic "dikke streep" (p.20) is for a batting substitution (PH) marking where the new
+    // batter's own turns begin — it doesn't apply to a pinch runner, who only gets the honk-vakje
+    // streepje above, not a substitution line across their row's cells.
+    expect(G.subMarkers.away[6]).toBeUndefined();
   });
 });
