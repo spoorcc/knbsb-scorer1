@@ -511,19 +511,3 @@ third-strike wild-pitch/passed-ball gating on 1st base being open or 2
 outs, the double-play notation convention) matched Scorer 1's own
 wording closely enough that rewording risked adding precision Scorer 1
 itself doesn't offer, so left as-is.
-
-## Follow-up: runner-on-base outs (CS/PO/forced-out) now use parentheses, not a drawn circle
-
-The source draws these as an actual circled/oval shape around the code
-(confirmed on p.19's `CS`/`PO13`/`64`/`43` examples), and the app matched
-that with a CSS `border-radius:50%` circle (`.out-circle-inner`). Per
-explicit request, switched to plain parentheses instead — `(CS 24)`
-rather than a drawn circle — for both the CS/PO codes typed as an
-answer (`renderCodeDisplay`) and the DP/FC forced-out codes committed to
-a scorecard cell (`renderScorecardCellHTML`'s `_outQ` quadrant). This is
-a deliberate departure from the source's own drawn-circle appearance,
-not a fidelity fix — parentheses render more predictably at small sizes
-and across fonts than a CSS circle wrapped around multi-line stacked
-text. Renamed the CSS class to `.out-paren` to match. The batter's own
-out-at-the-plate circle (`.out-mark`/`.builder-text.slot-any`, used for
-K/F9/etc. in the vrije-ruimte slot) is unrelated and unchanged.

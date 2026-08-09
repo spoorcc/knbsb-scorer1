@@ -25,10 +25,10 @@ describe("renderCodeDisplay", () => {
     expect(window.renderCodeDisplay("3B")).toContain("hs-mark");
   });
 
-  it("wraps CS/PO codes in parentheses, spaced out for legibility", () => {
+  it("wraps CS/PO codes in the out-circle widget, spaced out for legibility", () => {
     const { window } = loadApp();
-    expect(window.renderCodeDisplay("CS24")).toBe('<span class="out-paren">(CS 24)</span>');
-    expect(window.renderCodeDisplay("PO13")).toBe('<span class="out-paren">(PO 13)</span>');
+    expect(window.renderCodeDisplay("CS24")).toBe('<span class="out-circle-inner">CS 24</span>');
+    expect(window.renderCodeDisplay("PO13")).toBe('<span class="out-circle-inner">PO 13</span>');
   });
 
   it("renders PIJL / the arrow character as the arrow-mark widget", () => {
