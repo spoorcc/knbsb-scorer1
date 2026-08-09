@@ -476,3 +476,38 @@ strengthened `buildPitcherChangeQuizEvent`'s `explain` with a one-line
 mention of the optional stint-color convention, framed as optional to
 match the source's own framing. Regression tests assert each `explain`
 now contains the relevant marker language.
+
+## Follow-up: cross-checked against the official WBSC/KNBSB scoreregels (Dec. 2025)
+
+The user supplied the full "Officiële scoreregels honkbal & softbal"
+(December 2025, 51 pages — the WBSC rulebook chapter Scorer 1 is itself
+a simplified extract of) and asked whether it surfaces anything worth
+explaining better, while being explicit that this trainer should only
+ever teach Scorer 1's own scope, not expand into it.
+
+Read through Regel 16 (Aan slag), 17 (Veldprestaties), and 18.4
+(Vervanging van werpers) in full and cross-referenced every
+Scorer-1-covered scoring code's `explain` text against both documents.
+The large majority of the official rulebook is explicitly out of scope
+by design — detailed error/obstruction judgment calls (17.3's ~20
+sub-rules), pitcher win/loss/save and earned-run attribution (18.2-18.4,
+the "which pitcher gets charged for this run" bookkeeping), and
+counting statistics (Regel 19) are all Scorer 2/3 territory per
+CLAUDE.md's existing "PA–E columns... out of scope" framing, and
+importing any of that would be scope creep beyond what the user asked
+for.
+
+One genuine, in-scope gap surfaced: **SH and SF both require fewer than
+two outs** — this isn't an official-rulebook-only nuance, Scorer 1's own
+text states it plainly ("Wanneer er nog geen twee uit zijn, kan de
+slagman zich opofferen...", p.17 and p.18), and the game logic already
+enforces it correctly (`generateBatterEvent`'s pool only offers
+SH/SHE/SF/SFE when `outs<2`) — but none of the four cases' `explain`
+text ever told the user about the condition. Added a short mention to
+all four (`SH`, `SHE`, `SF`, `SFE`).
+
+Everything else checked (SB's "op eigen kracht bereikt" definition, the
+third-strike wild-pitch/passed-ball gating on 1st base being open or 2
+outs, the double-play notation convention) matched Scorer 1's own
+wording closely enough that rewording risked adding precision Scorer 1
+itself doesn't offer, so left as-is.
