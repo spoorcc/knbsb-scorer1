@@ -10,7 +10,8 @@
 <style>
   :root{
     /* Federation palette — derived from the KNBSB "Scorer 1" course cover (pale sky blue,
-       deep federation navy, crest red) rather than a generic UI blue. */
+       deep federation navy, crest red) rather than a generic UI blue. This is also the app's
+       default theme (light) — dark mode below only overrides these on [data-theme="dark"]. */
     --navy:#153458;         /* primary ink / headlines / scoreboard */
     --navy-2:#2c567f;       /* mid-blue, gradients & secondary accents */
     --sky:#e7edf6;          /* pale cover-page wash behind the whole app */
@@ -24,6 +25,62 @@
     --green:#1e6e46;
     --radius:5px;
     --space-1:6px; --space-2:12px; --space-3:20px; --space-4:28px;
+
+    /* Fixed brand navy for solid, white-text surfaces (header, primary buttons) — these stay
+       the same federation navy in both themes rather than following --navy/--navy-2, which get
+       brightened in dark mode for use as text or thin-border ink against a dark page/card
+       surface. */
+    --brand:#153458;
+    --brand-2:#2c567f;
+
+    /* Secondary surfaces/overlays that aren't simple ink-on-paper */
+    --surface:#fff;                        /* inputs, buttons, honk-vakje background */
+    --surface-alt:#f4f6fa;                 /* disclaimer note background */
+    --fold-hover:#dfe9f4;
+    --hist-ink:#2a2a2a;                    /* handwritten-style historical notation ink */
+    --debug-border:#ccc;
+    --veil:rgba(255,255,255,.55);          /* translucent "vrije ruimte" veil over grid lines */
+    --shadow-tint:rgba(21,52,88,.06);
+    --hover-tint:rgba(21,52,88,.06);
+    --hl-selected:rgba(21,52,88,.10);
+    --hl-correct:rgba(30,110,70,.15);
+    --hl-wrong:rgba(164,32,45,.15);
+    --mc-correct-bg:rgba(30,110,70,.1);
+    --mc-wrong-bg:rgba(164,32,45,.1);
+    --mc-correct-reveal-bg:rgba(30,110,70,.08);
+  }
+  /* Dark theme — opt-in via data-theme="dark" on <html>, toggled/persisted by the theme
+     button; the light palette above stays the default unless the user has explicitly chosen
+     dark before (see the theme bootstrap near the top of the script). */
+  :root[data-theme="dark"]{
+    --brand:#2f6aa8;
+    --brand-2:#3f7fc2;
+    --navy:#8fb4e0;
+    --navy-2:#a9c8ec;
+    --sky:#0f151d;
+    --paper:#1a232f;
+    --rule:#3a4a5e;
+    --rule-soft:#2b3948;
+    --red:#e07682;
+    --red-deep:#9c3a44;
+    --ink:#dfe6ee;
+    --ink-muted:#96a4b6;
+    --green:#5cc294;
+
+    --surface:#212d3b;
+    --surface-alt:#1c2732;
+    --fold-hover:#26364a;
+    --hist-ink:#c7d0da;
+    --debug-border:#3a4a5e;
+    --veil:rgba(20,28,38,.6);
+    --shadow-tint:rgba(0,0,0,.35);
+    --hover-tint:rgba(255,255,255,.06);
+    --hl-selected:rgba(143,180,224,.16);
+    --hl-correct:rgba(92,194,148,.18);
+    --hl-wrong:rgba(224,118,130,.18);
+    --mc-correct-bg:rgba(92,194,148,.14);
+    --mc-wrong-bg:rgba(224,118,130,.14);
+    --mc-correct-reveal-bg:rgba(92,194,148,.1);
   }
   *{box-sizing:border-box;}
   html{background:var(--sky); overflow-x:hidden;}
@@ -31,6 +88,7 @@
     margin:0; font-family:'Inter', system-ui, -apple-system, Arial, sans-serif;
     background:var(--sky); color:var(--ink); line-height:1.45; font-size:15px;
     -webkit-font-smoothing:antialiased; overflow-x:hidden; width:100%;
+    transition:background-color .15s ease, color .15s ease;
   }
   h1,h2,h3, .serif{font-family:'Source Serif 4', 'Georgia', serif;}
   .mono, code, .builder-text, .log-entry .codes, table.innings{font-family:'IBM Plex Mono','Consolas',monospace;}
@@ -38,7 +96,7 @@
   /* ============ HEADER ============ */
   header{
     position:relative; overflow:hidden;
-    background:linear-gradient(140deg,var(--navy) 0%, var(--navy-2) 100%);
+    background:linear-gradient(140deg,var(--brand) 0%, var(--brand-2) 100%);
     color:#fff; padding:18px 20px; border-bottom:3px solid var(--red);
     display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
   }
@@ -77,7 +135,7 @@
   .card{
     background:var(--paper); border:1px solid var(--rule); border-top:3px solid var(--navy);
     border-radius:var(--radius); padding:var(--space-3); margin-bottom:var(--space-3);
-    box-shadow:0 1px 2px rgba(21,52,88,.06);
+    box-shadow:0 1px 2px var(--shadow-tint);
   }
   .eyebrow{
     font-size:.68rem; font-weight:700; letter-spacing:1.2px; text-transform:uppercase;
@@ -92,7 +150,7 @@
   /* ============ FORM CONTROLS / BUTTONS ============ */
   footer a{color:var(--navy-2);}
   .disclaimer-note{
-    font-size:.8rem; color:var(--ink-muted); background:#f4f6fa; border-left:3px solid var(--navy);
+    font-size:.8rem; color:var(--ink-muted); background:var(--surface-alt); border-left:3px solid var(--navy);
     padding:10px 14px; border-radius:4px; margin:10px 0 var(--space-2);
   }
   .disclaimer-note a{color:var(--navy); font-weight:600;}
@@ -102,7 +160,7 @@
   .field-group > .field-label{font-weight:700; font-size:.72rem; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.5px;}
   .field-input{
     border:1.5px solid var(--rule); border-radius:6px; padding:10px 13px;
-    font-family:'Inter',sans-serif; font-size:.92rem; color:var(--ink); background:#fff;
+    font-family:'Inter',sans-serif; font-size:.92rem; color:var(--ink); background:var(--surface);
     width:230px; max-width:100%; height:42px; box-sizing:border-box;
   }
   .field-input:focus{border-color:var(--navy); outline:none;}
@@ -112,22 +170,22 @@
   .sport-toggle{display:inline-flex; border:1.5px solid var(--rule); border-radius:6px; overflow:hidden; height:42px; box-sizing:border-box;}
   .sport-btn{
     font-family:'Inter',sans-serif; font-size:.85rem; font-weight:700; color:var(--navy);
-    background:#fff; border:none; padding:0 18px; height:100%; cursor:pointer; transition:background .15s ease, color .15s ease;
+    background:var(--surface); border:none; padding:0 18px; height:100%; cursor:pointer; transition:background .15s ease, color .15s ease;
   }
   .sport-btn + .sport-btn{border-left:1.5px solid var(--rule);}
-  .sport-btn.active{background:var(--navy); color:#fff;}
+  .sport-btn.active{background:var(--brand); color:#fff;}
   label{font-size:.9rem; color:var(--ink-muted); font-weight:600;}
   select, input[type=number]{
     padding:8px 12px; border-radius:3px; border:1px solid var(--rule); font-size:16px;
-    background:#fff; color:var(--ink); font-family:'IBM Plex Mono',monospace;
+    background:var(--surface); color:var(--ink); font-family:'IBM Plex Mono',monospace;
   }
   button{
     cursor:pointer; border:1px solid transparent; border-radius:3px; padding:10px 18px; font-size:.85rem;
     font-weight:700; letter-spacing:.4px; text-transform:uppercase; font-family:'Inter',sans-serif;
     transition:background .15s ease, color .15s ease, border-color .15s ease;
   }
-  .btn-primary{background:var(--navy); color:#fff; border-color:var(--navy);}
-  .btn-primary:hover{background:var(--navy-2);}
+  .btn-primary{background:var(--brand); color:#fff; border-color:var(--brand);}
+  .btn-primary:hover{background:var(--brand-2);}
   .btn-primary:disabled{opacity:.4; cursor:default;}
   .btn-secondary{background:transparent; color:var(--navy); border-color:var(--rule);}
   .btn-secondary:hover{background:var(--sky);}
@@ -173,7 +231,7 @@
   .builder-wrap{display:flex; align-items:center; gap:20px; flex-wrap:wrap;}
   .honk-cell{
     position:relative; width:130px; height:130px; flex:0 0 auto;
-    background-color:#fff;
+    background-color:var(--surface);
     background-image:
       linear-gradient(var(--rule), var(--rule)),
       linear-gradient(var(--rule), var(--rule));
@@ -191,12 +249,12 @@
   .qbtn.q-2e{top:0; right:0; width:50%; height:50%; justify-content:flex-end; align-items:flex-start; padding:5px 7px 0 0;}
   .qbtn.q-thuis{bottom:0; left:0; width:50%; height:50%; justify-content:flex-start; align-items:flex-end; padding:0 0 5px 7px;}
   .qbtn.q-1e{bottom:0; right:0; width:50%; height:50%; justify-content:flex-end; align-items:flex-end; padding:0 7px 5px 0;}
-  .qbtn:hover{background:rgba(21,52,88,.06);}
+  .qbtn:hover{background:var(--hover-tint);}
   .qbtn.q-any{
     top:50%; left:50%; width:28px; height:28px; margin:-14px 0 0 -14px; border-radius:50%;
     /* Semi-transparent, not solid: on paper the "vrije ruimte" is written straight over the
        honk-vakje's grid lines, not on a blank patch, so let them show through here too. */
-    background:rgba(255,255,255,.55); border:1.5px solid var(--rule); z-index:4; align-items:center; justify-content:center;
+    background:var(--veil); border:1.5px solid var(--rule); z-index:4; align-items:center; justify-content:center;
     font-size:.85rem; color:var(--ink-muted); padding:0;
   }
   .qbtn.q-any:hover{background:var(--sky); border-color:var(--navy-2);}
@@ -204,7 +262,7 @@
 
   .hist-text{
     position:absolute; display:flex; align-items:center; justify-content:center; z-index:2;
-    font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:.8rem; color:#2a2a2a;
+    font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:.8rem; color:var(--hist-ink);
     pointer-events:none; padding-top:8px; text-align:center; line-height:1.1; word-break:break-all; overflow-wrap:break-word;
     min-width:0; white-space:normal;
   }
@@ -227,10 +285,11 @@
 
   .honk-dot{
     position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-    width:9px; height:9px; border-radius:50%; background:#000; z-index:3; pointer-events:none;
+    width:9px; height:9px; border-radius:50%; background:var(--hist-ink); z-index:3; pointer-events:none;
   }
   .honk-cell.mini .honk-dot{width:5px; height:5px;}
-  .honk-cell.sc-cell .honk-dot{width:7px; height:7px;}
+  /* The printed scorecard (.sc-cell) is fixed black/white/gray "paper" in both themes. */
+  .honk-cell.sc-cell .honk-dot{width:7px; height:7px; background:#000;}
 
   /* Authentic honkslag tick-mark (1B/2B/3B): a diagonal stroke with 1/2/3 near-horizontal crossbars, per
      the course material's "schuine dikke streep" (p.9). Proportions (stroke angle/length, tick length/
@@ -297,9 +356,9 @@
     -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-size:100% 100%; mask-size:100% 100%;
   }
   .hist-text.q-3e .arrow-mark::before, .hist-text.q-3e .arrow-mark::after{content:none;}
-  .q-highlight.state-selected{background:rgba(21,52,88,.10);}
-  .q-highlight.state-correct{background:rgba(30,110,70,.15);}
-  .q-highlight.state-wrong{background:rgba(164,32,45,.15);}
+  .q-highlight.state-selected{background:var(--hl-selected);}
+  .q-highlight.state-correct{background:var(--hl-correct);}
+  .q-highlight.state-wrong{background:var(--hl-wrong);}
 
   .builder-text{
     position:absolute; display:flex; align-items:center; justify-content:center; z-index:5;
@@ -308,11 +367,12 @@
     min-width:0; white-space:normal;
   }
   .builder-text.slot-any{
-    inset:24px; font-size:1.15rem; border:1.5px solid var(--navy); border-radius:50%; background:rgba(255,255,255,.55);
+    inset:24px; font-size:1.15rem; border:1.5px solid var(--navy); border-radius:50%; background:var(--veil);
   }
   .builder-text.slot-any.state-correct{border-color:var(--green);}
   .builder-text.slot-any.state-wrong{border-color:var(--red);}
-  .honk-cell.mini .builder-text.slot-any,
+  /* The full printed scorecard (.sc-cell) is deliberately fixed black/white/gray "paper" in
+     both themes — see the scorecard section below, which this rule intentionally matches. */
   .honk-cell.sc-cell .builder-text.slot-any{inset:8px; border-width:1.5px; font-size:.9rem; background:rgba(255,255,255,.55); border-color:#000 !important; color:#000;}
   .builder-text.slot-1e{top:50%; left:50%; right:2px; bottom:2px; font-size:1rem;}
   .builder-text.slot-2e{top:2px; left:50%; right:2px; bottom:50%; font-size:1rem;}
@@ -329,7 +389,7 @@
   .hint-row{display:flex; align-items:center; justify-content:space-between; gap:8px;}
   .info-btn{
     flex:0 0 auto; width:20px; height:20px; padding:0; border-radius:50%; border:1.5px solid var(--navy-2);
-    background:#fff; color:var(--navy-2); font-size:.72rem; line-height:1; display:flex; align-items:center; justify-content:center;
+    background:var(--surface); color:var(--navy-2); font-size:.72rem; line-height:1; display:flex; align-items:center; justify-content:center;
   }
   .info-btn:hover{background:var(--sky);}
   .builder-caption{font-size:.78rem; color:var(--ink-muted); margin:6px 0 8px 0;}
@@ -345,15 +405,15 @@
   .input-wrap input{
     width:100%; height:100%; box-sizing:border-box; padding:9px 26px 9px 10px;
     border:1.5px solid var(--navy); border-radius:4px; font-family:'IBM Plex Mono',monospace;
-    font-size:16px; text-transform:uppercase; letter-spacing:1px; color:var(--navy); background:#fff;
+    font-size:16px; text-transform:uppercase; letter-spacing:1px; color:var(--navy); background:var(--surface);
   }
   .clear-icon-btn{
     position:absolute; right:5px; top:50%; transform:translateY(-50%);
     width:19px; height:19px; padding:0; border-radius:50%; border:1.5px solid var(--rule);
-    background:#fff; color:var(--ink-muted); font-size:.6rem; line-height:1;
+    background:var(--surface); color:var(--ink-muted); font-size:.6rem; line-height:1;
     display:flex; align-items:center; justify-content:center; text-transform:none;
   }
-  .clear-icon-btn:hover{border-color:var(--red); color:var(--red); background:#fff;}
+  .clear-icon-btn:hover{border-color:var(--red); color:var(--red); background:var(--surface);}
   .icon-btn{flex:0 0 auto; padding:0 14px; font-size:1rem;}
   .control-row .btn-primary{flex:1; padding:0 8px; font-size:.78rem; letter-spacing:.2px; white-space:nowrap;}
 
@@ -369,7 +429,10 @@
     opacity:1;
   }
   .honk-cell.mini .builder-text{font-size:.6rem; padding:1px; letter-spacing:0;}
-  .honk-cell.mini .builder-text.slot-any{font-size:.62rem;}
+  .honk-cell.mini .builder-text.slot-any{
+    inset:8px; border-width:1.5px; font-size:.62rem; background:var(--veil);
+    border-color:var(--hist-ink) !important; color:var(--hist-ink);
+  }
   .honk-cell.mini .out-circle-inner{font-size:.56rem; padding:.05em .12em; letter-spacing:0;}
   .honk-cell.mini .hist-text{font-size:.5rem; padding-top:2px;}
 
@@ -382,15 +445,15 @@
   }
   .kb-buttons{display:grid; grid-template-columns:repeat(3, 1fr); gap:7px;}
   .kb-btn{
-    background:#fff; border:1px solid var(--rule); color:var(--ink); padding:8px 6px;
+    background:var(--surface); border:1px solid var(--rule); color:var(--ink); padding:8px 6px;
     font-family:'IBM Plex Mono',monospace; font-size:.85rem; font-weight:600; border-radius:3px;
     text-transform:none; letter-spacing:0; text-align:center; white-space:normal; line-height:1.25;
   }
   .kb-btn:hover{background:var(--sky); border-color:var(--navy-2);}
   .kb-btn small{display:block; font-weight:400; color:var(--ink-muted); font-size:.62rem; font-family:'Inter',sans-serif; margin-top:1px; text-transform:none;}
   #grpPos{display:grid; grid-template-columns:repeat(3, 56px); gap:7px;}
-  .kb-pos{background:var(--navy); color:#fff; text-align:center; border-color:var(--navy); padding:8px 4px;}
-  .kb-pos:hover{background:var(--navy-2);}
+  .kb-pos{background:var(--brand); color:#fff; text-align:center; border-color:var(--brand); padding:8px 4px;}
+  .kb-pos:hover{background:var(--brand-2);}
   .kb-pos small{color:rgba(255,255,255,.7);}
   #keyboard{
     margin-top:2px; overflow:hidden;
@@ -407,14 +470,14 @@
     padding:9px 12px; margin-top:var(--space-2); border-radius:4px;
     font-size:.78rem; text-transform:none; letter-spacing:0; font-weight:600;
   }
-  .fold-toggle:hover{background:#dfe9f4;}
+  .fold-toggle:hover{background:var(--fold-hover);}
   .fold-icon{display:inline-block; transition:transform .25s ease; font-size:.7rem; color:var(--navy);}
   .fold-toggle[aria-expanded="true"] .fold-icon{transform:rotate(90deg);}
 
   /* ============ FEEDBACK ============ */
   .feedback{
     margin-top:var(--space-3); padding:14px 16px; border-radius:3px; display:none;
-    background:#fff; border:1px solid var(--rule); border-left:5px solid var(--rule);
+    background:var(--surface); border:1px solid var(--rule); border-left:5px solid var(--rule);
   }
   .feedback.show{display:block;}
   .feedback.correct{border-left-color:var(--green);}
@@ -444,7 +507,7 @@
   footer{text-align:center; color:var(--ink-muted); font-size:.72rem; padding:8px 16px 30px; letter-spacing:.2px;}
   .footer-debug-btn{
     margin-top:10px; font-family:'IBM Plex Mono',monospace; font-size:.66rem; color:var(--ink-muted);
-    background:none; border:1px solid #ccc; border-radius:4px; padding:4px 10px; cursor:pointer; opacity:.7;
+    background:none; border:1px solid var(--debug-border); border-radius:4px; padding:4px 10px; cursor:pointer; opacity:.7;
   }
   .footer-debug-btn:hover{opacity:1; color:var(--navy); border-color:var(--navy);}
 
@@ -459,15 +522,15 @@
   .mc-wrap.hidden{display:none;}
   .mc-options{display:flex; flex-direction:column; gap:8px; margin-bottom:16px;}
   .mc-btn{
-    text-align:left; background:#fff; border:1.5px solid var(--rule); color:var(--ink); padding:11px 14px;
+    text-align:left; background:var(--surface); border:1.5px solid var(--rule); color:var(--ink); padding:11px 14px;
     border-radius:4px; font-size:.88rem; font-weight:500; text-transform:none; letter-spacing:0; line-height:1.35;
   }
   .mc-btn:hover{border-color:var(--navy-2); background:var(--sky);}
   .mc-btn.selected{border-color:var(--navy); background:var(--sky); font-weight:700;}
   .mc-wrap.locked .mc-btn{pointer-events:none;}
-  .mc-wrap.locked .mc-btn.selected.correct-choice{border-color:var(--green); background:rgba(30,110,70,.1);}
-  .mc-wrap.locked .mc-btn.selected.wrong-choice{border-color:var(--red); background:rgba(164,32,45,.1);}
-  .mc-wrap.locked .mc-btn.reveal-correct{border-color:var(--green); background:rgba(30,110,70,.08);}
+  .mc-wrap.locked .mc-btn.selected.correct-choice{border-color:var(--green); background:var(--mc-correct-bg);}
+  .mc-wrap.locked .mc-btn.selected.wrong-choice{border-color:var(--red); background:var(--mc-wrong-bg);}
+  .mc-wrap.locked .mc-btn.reveal-correct{border-color:var(--green); background:var(--mc-correct-reveal-bg);}
 
   /* Full scorecard table — deliberately black/white/gray to resemble the real paper form */
   .sc-card{background:#fff;}
@@ -576,6 +639,7 @@
     <div id="headerStats" class="stats hidden">0 / 0</div>
     <a href="https://www.knbsb.nl/kenniscentrum/opleidingen-officials/belangrijke-documenten-opleidingen/" target="_blank" rel="noopener" class="export-btn" title="Officiële cursus en spelregels op knbsb.nl">Cursus &amp; regels</a>
     <button id="shareBtn" class="export-btn" title="Deel deze wedstrijd via link">Deel</button>
+    <button id="themeToggleBtn" class="export-btn" type="button" title="Donker thema aan" aria-pressed="false">🌙</button>
   </div>
 </header>
 
@@ -785,6 +849,29 @@
 
 <script>
 "use strict";
+
+/* ============ THEME (light / dark) ============ */
+// The app's current (light) look stays the default: dark mode is opt-in, remembered only once
+// the user explicitly toggles it. No prefers-color-scheme auto-detect on first visit.
+const THEME_STORAGE_KEY = 'knbsbScorerTheme';
+function getStoredTheme(){
+  try{ return localStorage.getItem(THEME_STORAGE_KEY); }
+  catch(e){ return null; }
+}
+function setStoredTheme(theme){
+  try{ localStorage.setItem(THEME_STORAGE_KEY, theme); }
+  catch(e){ /* storage unavailable (e.g. private browsing) — theme just won't persist */ }
+}
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('themeToggleBtn');
+  if(btn){
+    btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    btn.title = theme === 'dark' ? 'Licht thema aan' : 'Donker thema aan';
+    btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+  }
+}
+applyTheme(getStoredTheme() === 'dark' ? 'dark' : 'light');
 
 /* ============ SCORING DATA ============ */
 const POS_NAMES = {1:'Werper',2:'Achtervanger',3:'Eerste honkman',4:'Tweede honkman',5:'Derde honkman',6:'Korte stop',7:'Linksvelder',8:'Midvelder',9:'Rechtsvelder'};
@@ -2826,6 +2913,12 @@ function startGame(innings, sport, matchNumber){
   renderHeaderStats();
   nextTurn();
 }
+
+document.getElementById('themeToggleBtn').addEventListener('click', ()=>{
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  setStoredTheme(next);
+});
 
 document.getElementById('shareBtn').addEventListener('click', ()=>{
   if(!G || !G.matchNumber){ return; }
