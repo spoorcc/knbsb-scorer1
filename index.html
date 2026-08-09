@@ -2620,10 +2620,13 @@ function nextTurn(){
     renderBuilder();
     resetSlotSelector();
     renderPriorHistory(ev);
-    // "Vrije ruimte" (any quadrant) is only a real answer for outs; once a turn targets a
-    // specific quadrant (a hit, an advance, a follow-up for a runner already on base, ...)
-    // it can never be correct, so don't offer it as a slot to pick.
-    document.querySelector('.qbtn.q-any').classList.toggle('hidden', ev.targetQuadrant !== 'any');
+    // "Vrije ruimte" (any quadrant) is only ever a real answer for a batter out at the plate —
+    // never for a runner who has already reached base (their outs, e.g. caught stealing, always
+    // land in a specific quadrant, not "any"). Keyed off ev.forBatter (game *context* — has this
+    // person already become a runner?) rather than ev.targetQuadrant (this turn's own answer),
+    // so it stays visible as a real decoy for every batter turn — including ones that are
+    // actually a hit — instead of quietly giving away "this isn't an out" before it's answered.
+    document.querySelector('.qbtn.q-any').classList.toggle('hidden', !ev.forBatter);
     document.getElementById('keyboard').classList.remove('disabled');
     document.getElementById('systemInput').disabled = false;
   }

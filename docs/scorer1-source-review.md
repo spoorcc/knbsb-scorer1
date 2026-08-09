@@ -327,9 +327,19 @@ the large interactive builder cell, for both the 1e→2e and 2e→3e cases.
 
 `.qbtn.q-any` — the center circle for placing an out anywhere in the cell
 — was always shown regardless of what the current turn actually asked for.
-It's only ever a valid answer when `ev.targetQuadrant === 'any'` (an out);
-for anything targeting a specific quadrant (a hit, an advance, a follow-up
-for a runner already safely on base, ...) it's not a real answer, it's an
-irrelevant fifth button, and once a runner has reached base it can never
-become relevant again for that at-bat. `nextTurn()` now toggles it hidden
-whenever `ev.targetQuadrant !== 'any'`.
+It's only ever a real answer for a *batter* out at the plate; a runner who
+has already reached base never uses it again for that at-bat, even when
+they themselves get put out (caught stealing, picked off, ... — those
+outs always land in a specific quadrant, never "any").
+
+First pass keyed the toggle off `ev.targetQuadrant !== 'any'` — simple, but
+wrong in spirit: for a batter turn that happens to be a hit, the button
+would hide before the turn is even answered, quietly telling the user
+"this isn't an out" ahead of time. Re-keyed it off `ev.forBatter` instead
+(game *context* — has this person already become a runner? — rather than
+this turn's own answer): every `buildBatterEvent` case is `forBatter:true`
+regardless of whether it turns out to be a hit or an out, so the button
+stays visible as a genuine decoy through the whole batter determination;
+every runner/follow-up event (`buildRunnerEvent` and all the deferred
+follow-up builders) is `forBatter:false`, so it's hidden unconditionally
+the moment the person being asked about is already an established runner.
