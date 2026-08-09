@@ -474,8 +474,6 @@
   table.sc-matchinfo-table td{border:1px solid #000; padding:5px 8px; color:#000;}
   table.sc-matchinfo-table td.mi-label{font-weight:700; width:110px; white-space:nowrap;}
   table.sc-matchinfo-table td.mi-colon{width:14px; text-align:center; color:#666;}
-  .sc-footer-table{margin-top:0; max-width:none; border-top:none;}
-  .sc-footer-table td.mi-value{text-align:left;}
   table.sc-matchinfo-table td.mi-value{text-align:center;}
 
   table.scorecard-table{border-collapse:collapse; font-size:.85rem; white-space:nowrap; background:#fff;}
@@ -761,12 +759,6 @@
       <div class="table-scroll" id="scorecard-away"></div>
       <h2 style="margin-top:18px;"><span id="scHomeName">Team B</span></h2>
       <div class="table-scroll" id="scorecard-home"></div>
-      <table class="sc-matchinfo-table sc-footer-table">
-        <tr><td class="mi-label">Scheidsrechters:</td><td class="mi-value"></td></tr>
-        <tr><td class="mi-label">Scorer:</td><td class="mi-value"></td></tr>
-        <tr><td class="mi-label">Aanvangstijd:</td><td class="mi-value" id="scStartTime"></td></tr>
-        <tr><td class="mi-label">Opmerkingen scheidsrechter:</td><td class="mi-value"></td></tr>
-      </table>
     </div>
 
   </section>
@@ -849,7 +841,6 @@ function initGame(maxInnings, sport, matchNumber){
     stintColor:{away:0, home:0},
     lastPitcherChangeInning:{away:null, home:null},
     matchDate: now.toLocaleDateString('nl-NL'),
-    matchTime: now.toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'}),
   };
 }
 
@@ -2408,7 +2399,6 @@ function renderFullScorecard(){
       <tr><td class="mi-label">Gespeeld te:</td><td class="mi-value" colspan="3">—</td></tr>
       <tr><td class="mi-label">Datum:</td><td class="mi-value">${G.matchDate}</td><td class="mi-label">Wedstrijdnummer:</td><td class="mi-value">${G.matchNumber}</td></tr>
     </table>`;
-  document.getElementById('scStartTime').textContent = G.matchTime + ' uur';
 
   ['away','home'].forEach(teamKey=>{
     const team = G[teamKey];
