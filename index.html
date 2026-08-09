@@ -1299,7 +1299,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       const fielder = pick([1,2,5,4]);
       ev.narrative = `<b>${batter.name}</b> legt een stootslag neer. De ${P(fielder)} gooit naar het eerste honk.`;
       ev.code = 'SH'+fielder+'3'; ev.refs=['Sacrifice hit, p.17, Scoreregel 9.08'];
-      ev.explain=`Een opofferingsstootslag noteer je met <code>SH</code> gevolgd door de actie: code <code>SH${fielder}3</code>. Let op: dit is alleen een sacrifice hit als de slagman zelf écht uit gaat én de loper daadwerkelijk een honk verder komt. Blijft de slagman ook veilig (bijv. door een fout of trage worp), dan is het geen offer meer maar een gewone honkslag of een fout. Dat lees je in de paragrafen Honkslagen en Fouten.`;
+      ev.explain=`Een opofferingsstootslag noteer je met <code>SH</code> gevolgd door de actie: code <code>SH${fielder}3</code>. Let op: dit is alleen een sacrifice hit als er nog geen twee uit waren, de slagman zelf écht uit gaat én de loper daadwerkelijk een honk verder komt. Blijft de slagman ook veilig (bijv. door een fout of trage worp), dan is het geen offer meer maar een gewone honkslag of een fout. Dat lees je in de paragrafen Honkslagen en Fouten.`;
       ev.applyBases = bases=>{
         const nb = cloneBases(bases);
         let runs=0;
@@ -1320,7 +1320,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       const code = 'SH'+fielder+'3'+' E'+fielder;
       ev.narrative = `<b>${batter.name}</b> legt een stootslag neer. De ${P(fielder)} gooit onzuiver naar het eerste honk, waardoor de slagman óók veilig blijft staan.`;
       ev.code = code; ev.refs=['Sacrifice hit, p.17, Scoreregel 9.08'];
-      ev.explain=`Wanneer de aangooi mislukt en de slagman daardoor zélf ook veilig blijft, blijft het toch een opofferingsstootslag als die zonder de fout gescoord had moeten worden, met de fout erbij genoteerd: code <code>${code}</code>.`;
+      ev.explain=`Wanneer de aangooi mislukt en de slagman daardoor zélf ook veilig blijft, blijft het toch een opofferingsstootslag (nog steeds met minder dan twee uit) als die zonder de fout gescoord had moeten worden, met de fout erbij genoteerd: code <code>${code}</code>.`;
       ev.forBatter=true;
       ev.applyBases = bases=>{
         const nb = cloneBases(bases);
@@ -1341,7 +1341,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       const p2 = pick([7,8,9]);
       ev.narrative = `<b>${batter.name}</b> slaat een hoge bal naar het buitenveld, gevangen door de ${P(p2)}. De loper van het derde honk rent naar huis.`;
       ev.code = 'SF'+p2; ev.refs=['Sacrifice fly, p.18, Scoreregel 9.08'];
-      ev.explain=`Een opofferingsslag in het buitenveld noteer je met code <code>SF${p2}</code>. Let op: dit telt alleen als sacrifice fly als de bal wordt gevangen (slagman dus uit) én de loper van het derde honk daadwerkelijk scoort. Wordt de bal niet gevangen, of scoort de loper niet, dan is het geen SF meer maar bijvoorbeeld een gewone vangbal-uit of een fout.`;
+      ev.explain=`Een opofferingsslag in het buitenveld noteer je met code <code>SF${p2}</code>. Let op: dit telt alleen als sacrifice fly als er nog geen twee uit waren, de bal wordt gevangen (slagman dus uit) én de loper van het derde honk daadwerkelijk scoort. Wordt de bal niet gevangen, of scoort de loper niet, dan is het geen SF meer maar bijvoorbeeld een gewone vangbal-uit of een fout.`;
       ev.applyBases = bases=>{
         const nb=cloneBases(bases);
         const advanced=[{name:nb[2].name, toIdx:'home'}];
@@ -1355,7 +1355,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       const code = 'SF'+p2+' E'+p2;
       ev.narrative = `<b>${batter.name}</b> slaat een hoge bal naar het buitenveld. De ${P(p2)} had een goede vangkans, maar laat de bal vallen. De slagman bereikt het eerste honk, en de loper van het derde honk scoort alsnog, precies zoals bij een gevangen bal zou zijn gebeurd.`;
       ev.code = code; ev.refs=['Sacrifice fly, p.18, Scoreregel 9.08'];
-      ev.explain=`Wanneer een opofferingsslag door een fout niet wordt gevangen, maar zonder de fout wél een sacrifice fly gescoord had moeten worden, blijft het een SF met de fout erbij genoteerd: code <code>${code}</code>.`;
+      ev.explain=`Wanneer een opofferingsslag door een fout niet wordt gevangen, maar zonder de fout wél een sacrifice fly gescoord had moeten worden (er waren nog geen twee uit), blijft het een SF met de fout erbij genoteerd: code <code>${code}</code>.`;
       ev.forBatter=true;
       ev.applyBases = bases=>{
         const nb=cloneBases(bases);

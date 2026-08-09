@@ -344,6 +344,8 @@ describe("buildBatterEvent — sacrifice and double plays", () => {
     expect(ev.code).toMatch(/^SH\d3$/);
     expect(ev.outsDelta).toBe(1);
     expect(ev.targetQuadrant).toBe("any");
+    // Scorer 1 p.17: "Wanneer er nog geen twee uit zijn..." — a sacrifice hit requires fewer than 2 outs.
+    expect(ev.explain).toContain("twee uit");
     const result = ev.applyBases(bases);
     expect(result.bases[2]).toMatchObject({ name: "Loper" });
     expect(result.runs).toBe(0);
@@ -373,6 +375,8 @@ describe("buildBatterEvent — sacrifice and double plays", () => {
     commonShape(ev);
     expect(ev.code).toMatch(/^SF[789]$/);
     expect(ev.outsDelta).toBe(1);
+    // Scorer 1 p.18: "Wanneer er nog geen twee uit zijn..." — a sacrifice fly requires fewer than 2 outs.
+    expect(ev.explain).toContain("twee uit");
     const result = ev.applyBases(bases);
     expect(result.runs).toBe(1);
     expect(result.bases[2]).toBeNull();
