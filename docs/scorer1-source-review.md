@@ -343,3 +343,22 @@ stays visible as a genuine decoy through the whole batter determination;
 every runner/follow-up event (`buildRunnerEvent` and all the deferred
 follow-up builders) is `forBatter:false`, so it's hidden unconditionally
 the moment the person being asked about is already an established runner.
+
+## Follow-up: honkslag mark fills the live-typing preview too, and sits closer to center
+
+Two more passes on the same mark:
+
+- The 100%-quadrant-fill fix only targeted `.hist-text` (confirmed
+  history), so `.builder-text` — the live `#builderText` preview shown
+  while actually typing an answer, and the mini log-entry's own
+  submitted-answer replay — was still sized off font-size and stayed
+  small. Both take on the same `.slot-1e`/`2e`/`3e`/`thuis` quadrant
+  shape as `.hist-text` once a specific honk is selected, so they needed
+  the same override; broadened the CSS rule to cover both.
+- The stroke/tick coordinates (measured off p.9 for the earlier SVG
+  rebuild) put the ink's horizontal center around x≈40–42 in the 0–100
+  viewBox — visibly left of the quadrant's own center at x=50, most
+  noticeable on 1B/2B. Shifted both stroke endpoints +8 (46→54, 30→38) to
+  bring it closer to center; verified visually rather than re-measuring
+  the source for this one, since it's a legibility/balance call within an
+  already-measured design rather than a fidelity correction.

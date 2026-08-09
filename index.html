@@ -2334,7 +2334,7 @@ function honkslagMarkHTML(n){
   // stroke runs from ~(46,18) to ~(30,80) — a ~13deg lean off vertical spanning
   // the middle ~60% of the quadrant's height — and each tick is a ~22-unit-wide,
   // essentially horizontal bar crossing the stroke, starting near its top end.
-  const strokeStart = {x:46, y:18}, strokeEnd = {x:30, y:80};
+  const strokeStart = {x:54, y:18}, strokeEnd = {x:38, y:80};
   const tickYs = {1:[29], 2:[31,40], 3:[32,42,52]}[n] || [];
   const tickHalfLen = 11;
   const xAt = y => strokeStart.x + (strokeEnd.x - strokeStart.x) * (y - strokeStart.y) / (strokeEnd.y - strokeStart.y);
