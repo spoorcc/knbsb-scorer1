@@ -57,9 +57,13 @@ describe("applyEventToState — batter events", () => {
     expect(G.outs).toBe(2);
     // the forced-out runner's own line isn't committed synchronously anymore: it's a queued
     // follow-up quiz (buildForcedOutFollowUpEvent), which the UI presents as the very next turn.
+    // The runner's code is only their own portion of the throw chain (64), not the batter's
+    // own code (43, ev.code) — each player's cell shows just the touches leading to their out.
     expect(G.pendingEvents.length).toBeGreaterThanOrEqual(1);
-    const followUp = G.pendingEvents.find((e) => e.code === ev.code && e.targetQuadrant === "2e");
+    const followUp = G.pendingEvents.find((e) => e.targetQuadrant === "2e");
     expect(followUp).toBeTruthy();
+    expect(followUp.code).toBe("64");
+    expect(followUp.code).not.toBe(ev.code);
     expect(followUp.narrative).toContain("First");
   });
 

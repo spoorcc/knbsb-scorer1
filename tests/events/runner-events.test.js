@@ -145,6 +145,105 @@ describe("buildRunnerEvent — WP / PB / BK advance every runner by one", () => 
   });
 });
 
+describe("buildRunnerEvent(SB3) / (CS3) — stealing home", () => {
+  it("SB3: steals home, code SB, quadrant thuis, scores a run", () => {
+    const dom = setupWithBases([null, null, { name: "Loper", battingSlot: 5, history: {} }]);
+    const ev = dom.window.buildRunnerEvent("SB3");
+    commonShape(ev);
+    expect(ev.code).toBe("SB");
+    expect(ev.targetQuadrant).toBe("thuis");
+    expect(ev.leadRunnerName).toBe("Loper");
+    const result = ev.applyBases([null, null, { name: "Loper", battingSlot: 5, history: {} }]);
+    expect(result.runs).toBe(1);
+    expect(result.bases[2]).toBeNull();
+  });
+
+  it("CS3: caught stealing home, unassisted by the catcher, code CS2, one out", () => {
+    const dom = setupWithBases([null, null, { name: "Loper", battingSlot: 5, history: {} }]);
+    const ev = dom.window.buildRunnerEvent("CS3");
+    commonShape(ev);
+    expect(ev.code).toBe("CS2");
+    expect(ev.targetQuadrant).toBe("thuis");
+    expect(ev.outsDelta).toBe(1);
+    const result = ev.applyBases([null, null, { name: "Loper", battingSlot: 5, history: {} }]);
+    expect(result.bases[2]).toBeNull();
+    expect(dom.window.eval("G.scorecard.away[5][1]")).toMatchObject({ thuis: "CS2" });
+  });
+});
+
+describe("buildRunnerEvent(PO2) / (PO3) — pickoff at second and third", () => {
+  it("PO2: picked off second, out, commits directly", () => {
+    const dom = setupWithBases([null, { name: "Loper", battingSlot: 3, history: {} }, null]);
+    stubRngConstant(dom, randomForPickIndex(0, 2));
+    const ev = dom.window.buildRunnerEvent("PO2");
+    commonShape(ev);
+    expect(ev.code).toMatch(/^PO1[46]$/);
+    expect(ev.outsDelta).toBe(1);
+    expect(ev.targetQuadrant).toBe("3e");
+    const result = ev.applyBases([null, { name: "Loper", battingSlot: 3, history: {} }, null]);
+    expect(result.bases[1]).toBeNull();
+    expect(dom.window.eval("G.scorecard.away[3][1]")).toMatchObject({ "3e": ev.code });
+  });
+
+  it("PO3: picked off third, out, commits directly", () => {
+    const dom = setupWithBases([null, null, { name: "Loper", battingSlot: 4, history: {} }]);
+    const ev = dom.window.buildRunnerEvent("PO3");
+    commonShape(ev);
+    expect(ev.code).toBe("PO15");
+    expect(ev.outsDelta).toBe(1);
+    expect(ev.targetQuadrant).toBe("thuis");
+    const result = ev.applyBases([null, null, { name: "Loper", battingSlot: 4, history: {} }]);
+    expect(result.bases[2]).toBeNull();
+  });
+});
+
+describe("buildRunnerEvent(EVADE1) / (EVADE2) — automatic out for evading a tag", () => {
+  it("EVADE1: out between first and second, bare fielder code, no assist chain", () => {
+    const dom = setupWithBases([{ name: "Loper", battingSlot: 0, history: {} }, null, null]);
+    stubRngConstant(dom, randomForPickIndex(0, 3));
+    const ev = dom.window.buildRunnerEvent("EVADE1");
+    commonShape(ev);
+    expect(ev.code).toMatch(/^[346]$/);
+    expect(ev.outsDelta).toBe(1);
+    expect(ev.targetQuadrant).toBe("2e");
+    const result = ev.applyBases([{ name: "Loper", battingSlot: 0, history: {} }, null, null]);
+    expect(result.bases[0]).toBeNull();
+  });
+
+  it("EVADE2: out between second and third", () => {
+    const dom = setupWithBases([null, { name: "Loper", battingSlot: 1, history: {} }, null]);
+    stubRngConstant(dom, randomForPickIndex(0, 3));
+    const ev = dom.window.buildRunnerEvent("EVADE2");
+    commonShape(ev);
+    expect(ev.code).toMatch(/^[456]$/);
+    expect(ev.outsDelta).toBe(1);
+    expect(ev.targetQuadrant).toBe("3e");
+  });
+});
+
+describe("buildRunnerEvent(PASS1) — passing the preceding runner is an automatic out", () => {
+  it("outs the trailing runner from first, the lead runner on second stays put", () => {
+    const dom = setupWithBases([
+      { name: "Trailing", battingSlot: 0, history: {} },
+      { name: "Lead", battingSlot: 1, history: {} },
+      null,
+    ]);
+    stubRngConstant(dom, randomForPickIndex(0, 2));
+    const ev = dom.window.buildRunnerEvent("PASS1");
+    commonShape(ev);
+    expect(ev.code).toMatch(/^[46]$/);
+    expect(ev.outsDelta).toBe(1);
+    expect(ev.targetQuadrant).toBe("2e");
+    const result = ev.applyBases([
+      { name: "Trailing", battingSlot: 0, history: {} },
+      { name: "Lead", battingSlot: 1, history: {} },
+      null,
+    ]);
+    expect(result.bases[0]).toBeNull();
+    expect(result.bases[1]).toMatchObject({ name: "Lead" });
+  });
+});
+
 describe("buildRunnerEvent(OB1)", () => {
   it("obstruction advances the runner to second with code OB6", () => {
     const dom = setupWithBases([runner("Loper"), null, null]);
