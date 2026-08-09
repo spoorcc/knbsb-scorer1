@@ -144,13 +144,6 @@ the original FC/DP text so those two call sites are unchanged.
 
 ## Still open
 
-- **The two secondary "geen fout" exceptions on p.13** — only the
-  "langzame verwerking is geen fout" judgment call is quizzed (in
-  `buildEndOfInningQuizEvent`). The two adjoining exceptions — an errant
-  throw that wouldn't have gotten the runner anyway, and an errant throw
-  made while completing a double/triple play — still aren't covered by any
-  quiz question. Left for a future pass since both are pure judgment-call
-  MC material (no new scoreteken), not blocked by anything in this PR.
 - **"Te vroeg los"** (p.19, leaving the base early) — see item 2 above;
   deliberately not implemented because it's scoped to youth divisions the
   app doesn't model.
@@ -511,3 +504,12 @@ third-strike wild-pitch/passed-ball gating on 1st base being open or 2
 outs, the double-play notation convention) matched Scorer 1's own
 wording closely enough that rewording risked adding precision Scorer 1
 itself doesn't offer, so left as-is.
+
+## Follow-up: closed the two secondary "geen fout" quiz gaps from p.13
+
+Added the two adjoining `buildEndOfInningQuizEvent` pool entries flagged
+under "Still open" above: an errant throw that wouldn't have gotten the
+runner anyway, and an errant throw made while completing a dubbel-/
+drievoudig spel — both cited to `Fouten, p.13`, matching the "langzame
+verwerking" entry already in that pool. Pure judgment-call MC material,
+no new scoreteken, same shape as the existing pool entries.

@@ -1920,6 +1920,28 @@ function buildEndOfInningQuizEvent(){
       explain: 'Een dubbelspel is specifiek twee nullen in één ononderbroken actie, herkenbaar aan de streep die de twee cirkels met elkaar verbindt. Twee losse outs in aparte acties zijn geen dubbelspel.',
     },
     {
+      narrative: `Een veldspeler gooit slecht over naar een honk, maar zelfs bij een goede aangooi was de honkloper toch niet op tijd geweest. Is dit een fout?`,
+      options: [
+        'Nee, als de loper hoe dan ook niet getikt had kunnen worden, reken je de slechte aangooi niet als fout.',
+        'Ja, elke slechte aangooi is een fout, ongeacht de uitkomst.',
+        'Alleen als de bal het speelveld verlaat.',
+        'Alleen bij de korte stop.'
+      ], correctIndex: 0,
+      refs:['Fouten, p.13'],
+      explain: 'Een aangooi die de loper toch niet had kunnen uitmaken, telt niet als fout, ook al is de aangooi zelf niet goed. De fout moet de honkloper daadwerkelijk een kans op uitmaken hebben gekost.',
+    },
+    {
+      narrative: `Bij het afmaken van een dubbelspel gooit de veldspeler slecht over naar het laatste honk, waardoor die laatste loper alsnog veilig is. Is dit een fout?`,
+      options: [
+        'Nee, een misworp bij het voltooien van een dubbel- of drievoudig spel wordt niet als fout gerekend, ook al is de laatste loper daardoor veilig.',
+        'Ja, want zonder de misworp waren het twee uit geworden in plaats van één.',
+        'Alleen als het de laatste slagbeurt van de inning is.',
+        'Alleen bij softbal, niet bij honkbal.'
+      ], correctIndex: 0,
+      refs:['Fouten, p.13'],
+      explain: 'Een misworp die het voltooien van een dubbel- of drievoudig spel verhindert, wordt niet als fout genoteerd. Deze uitzondering geldt speciaal voor de laatste stap van zo\'n meervoudige uitmaak-actie.',
+    },
+    {
       narrative: `Wanneer een honkloper wordt uitgegeven omdat hij een andere honkloper passeert op de honkenpaden, voor welke veldspeler noteer je dan de "nul"?`,
       options: [
         'Voor de veldspeler die het dichtst stond bij de plek waar het passeren plaatsvond.',

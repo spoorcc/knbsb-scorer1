@@ -72,6 +72,24 @@ describe("buildSchuinStreepQuiz / buildEndOfInningQuizEvent", () => {
       commonMcShape(ev);
     }
   });
+
+  it("covers both p.13 'geen fout' exceptions (errant throw wouldn't have gotten the runner; errant throw completing a double play)", () => {
+    const dom = setup();
+    // pool has 9 entries after the p.13 additions; buildEndOfInningQuizEvent's
+    // >=0.55 branch runs `pick(pool)` = pool[floor(rng()*pool.length)], so 0.7/0.8
+    // land on the two new entries (indices 6 and 7) deterministically.
+    stubRngConstant(dom, 0.7);
+    const wouldntHaveGotten = dom.window.buildEndOfInningQuizEvent();
+    commonMcShape(wouldntHaveGotten);
+    expect(wouldntHaveGotten.narrative).toContain("niet op tijd geweest");
+    expect(wouldntHaveGotten.refs).toContain("Fouten, p.13");
+
+    stubRngConstant(dom, 0.8);
+    const dpMisworp = dom.window.buildEndOfInningQuizEvent();
+    commonMcShape(dpMisworp);
+    expect(dpMisworp.narrative).toContain("dubbelspel gooit");
+    expect(dpMisworp.refs).toContain("Fouten, p.13");
+  });
 });
 
 describe("getAvailableBenchPlayer", () => {
