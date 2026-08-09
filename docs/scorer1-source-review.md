@@ -421,3 +421,58 @@ line above it. `applyEventToState` now skips the `subMarkers` push when
 `ev.lineupChange.subType === 'PR'`, leaving the row's own name-change
 annotation (`slotEvents`) intact but without the redundant/incorrect
 substitution line.
+
+## Follow-up: audited every substitution marker's feedback text against what it actually draws
+
+Went through all four `Verandering van werper, slagman en veldspeler`
+event builders (`buildPositionChangeQuizEvent`, `buildPinchHitterQuizEvent`,
+`buildPitcherChangeQuizEvent`, `buildPinchRunnerQuizEvent`) and matched
+each one's actual `applyEventToState` side effect against what its
+`explain` text tells the user to expect. Re-reading p.20-21 closely
+(rather than the paragraph-at-a-time reading used the first time
+through) clarified that the four paragraphs there map to four distinct
+markers, not three:
+
+1. **Position swap between two already-playing fielders** (p.20, "Soms
+   blijven de spelers hetzelfde, maar nemen ze alleen een andere
+   veldpositie in") — bare position number + halfLabel on both players.
+   No streep on their *own* card. `buildPositionChangeQuizEvent` /
+   `posChange`.
+2. **Pinch hitter** (p.20) — `PH` + name + halfLabel, *plus* "een dikke
+   streep...waar de wissel plaatsvindt" separating what's scored for the
+   outgoing vs. incoming batter. `buildPinchHitterQuizEvent` /
+   `lineupChange` (`subMarkers` → `.sc-subline`).
+3. **Any fielder change, shown on the opposing (batting) team's card**
+   (p.21, "De wissel van de veldspeler wordt aan de andere kant van de
+   scorekaart aangegeven met een dikke horizontale streep...boven de
+   eerste slagman die aan slag komt na de wissel") — this is *not* the
+   same streep as #2; it's drawn on the *other* team's card, above
+   whichever batter happens to be up when the swap happens. The code
+   already implements this correctly for position swaps (`posChange` →
+   `fieldSubMarkers[oppTeam][oppSlot]` → `.sc-subline` on the opposing
+   team's current-batter cell) — it just wasn't mentioned anywhere in
+   `buildPositionChangeQuizEvent`'s `explain`.
+4. **Pitcher change** (p.21) — the same "opposing card" concept as #3,
+   but with the special bootje shape instead of a plain streep
+   (`boatMarkers`), plus a new row on the pitcher's own team's card
+   (`pitcherChange`/`slotEvents`, matching #2's own-card new-row
+   mechanic but *without* #2's dikke streep — pitchers don't get one).
+   The explain text already covered the bootje and the new row; it
+   didn't mention the optional stint-color convention from the very
+   next sentence in the source ("Het vereenvoudigt het overzicht van de
+   werperresultaten als na het bootje met een andere kleur wordt
+   doorgewerkt"), which the app does actually implement
+   (`G.stintColor`/`_stintQ`, alternating red/black ink).
+5. **Pinch runner** (p.21) — already covered in the follow-ups above:
+   the honk-vakje streepje, explicitly *not* the generic streep from #2.
+
+Fixes: strengthened `buildPositionChangeQuizEvent`'s `explain` to name
+the opposing team and their current batter by name and describe the
+`.sc-subline` mark that lands on that batter's cell; strengthened
+`buildPinchHitterQuizEvent`'s `explain` to mention the dikke streep (it
+previously only described the `PH`/name/halfLabel bookkeeping, leaving
+a real visual feature of the rendered scorecard unexplained);
+strengthened `buildPitcherChangeQuizEvent`'s `explain` with a one-line
+mention of the optional stint-color convention, framed as optional to
+match the source's own framing. Regression tests assert each `explain`
+now contains the relevant marker language.

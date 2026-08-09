@@ -1907,8 +1907,10 @@ function buildPositionChangeQuizEvent(fieldingTeamKey){
   const playerB = team.lineup[slotB];
   const curPosB = currentPos(fieldingTeamKey, slotB);
   const halfLabel = halfInningLabel();
+  const oppTeam = fieldingTeamKey==='away' ? 'home' : 'away';
+  const oppBatterName = currentBatterName(oppTeam, G.battingIdx[oppTeam] % 9);
   const shuffled = shuffleMcOptions([
-    `In het volgende positievakje van beide spelers komt hun nieuwe veldpositie (een kaal getal), en achter hun naam op een nieuwe regel komt "${halfLabel}" (de speelhelft en inning van de wissel).`,
+    `In het volgende positievakje van beide spelers komt hun nieuwe veldpositie (een kaal getal), en achter hun naam op een nieuwe regel komt "${halfLabel}" (de speelhelft en inning van de wissel). Ook komt er een dikke streep aan de andere kant van de scorekaart: bij de slagpartij, boven de eerste slagman die aan slag komt na de wissel.`,
     'Met de letters "PR" in de kolom.',
     'Met een schuine streep in het honkvakje.',
     'Dit hoeft niet apart genoteerd te worden.'
@@ -1918,8 +1920,8 @@ function buildPositionChangeQuizEvent(fieldingTeamKey){
     narrative: `<b>${playerA.name}</b> (nu ${POS_NAMES[curPosA]}) en <b>${playerB.name}</b> (nu ${POS_NAMES[curPosB]}) wisselen onderling van positie.`,
     options: shuffled.options,
     correctIndex: shuffled.correctIndex,
-    refs:['Verandering van werper, slagman en veldspeler, p.20'],
-    explain: `Een positiewissel van spelers die blijven spelen noteer je bij ieder van hen in het volgende positievakje: alleen het kale positienummer (<code>${curPosB}</code> bij <b>${playerA.name}</b>, <code>${curPosA}</code> bij <b>${playerB.name}</b>). Achter hun naam, op een nieuwe regel, komt de speelhelft en inning van de wissel: <code>${halfLabel}</code>.`,
+    refs:['Verandering van werper, slagman en veldspeler, p.20-21'],
+    explain: `Een positiewissel van spelers die blijven spelen noteer je bij ieder van hen in het volgende positievakje: alleen het kale positienummer (<code>${curPosB}</code> bij <b>${playerA.name}</b>, <code>${curPosA}</code> bij <b>${playerB.name}</b>). Achter hun naam, op een nieuwe regel, komt de speelhelft en inning van de wissel: <code>${halfLabel}</code>. De wissel van een veldspeler wordt ook aangegeven aan de andere kant van de scorekaart: bij <b>${G[oppTeam].name}</b> komt een dikke streep boven het vakje van de huidige slagman, <b>${oppBatterName}</b>, want die is de eerste die aan slag komt na deze wissel.`,
     applyBases: b=>({bases:b, runs:0}),
     posChange: {teamKey:fieldingTeamKey, swaps:[{slot:slotA, newPos:curPosB}, {slot:slotB, newPos:curPosA}], halfLabel},
   };
@@ -1945,7 +1947,7 @@ function buildPinchHitterQuizEvent(teamKey){
     options: shuffled.options,
     correctIndex: shuffled.correctIndex,
     refs:['De scorekaart, p.7', 'Verandering van werper, slagman en veldspeler, p.20'],
-    explain: `Een vervangende slagman (pinch hitter) noteer je met de afkorting <code>PH</code> in de positiekolom, met de naam van <b>${subName}</b> en het moment van wisselen (<code>${halfLabel}</code>) erbij.`,
+    explain: `Een vervangende slagman (pinch hitter) noteer je met de afkorting <code>PH</code> in de positiekolom, met de naam van <b>${subName}</b> en het moment van wisselen (<code>${halfLabel}</code>) erbij. Ook zet je een dikke streep op de scorekaart waar de wissel plaatsvindt, zodat duidelijk is dat wat ervoor gescoord is voor <b>${originalName}</b> geldt en wat erna komt voor <b>${subName}</b>.`,
     applyBases: b=>({bases:b, runs:0}),
     lineupChange: {teamKey, slot, newName: subName, subType:'PH'},
   };
@@ -1978,7 +1980,7 @@ function buildPitcherChangeQuizEvent(fieldingTeamKey){
     options: shuffled.options,
     correctIndex: shuffled.correctIndex,
     refs:['Verandering van werper, slagman en veldspeler, p.20-21'],
-    explain: `Bij een werperwissel plaats je aan de kant van de slagpartij (dus op de scorekaart van de tegenstander) een dikke horizontale streep met de uiteinden een stukje omhoog: het "bootje". Bij ${team.name} zelf komt <b>${subName}</b> op een nieuwe regel onder <b>${curName}</b> in hetzelfde slagvolgordevakje: alleen het kale cijfer <code>1</code> in de positiekolom (want werper is positie 1), met zijn naam en daarachter <code>${halfLabel}</code> (de speelhelft en inning van de wissel).`,
+    explain: `Bij een werperwissel plaats je aan de kant van de slagpartij (dus op de scorekaart van de tegenstander) een dikke horizontale streep met de uiteinden een stukje omhoog: het "bootje". Bij ${team.name} zelf komt <b>${subName}</b> op een nieuwe regel onder <b>${curName}</b> in hetzelfde slagvolgordevakje: alleen het kale cijfer <code>1</code> in de positiekolom (want werper is positie 1), met zijn naam en daarachter <code>${halfLabel}</code> (de speelhelft en inning van de wissel). Optioneel werk je na het bootje verder in een andere kleur inkt (zoals hier), zodat het overzicht van de werperresultaten per werper duidelijk blijft.`,
     applyBases: b=>({bases:b, runs:0}),
     pitcherChange: {teamKey:fieldingTeamKey, slot, newName:subName, halfLabel},
   };
