@@ -230,12 +230,12 @@
   .honk-cell.mini .honk-dot{width:5px; height:5px;}
   .honk-cell.sc-cell .honk-dot{width:7px; height:7px;}
 
-  /* Authentic honkslag tick-mark (1B/2B/3B): a diagonal stroke with 1/2/3 near-horizontal crossbars, per the course material's "schuine dikke streep" */
-  .hs-mark{position:relative; display:inline-block; width:.6em; height:1.15em; vertical-align:middle;}
-  .hs-mark::before{
-    content:''; position:absolute; left:50%; top:.05em; bottom:.05em; width:.1em; background:currentColor; transform:translateX(-50%) rotate(20deg);
-  }
-  .hs-tick{position:absolute; left:50%; width:.62em; height:.1em; background:currentColor; transform:translateX(-50%) rotate(-6deg);}
+  /* Authentic honkslag tick-mark (1B/2B/3B): a diagonal stroke with 1/2/3 near-horizontal crossbars, per
+     the course material's "schuine dikke streep" (p.9). Proportions (stroke angle/length, tick length/
+     spacing, all relative to the honk-vakje quadrant) were measured pixel-for-pixel off a high-resolution
+     render of p.9/p.20 rather than eyeballed — see honkslagMarkHTML(). */
+  .hs-mark{display:inline-block; width:1em; height:1em; vertical-align:middle;}
+  .hs-mark svg{display:block; width:100%; height:100%; overflow:visible;}
   /* Extra base error arrow: connects two honk-vakjes to show one continuous play */
   .arrow-mark{position:relative; display:inline-block; width:.6em; height:1.15em; vertical-align:middle;}
   .arrow-mark::before{
@@ -2283,11 +2283,24 @@ function renderScoreboard(){
 }
 
 function honkslagMarkHTML(n){
-  const positions = {1:[.18], 2:[.06,.34], 3:[-.06,.16,.38]}[n] || [];
-  let html = '<span class="hs-mark">';
-  positions.forEach(pos=>{ html += `<span class="hs-tick" style="top:${pos}em"></span>`; });
-  html += '</span>';
-  return html;
+  // Stroke endpoints and tick rows/length are all in a 0-100 quadrant-relative
+  // coordinate space, measured directly off a high-resolution render of p.9's
+  // 1B/2B/3B examples (pixel bounding boxes of the ink, not eyeballed): the
+  // stroke runs from ~(46,18) to ~(30,80) — a ~13deg lean off vertical spanning
+  // the middle ~60% of the quadrant's height — and each tick is a ~22-unit-wide,
+  // essentially horizontal bar crossing the stroke, starting near its top end.
+  const strokeStart = {x:46, y:18}, strokeEnd = {x:30, y:80};
+  const tickYs = {1:[29], 2:[31,40], 3:[32,42,52]}[n] || [];
+  const tickHalfLen = 11;
+  const xAt = y => strokeStart.x + (strokeEnd.x - strokeStart.x) * (y - strokeStart.y) / (strokeEnd.y - strokeStart.y);
+  let svg = `<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">`;
+  svg += `<line x1="${strokeStart.x}" y1="${strokeStart.y}" x2="${strokeEnd.x}" y2="${strokeEnd.y}" stroke="currentColor" stroke-width="6" stroke-linecap="square"/>`;
+  tickYs.forEach(y=>{
+    const cx = xAt(y);
+    svg += `<line x1="${(cx-tickHalfLen).toFixed(1)}" y1="${y}" x2="${(cx+tickHalfLen).toFixed(1)}" y2="${y}" stroke="currentColor" stroke-width="6" stroke-linecap="square"/>`;
+  });
+  svg += `</svg>`;
+  return `<span class="hs-mark">${svg}</span>`;
 }
 
 function renderCodeDisplay(code){

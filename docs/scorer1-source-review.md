@@ -252,3 +252,38 @@ pre-installed Chromium).
   correctly). This is based on only one example of each, and the source
   never states the distinction in prose, so it's flagged rather than
   changed — worth a second look before acting on it.
+
+## Follow-up: honkslag mark geometry, measured precisely
+
+The diagonal-vs-vertical fix above was a hand-tuned CSS rotation. A closer
+look asked whether the mark's *proportions* — size relative to its
+honk-vakje quadrant, and the stroke/tick's relative length and position to
+each other — also matched the source, not just "is it diagonal." They
+didn't quite: the old `.hs-mark` box (0.6em × 1.15em) was noticeably more
+elongated than a real quadrant cell (measured ~65×69px on p.9, ~64×58px in
+the app's own small scorecard cells — both close to square), and the
+rotated-div approach couldn't easily encode the ticks' true near-horizontal
+angle (measured ~0° tilt, not the ~-6 to -18° the div rotation used) or
+their position along the stroke.
+
+Rebuilt `honkslagMarkHTML()` as an inline SVG instead, with every
+coordinate taken from pixel measurements off p.9's 1B/2B/3B examples
+(quadrant-relative bounding boxes of the actual ink, via a small numpy
+script — not eyeballed):
+
+- Stroke: runs from (46, 18) to (30, 80) in a 0–100 quadrant-relative
+  space — a ~13° lean off vertical, spanning the middle ~62% of the
+  quadrant's height (measured stroke row-range across the three examples:
+  19–25% to 75–76%).
+- Ticks: ~22 units wide (measured 20–24% of quadrant width), essentially
+  horizontal (measured tilt was within noise of the pixel grid — nowhere
+  near the stroke's own angle), positioned at y≈29 (1B), y≈31/40 (2B),
+  y≈32/42/52 (3B) — matching the measured ~9-unit spacing between tick
+  centers and the pattern of the tick cluster starting slightly lower as
+  more ticks are added.
+- `.hs-mark`'s box changed from 0.6em × 1.15em to a square 1em × 1em, to
+  stop under-sizing the mark relative to a (roughly square) honk-vakje
+  quadrant.
+
+Verified against a live Playwright screenshot of the rendered scorecard,
+side by side with the same p.9 crop used for the measurements.

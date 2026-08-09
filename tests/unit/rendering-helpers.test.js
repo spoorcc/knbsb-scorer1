@@ -2,16 +2,18 @@ import { describe, expect, it } from "vitest";
 import { loadApp } from "../helpers/loadApp.js";
 
 describe("honkslagMarkHTML", () => {
+  // The mark is an inline SVG: one <line> for the diagonal stroke, plus one
+  // <line> per tick — so N ticks means N+1 total <line> elements.
   it("draws one tick for a single, two for a double, three for a triple", () => {
     const { window } = loadApp();
-    expect((window.honkslagMarkHTML(1).match(/hs-tick/g) || []).length).toBe(1);
-    expect((window.honkslagMarkHTML(2).match(/hs-tick/g) || []).length).toBe(2);
-    expect((window.honkslagMarkHTML(3).match(/hs-tick/g) || []).length).toBe(3);
+    expect((window.honkslagMarkHTML(1).match(/<line/g) || []).length).toBe(2);
+    expect((window.honkslagMarkHTML(2).match(/<line/g) || []).length).toBe(3);
+    expect((window.honkslagMarkHTML(3).match(/<line/g) || []).length).toBe(4);
   });
 
-  it("draws no ticks for an unknown count", () => {
+  it("draws no ticks for an unknown count (just the bare stroke)", () => {
     const { window } = loadApp();
-    expect((window.honkslagMarkHTML(4).match(/hs-tick/g) || []).length).toBe(0);
+    expect((window.honkslagMarkHTML(4).match(/<line/g) || []).length).toBe(1);
   });
 });
 
