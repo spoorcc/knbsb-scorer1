@@ -375,21 +375,32 @@ own new lineup row per p.21, but no marks of their own for the inning
 the swap happened in).
 
 Geometry, cross-checked against a tight crop of the p.21 worked examples
-(VAN DOMMELEN/VAN DONGEN and VAN FIJNAART/VAN FELLENOORD): the thick line
-sits exactly on the honk-vakje's own grid line — the same divider that
-already separates the top row of quadrants (2e/3e) from the bottom row
-(1e/thuis) — not floating under the mark inside whichever quadrant the
-runner happened to occupy. First implementation drew a short underline
-inside the specific quadrant's own box; corrected to overlay the cell's
-actual central grid line instead, full width, regardless of which of the
-three bases the swap happened on.
+(VAN DOMMELEN/VAN DONGEN and VAN FIJNAART/VAN FELLENOORD) and refined
+across two passes:
+
+1. First implementation drew a short underline inside the specific
+   quadrant's own box — wrong, floated free of the grid entirely.
+2. Second pass overlaid the honk-vakje's central grid line full width —
+   closer (it's genuinely on a grid line now), but still wrong: a runner
+   replaced on 1st would thicken the *entire* horizontal divider,
+   including the unrelated 3e/thuis segment on the far side of the cell
+   that has nothing to do with this substitution.
+3. Final: only the grid segment between the quadrant the runner was
+   standing on and the *next* quadrant in the base-running order
+   (1e→2e→3e→thuis) gets thickened — e.g. replaced on 1st marks only the
+   1e/2e boundary (the right half of the horizontal divider), not the
+   3e/thuis one. Quadrant layout is 3e top-left, 2e top-right, thuis
+   bottom-left, 1e bottom-right, so the three cases are: 1e→2e is the
+   right half of the horizontal line, 2e→3e is the top half of the
+   vertical line, 3e→thuis is the left half of the horizontal line.
 
 Implementation: `generateEvent()` computes which base (and therefore
 quadrant) the pinch-run candidate occupies and passes it through to
 `buildPinchRunnerQuizEvent`, which returns a `pinchRunnerMarker:
 {teamKey, battingSlot, quadrant}` field. `applyEventToState` commits
 `{_prQ: quadrant}` into that cell (same pattern as the existing `_outQ`
-double-play marker), and `renderScorecardCellHTML` adds a `.sc-pr-mark`
-element — a thick bar positioned at the cell's own 50% line — whenever
-`cell._prQ` is set. The `explain` text also names the specific quadrant
-instead of only describing the convention in the abstract.
+double-play marker), and `renderScorecardCellHTML` adds a `.sc-pr-mark
+.sc-pr-{quadrant}` element whenever `cell._prQ` is set, with a dedicated
+CSS rule per quadrant positioning the bar over just that half-segment.
+The `explain` text also names the specific quadrant instead of only
+describing the convention in the abstract.

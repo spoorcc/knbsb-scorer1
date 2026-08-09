@@ -506,12 +506,14 @@
   .honk-cell.sc-cell .hist-text{font-size:.68rem; padding-top:3px; color:#000;}
   .honk-cell.sc-cell .hist-text.sc-stint-b{color:#d21f1f;}
   /* Pinch runner: "een streepje tussen de honken op het moment van wisselen" (p.21) — a thick
-     line drawn exactly over the honk-vakje's own grid line, the one already separating the top
-     row of quadrants (2e/3e) from the bottom row (1e/thuis), not floating inside a quadrant. */
-  .sc-pr-mark{
-    position:absolute; left:0; right:0; top:50%; height:2.5px; margin-top:-1.25px;
-    background:#000; pointer-events:none;
-  }
+     line over just the segment of the honk-vakje's own grid that borders the quadrant the runner
+     was standing on and the *next* quadrant in the base-running order (1e->2e->3e->thuis), not
+     the full divider and not floating inside a quadrant. Quadrant layout: 3e top-left, 2e
+     top-right, thuis bottom-left, 1e bottom-right. */
+  .sc-pr-mark{position:absolute; background:#000; pointer-events:none;}
+  .sc-pr-mark.sc-pr-1e{left:50%; right:0; top:50%; height:2.5px; margin-top:-1.25px;}
+  .sc-pr-mark.sc-pr-2e{left:50%; top:0; bottom:50%; width:2.5px; margin-left:-1.25px;}
+  .sc-pr-mark.sc-pr-3e{left:0; right:50%; top:50%; height:2.5px; margin-top:-1.25px;}
   .honk-cell.sc-cell .builder-text.slot-any.sc-stint-b{border-color:#d21f1f !important; color:#d21f1f !important;}
   .honk-dot.sc-stint-b{background:#d21f1f;}
   .sc-out{
@@ -2405,10 +2407,10 @@ function renderScorecardCellHTML(cell){
     html += `<span class="honk-dot${dotCls}" title="Punt gescoord"></span>`;
   }
   if(cell._prQ){
-    // Pinch runner (p.21): the streepje sits exactly on the honk-vakje's own grid line — the same
-    // divider that already separates the top row of quadrants (2e/3e) from the bottom row (1e/thuis)
-    // — not floating inside whichever quadrant the runner happened to be standing in.
-    html += `<span class="sc-pr-mark"></span>`;
+    // Pinch runner (p.21): the streepje sits exactly on the grid line between the honk-vakje
+    // quadrant the runner was standing on and the *next* quadrant in the base-running order — e.g.
+    // replaced on 1st, the line covers only the 1e/2e boundary, not the unrelated 3e/thuis divider.
+    html += `<span class="sc-pr-mark sc-pr-${cell._prQ}"></span>`;
   }
   html += `</div>`;
   return html;

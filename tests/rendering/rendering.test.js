@@ -76,13 +76,17 @@ describe("renderFullScorecard", () => {
     expect(cell.length).toBeGreaterThan(0);
   });
 
-  it("draws the pinch-runner streepje (sc-pr-mark) on the honk-vakje's own grid line, not cells without a swap", () => {
+  it("draws the pinch-runner streepje only on the grid segment toward the next base, not the whole divider", () => {
     const dom = startGame(loadApp());
-    evalIn(dom, "G.scorecard.away[0][1] = {'1e':'1B','2e':'SB', _prQ:'2e'};");
-    evalIn(dom, "G.scorecard.away[1][1] = {'1e':'1B','2e':'SB'};");
+    // replaced on 1st: only the 1e/2e boundary should get a mark, not the unrelated 3e/thuis one
+    evalIn(dom, "G.scorecard.away[0][1] = {'1e':'1B', _prQ:'1e'};");
+    evalIn(dom, "G.scorecard.away[1][1] = {'1e':'1B','2e':'SB'};"); // no swap: no mark at all
     dom.window.renderFullScorecard();
     const html = dom.window.document.getElementById("scorecard-away").innerHTML;
     expect((html.match(/sc-pr-mark/g) || []).length).toBe(1);
+    expect(html).toContain('class="sc-pr-mark sc-pr-1e"');
+    expect(html).not.toContain("sc-pr-2e");
+    expect(html).not.toContain("sc-pr-3e");
   });
 });
 
