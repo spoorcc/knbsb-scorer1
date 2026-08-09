@@ -67,6 +67,79 @@ describe("applyEventToState — batter events", () => {
     expect(followUp.narrative).toContain("First");
   });
 
+  it("a double play with runners on 1st and 2nd queues the forced-out runner's follow-up before the other runner's advance-credit", () => {
+    const dom = setup();
+    // With 2nd occupied too, the DP also forces that runner to 3rd — its own applyBases returns
+    // both `outRunner` (the runner forced out from 1st) and `advanced` (the runner forced from 2nd
+    // to 3rd) from the very same play. The forced-out follow-up's narrative only ever says "ook
+    // <naam> is uit door dezelfde actie" without re-describing the play, so it must be asked
+    // immediately after the main DP question — before the unrelated runner's advance-credit turn.
+    evalIn(dom, "G.bases = [{name:'First', battingSlot:4, history:{}}, {name:'Second', battingSlot:5, history:{}}, null]");
+    stubRngConstant(dom, 0); // pin the [6,4,3] combo deterministically
+    const ev = dom.window.buildBatterEvent("DP", { name: "Slagman" }, getG(dom).bases, 0);
+    dom.window.applyEventToState(ev);
+    const G = getG(dom);
+    expect(G.pendingEvents.length).toBeGreaterThanOrEqual(2);
+    expect(G.pendingEvents[0].targetQuadrant).toBe("2e");
+    expect(G.pendingEvents[0].code).toBe("64");
+    expect(G.pendingEvents[0].narrative).toContain("First");
+    expect(G.pendingEvents[1].targetQuadrant).toBe("3e");
+    expect(G.pendingEvents[1].narrative).toContain("Second");
+  });
+
+  it("a double-play that itself ends the half-inning still commits the forced-out follow-up to the inning the play happened in", () => {
+    const dom = setup();
+    // Bottom of inning 1, home batting, already 1 out: this DP's outsDelta of 2 pushes the
+    // total to 3 and ends the half-inning (bottom -> top, inning 1 -> 2) *inside*
+    // applyEventToState, before the queued follow-up question has even been shown to the user.
+    evalIn(dom, "G.half = 'bottom'; G.outs = 1; G.battingIdx.home = 0");
+    evalIn(dom, "G.bases = [{name:'First', battingSlot:4, history:{}}, null, null]");
+    stubRngConstant(dom, 0); // pin the [6,4,3] combo deterministically
+    const ev = dom.window.buildBatterEvent("DP", { name: "Slagman" }, getG(dom).bases, 0);
+    dom.window.applyEventToState(ev);
+    let G = getG(dom);
+    expect(G.outs).toBe(0); // endHalfInning() already reset outs for the new half-inning
+    expect(G.inning).toBe(2);
+    expect(G.half).toBe("top");
+
+    // The user now answers the queued follow-up question — one turn later, already in inning 2.
+    const followUp = G.pendingEvents.find((e) => e.targetQuadrant === "2e");
+    expect(followUp).toBeTruthy();
+    dom.window.applyEventToState(followUp);
+    G = getG(dom);
+
+    // The forced-out runner's line belongs to the play that happened in inning 1, not inning 2.
+    expect(G.scorecard.home[4][1]).toMatchObject({ _outQ: "2e" });
+    expect(G.scorecard.home[4][2]).toBeUndefined();
+  });
+
+  it("a sacrifice fly that itself ends the half-inning still commits the scoring runner's advance-credit to the inning the play happened in", () => {
+    const dom = setup();
+    // Bottom of inning 1, home batting, already 2 outs: the SF's own out (outsDelta 1) ends the
+    // half-inning (bottom -> top, inning 1 -> 2) inside applyEventToState, but it also queues an
+    // advance-credit follow-up for the runner it just sent home from third — that follow-up is
+    // answered one turn later, already in inning 2.
+    evalIn(dom, "G.half = 'bottom'; G.outs = 2; G.battingIdx.home = 0");
+    evalIn(dom, "G.bases = [null, null, {name:'Derde', battingSlot:6, history:{'1e':'1B'}}]");
+    stubRngConstant(dom, 0); // pin SF's fielder pick
+    const ev = dom.window.buildBatterEvent("SF", { name: "Slagman" }, getG(dom).bases, 0);
+    dom.window.applyEventToState(ev);
+    let G = getG(dom);
+    expect(G.outs).toBe(0); // endHalfInning() already reset outs for the new half-inning
+    expect(G.inning).toBe(2);
+    expect(G.half).toBe("top");
+
+    // The user now answers the queued advance-credit question — one turn later, already inning 2.
+    const followUp = G.pendingEvents.find((e) => e.targetQuadrant === "thuis");
+    expect(followUp).toBeTruthy();
+    dom.window.applyEventToState(followUp);
+    G = getG(dom);
+
+    // The scoring runner's credit belongs to the play that happened in inning 1, not inning 2.
+    expect(G.scorecard.home[6][1]).toMatchObject({ thuis: followUp.code, scored: true });
+    expect(G.scorecard.home[6][2]).toBeUndefined();
+  });
+
   it("queues an advance-credit follow-up event for a runner driven home by a later batter", () => {
     const dom = setup();
     evalIn(dom, "G.bases = [null, null, {name:'Loper', battingSlot:5, history:{'1e':'1B'}}]");
@@ -127,5 +200,23 @@ describe("applyEventToState — runner events", () => {
     expect(G.bases[2]).toBeNull();
     expect(G.score.away).toBe(1);
     expect(G.scorecard.away[6][1]).toMatchObject({ "1e": "1B", "2e": "SB", thuis: "WP", scored: true });
+  });
+
+  it("a pinch runner substitution marks the streepje on the outgoing runner's own scorecard cell", () => {
+    const dom = setup();
+    evalIn(dom, "G.bases = [null, {name:'Loper', battingSlot:6, history:{'1e':'1B','2e':'SB'}}, null]");
+    const runner = getG(dom).bases[1];
+    const ev = dom.window.buildPinchRunnerQuizEvent(runner, "away", "2e");
+    dom.window.applyEventToState(ev);
+    const G = getG(dom);
+    // the incoming sub takes over the physical base occupant, keeping the same battingSlot/history
+    expect(G.bases[1].name).not.toBe("Loper");
+    expect(G.bases[1].battingSlot).toBe(6);
+    // the streepje lands in the quadrant the runner was standing on (2e), on their own cell
+    expect(G.scorecard.away[6][1]).toMatchObject({ "1e": "1B", "2e": "SB", _prQ: "2e" });
+    // the generic "dikke streep" (p.20) is for a batting substitution (PH) marking where the new
+    // batter's own turns begin — it doesn't apply to a pinch runner, who only gets the honk-vakje
+    // streepje above, not a substitution line across their row's cells.
+    expect(G.subMarkers.away[6]).toBeUndefined();
   });
 });

@@ -343,3 +343,136 @@ stays visible as a genuine decoy through the whole batter determination;
 every runner/follow-up event (`buildRunnerEvent` and all the deferred
 follow-up builders) is `forBatter:false`, so it's hidden unconditionally
 the moment the person being asked about is already an established runner.
+
+## Follow-up: honkslag mark fills the live-typing preview too, and sits closer to center
+
+Two more passes on the same mark:
+
+- The 100%-quadrant-fill fix only targeted `.hist-text` (confirmed
+  history), so `.builder-text` — the live `#builderText` preview shown
+  while actually typing an answer, and the mini log-entry's own
+  submitted-answer replay — was still sized off font-size and stayed
+  small. Both take on the same `.slot-1e`/`2e`/`3e`/`thuis` quadrant
+  shape as `.hist-text` once a specific honk is selected, so they needed
+  the same override; broadened the CSS rule to cover both.
+- The stroke/tick coordinates (measured off p.9 for the earlier SVG
+  rebuild) put the ink's horizontal center around x≈40–42 in the 0–100
+  viewBox — visibly left of the quadrant's own center at x=50, most
+  noticeable on 1B/2B. Shifted both stroke endpoints +8 (46→54, 30→38) to
+  bring it closer to center; verified visually rather than re-measuring
+  the source for this one, since it's a legibility/balance call within an
+  already-measured design rather than a fidelity correction.
+
+## Follow-up: pinch-runner streepje now actually renders on the scorecard
+
+`buildPinchRunnerQuizEvent`'s `explain` text always described "een
+streepje tussen de honken op het moment van wisselen" (p.21), but nothing
+ever drew it — the substitution only ever updated the base occupant's
+`.name` in place, so the outgoing/incoming split was purely narrative.
+The mark sits in the *outgoing* runner's own scorecard cell (their
+lineup slot keeps owning that inning's cell; the incoming PR gets their
+own new lineup row per p.21, but no marks of their own for the inning
+the swap happened in).
+
+Geometry, cross-checked against a tight crop of the p.21 worked examples
+(VAN DOMMELEN/VAN DONGEN and VAN FIJNAART/VAN FELLENOORD) and refined
+across two passes:
+
+1. First implementation drew a short underline inside the specific
+   quadrant's own box — wrong, floated free of the grid entirely.
+2. Second pass overlaid the honk-vakje's central grid line full width —
+   closer (it's genuinely on a grid line now), but still wrong: a runner
+   replaced on 1st would thicken the *entire* horizontal divider,
+   including the unrelated 3e/thuis segment on the far side of the cell
+   that has nothing to do with this substitution.
+3. Final: only the grid segment between the quadrant the runner was
+   standing on and the *next* quadrant in the base-running order
+   (1e→2e→3e→thuis) gets thickened — e.g. replaced on 1st marks only the
+   1e/2e boundary (the right half of the horizontal divider), not the
+   3e/thuis one. Quadrant layout is 3e top-left, 2e top-right, thuis
+   bottom-left, 1e bottom-right, so the three cases are: 1e→2e is the
+   right half of the horizontal line, 2e→3e is the top half of the
+   vertical line, 3e→thuis is the left half of the horizontal line.
+
+Implementation: `generateEvent()` computes which base (and therefore
+quadrant) the pinch-run candidate occupies and passes it through to
+`buildPinchRunnerQuizEvent`, which returns a `pinchRunnerMarker:
+{teamKey, battingSlot, quadrant}` field. `applyEventToState` commits
+`{_prQ: quadrant}` into that cell (same pattern as the existing `_outQ`
+double-play marker), and `renderScorecardCellHTML` adds a `.sc-pr-mark
+.sc-pr-{quadrant}` element whenever `cell._prQ` is set, with a dedicated
+CSS rule per quadrant positioning the bar over just that half-segment.
+The `explain` text also names the specific quadrant instead of only
+describing the convention in the abstract.
+
+### Follow-up: PR shouldn't also get the generic "dikke streep"
+
+`buildPinchRunnerQuizEvent` reuses the same `lineupChange` mechanism as
+`buildPinchHitterQuizEvent` to add the incoming sub's new lineup row —
+but that path also unconditionally marked every inning cell in the row
+with `sc-subline`, the generic "dikke streep" from p.20. That line is
+specifically about *batting* substitutions: "de streep komt altijd te
+staan boven de eerste slagman die aan slag komt na de wissel" — it marks
+where the new *batter's* own recorded turns begin. Nothing in p.21's PR
+section or its worked examples calls for that line in addition to the
+honk-vakje streepje; a tight crop of the VAN DOMMELEN/VAN DONGEN example
+confirms the cell only ever gets the one grid-segment mark, no full-width
+line above it. `applyEventToState` now skips the `subMarkers` push when
+`ev.lineupChange.subType === 'PR'`, leaving the row's own name-change
+annotation (`slotEvents`) intact but without the redundant/incorrect
+substitution line.
+
+## Follow-up: audited every substitution marker's feedback text against what it actually draws
+
+Went through all four `Verandering van werper, slagman en veldspeler`
+event builders (`buildPositionChangeQuizEvent`, `buildPinchHitterQuizEvent`,
+`buildPitcherChangeQuizEvent`, `buildPinchRunnerQuizEvent`) and matched
+each one's actual `applyEventToState` side effect against what its
+`explain` text tells the user to expect. Re-reading p.20-21 closely
+(rather than the paragraph-at-a-time reading used the first time
+through) clarified that the four paragraphs there map to four distinct
+markers, not three:
+
+1. **Position swap between two already-playing fielders** (p.20, "Soms
+   blijven de spelers hetzelfde, maar nemen ze alleen een andere
+   veldpositie in") — bare position number + halfLabel on both players.
+   No streep on their *own* card. `buildPositionChangeQuizEvent` /
+   `posChange`.
+2. **Pinch hitter** (p.20) — `PH` + name + halfLabel, *plus* "een dikke
+   streep...waar de wissel plaatsvindt" separating what's scored for the
+   outgoing vs. incoming batter. `buildPinchHitterQuizEvent` /
+   `lineupChange` (`subMarkers` → `.sc-subline`).
+3. **Any fielder change, shown on the opposing (batting) team's card**
+   (p.21, "De wissel van de veldspeler wordt aan de andere kant van de
+   scorekaart aangegeven met een dikke horizontale streep...boven de
+   eerste slagman die aan slag komt na de wissel") — this is *not* the
+   same streep as #2; it's drawn on the *other* team's card, above
+   whichever batter happens to be up when the swap happens. The code
+   already implements this correctly for position swaps (`posChange` →
+   `fieldSubMarkers[oppTeam][oppSlot]` → `.sc-subline` on the opposing
+   team's current-batter cell) — it just wasn't mentioned anywhere in
+   `buildPositionChangeQuizEvent`'s `explain`.
+4. **Pitcher change** (p.21) — the same "opposing card" concept as #3,
+   but with the special bootje shape instead of a plain streep
+   (`boatMarkers`), plus a new row on the pitcher's own team's card
+   (`pitcherChange`/`slotEvents`, matching #2's own-card new-row
+   mechanic but *without* #2's dikke streep — pitchers don't get one).
+   The explain text already covered the bootje and the new row; it
+   didn't mention the optional stint-color convention from the very
+   next sentence in the source ("Het vereenvoudigt het overzicht van de
+   werperresultaten als na het bootje met een andere kleur wordt
+   doorgewerkt"), which the app does actually implement
+   (`G.stintColor`/`_stintQ`, alternating red/black ink).
+5. **Pinch runner** (p.21) — already covered in the follow-ups above:
+   the honk-vakje streepje, explicitly *not* the generic streep from #2.
+
+Fixes: strengthened `buildPositionChangeQuizEvent`'s `explain` to name
+the opposing team and their current batter by name and describe the
+`.sc-subline` mark that lands on that batter's cell; strengthened
+`buildPinchHitterQuizEvent`'s `explain` to mention the dikke streep (it
+previously only described the `PH`/name/halfLabel bookkeeping, leaving
+a real visual feature of the rendered scorecard unexplained);
+strengthened `buildPitcherChangeQuizEvent`'s `explain` with a one-line
+mention of the optional stint-color convention, framed as optional to
+match the source's own framing. Regression tests assert each `explain`
+now contains the relevant marker language.

@@ -124,15 +124,19 @@ describe("buildPinchRunnerQuizEvent", () => {
     bench.forEach((b, i) => {
       evalIn(dom, `G.slotEvents.away[${i}].push({type:'sub', name:${JSON.stringify(b.name)}})`);
     });
-    expect(dom.window.buildPinchRunnerQuizEvent({ name: "Loper", battingSlot: 0 }, "away")).toBeNull();
+    expect(dom.window.buildPinchRunnerQuizEvent({ name: "Loper", battingSlot: 0 }, "away", "2e")).toBeNull();
   });
 
-  it("otherwise builds a valid MC event naming the runner and the substitute", () => {
+  it("otherwise builds a valid MC event naming the runner and the substitute, and marks the swap quadrant", () => {
     const dom = setup();
-    const ev = dom.window.buildPinchRunnerQuizEvent({ name: "Loper", battingSlot: 0 }, "away");
+    const ev = dom.window.buildPinchRunnerQuizEvent({ name: "Loper", battingSlot: 0 }, "away", "2e");
     commonMcShape(ev);
     expect(ev.narrative).toContain("Loper");
+    expect(ev.explain).toContain("2e honk");
     expect(ev.lineupChange).toMatchObject({ teamKey: "away", slot: 0, subType: "PR" });
+    // the streepje (p.21) belongs in the outgoing runner's own cell, at the honk-vakje quadrant
+    // they were standing on when the swap happened — not the incoming PR's own (blank) row.
+    expect(ev.pinchRunnerMarker).toEqual({ teamKey: "away", battingSlot: 0, quadrant: "2e" });
   });
 });
 
@@ -147,6 +151,16 @@ describe("buildPositionChangeQuizEvent", () => {
     expect(ev.posChange.swaps[0].slot).not.toBe(ev.posChange.swaps[1].slot);
     expect(ev.posChange.swaps[0].newPos).not.toBe(ev.posChange.swaps[1].newPos);
     expect(ev.posChange.halfLabel).toBe(dom.window.halfInningLabel());
+  });
+
+  it("also explains the dikke streep it puts on the opposing team's current-batter cell (p.21)", () => {
+    const dom = setup();
+    stubRngConstant(dom, 0);
+    const ev = dom.window.buildPositionChangeQuizEvent("away");
+    const G = getG(dom);
+    const oppBatterName = dom.window.currentBatterName("home", G.battingIdx.home % 9);
+    expect(ev.explain).toContain("dikke streep");
+    expect(ev.explain).toContain(oppBatterName);
   });
 });
 
@@ -163,6 +177,12 @@ describe("buildPinchHitterQuizEvent", () => {
     });
     expect(dom.window.buildPinchHitterQuizEvent("home")).toBeNull();
   });
+
+  it("explains the dikke streep marking where the sub's own turns begin (p.20)", () => {
+    const dom = setup();
+    const ev = dom.window.buildPinchHitterQuizEvent("home");
+    expect(ev.explain).toContain("dikke streep");
+  });
 });
 
 describe("buildPitcherChangeQuizEvent", () => {
@@ -178,6 +198,13 @@ describe("buildPitcherChangeQuizEvent", () => {
     commonMcShape(ev);
     expect(ev.pitcherChange.teamKey).toBe("away");
     expect(ev.pitcherChange.newName).toBeTruthy();
+  });
+
+  it("explains the bootje, the new lineup row, and the optional stint color (p.20-21)", () => {
+    const dom = setup();
+    const ev = dom.window.buildPitcherChangeQuizEvent("away");
+    expect(ev.explain).toContain("bootje");
+    expect(ev.explain).toContain("kleur");
   });
 
   it("returns null once every relief pitcher has been used", () => {

@@ -194,7 +194,9 @@
   .qbtn:hover{background:rgba(21,52,88,.06);}
   .qbtn.q-any{
     top:50%; left:50%; width:28px; height:28px; margin:-14px 0 0 -14px; border-radius:50%;
-    background:#fff; border:1.5px solid var(--rule); z-index:4; align-items:center; justify-content:center;
+    /* Semi-transparent, not solid: on paper the "vrije ruimte" is written straight over the
+       honk-vakje's grid lines, not on a blank patch, so let them show through here too. */
+    background:rgba(255,255,255,.55); border:1.5px solid var(--rule); z-index:4; align-items:center; justify-content:center;
     font-size:.85rem; color:var(--ink-muted); padding:0;
   }
   .qbtn.q-any:hover{background:var(--sky); border-color:var(--navy-2);}
@@ -236,11 +238,19 @@
      render of p.9/p.20 rather than eyeballed — see honkslagMarkHTML(). */
   .hs-mark{display:inline-block; width:1em; height:1em; vertical-align:middle;}
   .hs-mark svg{display:block; width:100%; height:100%; overflow:visible;}
-  /* Inside an actual honk-vakje quadrant (.hist-text), size the mark off the quadrant's own
-     box instead of font-size, so it fills the cell the way it fills a quadrant on paper —
-     the SVG's own internal coordinates already carry the correct margin around the ink, so
-     the container itself should span (close to) the full quadrant, not add extra shrinkage. */
+  /* Inside an actual honk-vakje quadrant, size the mark off the quadrant's own box instead of
+     font-size, so it fills the cell the way it fills a quadrant on paper — the SVG's own
+     internal coordinates already carry the correct margin around the ink, so the container
+     itself should span (close to) the full quadrant, not add extra shrinkage. .hist-text is
+     confirmed history (scorecard cells, the builder's own-history quadrants, mini log entries'
+     history); .builder-text is the live #builderText preview while typing and the mini log
+     entries' own submitted-answer display — both take on the exact quadrant shape/size once a
+     specific honk (not "any") is selected, via the .slot-1e/2e/3e/thuis classes. */
   .hist-text .hs-mark{width:100%; height:100%;}
+  /* The live preview sits in the same quadrant as the "1e honk"/"2e honk"/... corner label
+     (.qbtn), so shrink it a bit off the full quadrant size to keep the diagonal stroke clear
+     of that label instead of drawing over it. */
+  .builder-text .hs-mark{width:78%; height:78%;}
   /* Extra base error arrow (pijltje): on paper it starts in the honk-vakje the runner left
      from and crosses into the one it arrived at (p.12's "E6" example: tail sits inside the
      1e-honk quadrant, shaft crosses the shared line, arrowhead ends inside 2e-honk) — not a
@@ -298,12 +308,12 @@
     min-width:0; white-space:normal;
   }
   .builder-text.slot-any{
-    inset:24px; font-size:1.15rem; border:1.5px solid var(--navy); border-radius:50%; background:#fff;
+    inset:24px; font-size:1.15rem; border:1.5px solid var(--navy); border-radius:50%; background:rgba(255,255,255,.55);
   }
   .builder-text.slot-any.state-correct{border-color:var(--green);}
   .builder-text.slot-any.state-wrong{border-color:var(--red);}
   .honk-cell.mini .builder-text.slot-any,
-  .honk-cell.sc-cell .builder-text.slot-any{inset:8px; border-width:1.5px; font-size:.9rem; background:#fff; border-color:#000 !important; color:#000;}
+  .honk-cell.sc-cell .builder-text.slot-any{inset:8px; border-width:1.5px; font-size:.9rem; background:rgba(255,255,255,.55); border-color:#000 !important; color:#000;}
   .builder-text.slot-1e{top:50%; left:50%; right:2px; bottom:2px; font-size:1rem;}
   .builder-text.slot-2e{top:2px; left:50%; right:2px; bottom:50%; font-size:1rem;}
   .builder-text.slot-3e{top:2px; left:2px; right:50%; bottom:50%; font-size:1rem;}
@@ -328,7 +338,10 @@
 
   .control-row{display:flex; align-items:stretch; gap:8px;}
   .input-wrap{position:relative; flex:1 1 140px;}
-  #submitBtn{flex:1 1 160px;}
+  /* Matches the input's own height (padding+border+line-height) so the button stays this tall
+     even in MC mode, where #inputWrap is hidden and it's the row's only flex child left to
+     stretch against. */
+  #submitBtn{flex:1 1 160px; min-height:39px;}
   .input-wrap input{
     width:100%; height:100%; box-sizing:border-box; padding:9px 26px 9px 10px;
     border:1.5px solid var(--navy); border-radius:4px; font-family:'IBM Plex Mono',monospace;
@@ -464,8 +477,6 @@
   table.sc-matchinfo-table td{border:1px solid #000; padding:5px 8px; color:#000;}
   table.sc-matchinfo-table td.mi-label{font-weight:700; width:110px; white-space:nowrap;}
   table.sc-matchinfo-table td.mi-colon{width:14px; text-align:center; color:#666;}
-  .sc-footer-table{margin-top:0; max-width:none; border-top:none;}
-  .sc-footer-table td.mi-value{text-align:left;}
   table.sc-matchinfo-table td.mi-value{text-align:center;}
 
   table.scorecard-table{border-collapse:collapse; font-size:.85rem; white-space:nowrap; background:#fff;}
@@ -494,6 +505,15 @@
   }
   .honk-cell.sc-cell .hist-text{font-size:.68rem; padding-top:3px; color:#000;}
   .honk-cell.sc-cell .hist-text.sc-stint-b{color:#d21f1f;}
+  /* Pinch runner: "een streepje tussen de honken op het moment van wisselen" (p.21) — a thick
+     line over just the segment of the honk-vakje's own grid that borders the quadrant the runner
+     was standing on and the *next* quadrant in the base-running order (1e->2e->3e->thuis), not
+     the full divider and not floating inside a quadrant. Quadrant layout: 3e top-left, 2e
+     top-right, thuis bottom-left, 1e bottom-right. */
+  .sc-pr-mark{position:absolute; background:#000; pointer-events:none;}
+  .sc-pr-mark.sc-pr-1e{left:50%; right:0; top:50%; height:2.5px; margin-top:-1.25px;}
+  .sc-pr-mark.sc-pr-2e{left:50%; top:0; bottom:50%; width:2.5px; margin-left:-1.25px;}
+  .sc-pr-mark.sc-pr-3e{left:0; right:50%; top:50%; height:2.5px; margin-top:-1.25px;}
   .honk-cell.sc-cell .builder-text.slot-any.sc-stint-b{border-color:#d21f1f !important; color:#d21f1f !important;}
   .honk-dot.sc-stint-b{background:#d21f1f;}
   .sc-out{
@@ -751,12 +771,6 @@
       <div class="table-scroll" id="scorecard-away"></div>
       <h2 style="margin-top:18px;"><span id="scHomeName">Team B</span></h2>
       <div class="table-scroll" id="scorecard-home"></div>
-      <table class="sc-matchinfo-table sc-footer-table">
-        <tr><td class="mi-label">Scheidsrechters:</td><td class="mi-value"></td></tr>
-        <tr><td class="mi-label">Scorer:</td><td class="mi-value"></td></tr>
-        <tr><td class="mi-label">Aanvangstijd:</td><td class="mi-value" id="scStartTime"></td></tr>
-        <tr><td class="mi-label">Opmerkingen scheidsrechter:</td><td class="mi-value"></td></tr>
-      </table>
     </div>
 
   </section>
@@ -839,7 +853,6 @@ function initGame(maxInnings, sport, matchNumber){
     stintColor:{away:0, home:0},
     lastPitcherChangeInning:{away:null, home:null},
     matchDate: now.toLocaleDateString('nl-NL'),
-    matchTime: now.toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'}),
   };
 }
 
@@ -961,8 +974,8 @@ function generateEvent(){
     if(pc) return pc;
   }
   if(anyRunner && rng()<0.05){
-    const runner = bases[2] || bases[1] || bases[0];
-    const pr = buildPinchRunnerQuizEvent(runner, battingKey());
+    const idx = bases[2] ? 2 : (bases[1] ? 1 : 0);
+    const pr = buildPinchRunnerQuizEvent(bases[idx], battingKey(), IDX_TO_QUADRANT[idx]);
     if(pr) return pr;
   }
   if(anyRunner && rng()<0.25){
@@ -1006,6 +1019,10 @@ function buildForcedOutFollowUpEvent(runnerName, quadrant, code, priorHistory, b
   const explain = customExplain || (alsoOut
     ? `Bij een dubbelspel noteer je bij allebei de spelers dezelfde aangooiketen: ook <b>${runnerName}</b> krijgt code <code>${code}</code>, in zijn eigen honk-vakje, met een cirkel omdat hij ook uit is.`
     : `Bij een velderskeus is het niet de slagman maar de voorgaande loper die uit gaat. <b>${runnerName}</b> krijgt in zijn eigen honk-vakje dezelfde aangooiketen als de slagman: code <code>${code}</code>, met een cirkel omdat hij hier de enige is die uit is.`);
+  // Capture the inning the underlying play happened in now, at queue time — this question may not be
+  // answered until after the half-inning (and G.inning) has already moved on, e.g. when this follow-up's
+  // own out is what pushes the half-inning's out count to 3.
+  const playInning = G.inning;
   return {
     forBatter:false, outsDelta:0, targetQuadrant:quadrant,
     code:code,
@@ -1016,7 +1033,7 @@ function buildForcedOutFollowUpEvent(runnerName, quadrant, code, priorHistory, b
     applyBases: b=>{
       if(battingSlot!==undefined && teamKey){
         const finalHist = Object.assign({}, priorHistory, {[quadrant]:code, _outQ:quadrant});
-        commitToScorecard(teamKey, battingSlot, G.inning, finalHist);
+        commitToScorecard(teamKey, battingSlot, playInning, finalHist);
       }
       return {bases:b, runs:0};
     },
@@ -1851,7 +1868,7 @@ function getAvailableBenchPlayer(teamKey, pool){
   return list.find(b => !everUsed.has(b.name)) || null;
 }
 
-function buildPinchRunnerQuizEvent(runner, teamKey){
+function buildPinchRunnerQuizEvent(runner, teamKey, quadrant){
   const sub = getAvailableBenchPlayer(teamKey);
   if(!sub) return null;
   const subName = sub.name;
@@ -1867,13 +1884,14 @@ function buildPinchRunnerQuizEvent(runner, teamKey){
     options: shuffled.options,
     correctIndex: shuffled.correctIndex,
     refs:['Verandering van werper, slagman en veldspeler, p.21'],
-    explain: `Een vervangende honkloper (pinch runner) noteer je met de afkorting <code>PR</code> in de positiekolom. Tussen de honken zet je een streepje op het punt waar de wissel plaatsvond, en <b>${subName}</b> rent vanaf nu verder als loper.`,
+    explain: `Een vervangende honkloper (pinch runner) noteer je met de afkorting <code>PR</code> in de positiekolom. Tussen de honken zet je een streepje op het punt waar de wissel plaatsvond — in het ${QUADRANT_SHORT[quadrant]}-vakje op de scorekaart hierboven, ter hoogte van het honk waar <b>${runner.name}</b> nu staat — en <b>${subName}</b> rent vanaf nu verder als loper.`,
     applyBases: b=>{
       const idx = b.findIndex(x=>x && x.name===runner.name);
       if(idx>=0) b[idx] = Object.assign({}, b[idx], {name:subName});
       return {bases:b, runs:0};
     },
     lineupChange: {teamKey, slot:runner.battingSlot, newName:subName, subType:'PR'},
+    pinchRunnerMarker: {teamKey, battingSlot:runner.battingSlot, quadrant},
   };
 }
 
@@ -1889,8 +1907,10 @@ function buildPositionChangeQuizEvent(fieldingTeamKey){
   const playerB = team.lineup[slotB];
   const curPosB = currentPos(fieldingTeamKey, slotB);
   const halfLabel = halfInningLabel();
+  const oppTeam = fieldingTeamKey==='away' ? 'home' : 'away';
+  const oppBatterName = currentBatterName(oppTeam, G.battingIdx[oppTeam] % 9);
   const shuffled = shuffleMcOptions([
-    `In het volgende positievakje van beide spelers komt hun nieuwe veldpositie (een kaal getal), en achter hun naam op een nieuwe regel komt "${halfLabel}" (de speelhelft en inning van de wissel).`,
+    `In het volgende positievakje van beide spelers komt hun nieuwe veldpositie (een kaal getal), en achter hun naam op een nieuwe regel komt "${halfLabel}" (de speelhelft en inning van de wissel). Ook komt er een dikke streep aan de andere kant van de scorekaart: bij de slagpartij, boven de eerste slagman die aan slag komt na de wissel.`,
     'Met de letters "PR" in de kolom.',
     'Met een schuine streep in het honkvakje.',
     'Dit hoeft niet apart genoteerd te worden.'
@@ -1900,8 +1920,8 @@ function buildPositionChangeQuizEvent(fieldingTeamKey){
     narrative: `<b>${playerA.name}</b> (nu ${POS_NAMES[curPosA]}) en <b>${playerB.name}</b> (nu ${POS_NAMES[curPosB]}) wisselen onderling van positie.`,
     options: shuffled.options,
     correctIndex: shuffled.correctIndex,
-    refs:['Verandering van werper, slagman en veldspeler, p.20'],
-    explain: `Een positiewissel van spelers die blijven spelen noteer je bij ieder van hen in het volgende positievakje: alleen het kale positienummer (<code>${curPosB}</code> bij <b>${playerA.name}</b>, <code>${curPosA}</code> bij <b>${playerB.name}</b>). Achter hun naam, op een nieuwe regel, komt de speelhelft en inning van de wissel: <code>${halfLabel}</code>.`,
+    refs:['Verandering van werper, slagman en veldspeler, p.20-21'],
+    explain: `Een positiewissel van spelers die blijven spelen noteer je bij ieder van hen in het volgende positievakje: alleen het kale positienummer (<code>${curPosB}</code> bij <b>${playerA.name}</b>, <code>${curPosA}</code> bij <b>${playerB.name}</b>). Achter hun naam, op een nieuwe regel, komt de speelhelft en inning van de wissel: <code>${halfLabel}</code>. De wissel van een veldspeler wordt ook aangegeven aan de andere kant van de scorekaart: bij <b>${G[oppTeam].name}</b> komt een dikke streep boven het vakje van de huidige slagman, <b>${oppBatterName}</b>, want die is de eerste die aan slag komt na deze wissel.`,
     applyBases: b=>({bases:b, runs:0}),
     posChange: {teamKey:fieldingTeamKey, swaps:[{slot:slotA, newPos:curPosB}, {slot:slotB, newPos:curPosA}], halfLabel},
   };
@@ -1927,7 +1947,7 @@ function buildPinchHitterQuizEvent(teamKey){
     options: shuffled.options,
     correctIndex: shuffled.correctIndex,
     refs:['De scorekaart, p.7', 'Verandering van werper, slagman en veldspeler, p.20'],
-    explain: `Een vervangende slagman (pinch hitter) noteer je met de afkorting <code>PH</code> in de positiekolom, met de naam van <b>${subName}</b> en het moment van wisselen (<code>${halfLabel}</code>) erbij.`,
+    explain: `Een vervangende slagman (pinch hitter) noteer je met de afkorting <code>PH</code> in de positiekolom, met de naam van <b>${subName}</b> en het moment van wisselen (<code>${halfLabel}</code>) erbij. Ook zet je een dikke streep op de scorekaart waar de wissel plaatsvindt, zodat duidelijk is dat wat ervoor gescoord is voor <b>${originalName}</b> geldt en wat erna komt voor <b>${subName}</b>.`,
     applyBases: b=>({bases:b, runs:0}),
     lineupChange: {teamKey, slot, newName: subName, subType:'PH'},
   };
@@ -1960,7 +1980,7 @@ function buildPitcherChangeQuizEvent(fieldingTeamKey){
     options: shuffled.options,
     correctIndex: shuffled.correctIndex,
     refs:['Verandering van werper, slagman en veldspeler, p.20-21'],
-    explain: `Bij een werperwissel plaats je aan de kant van de slagpartij (dus op de scorekaart van de tegenstander) een dikke horizontale streep met de uiteinden een stukje omhoog: het "bootje". Bij ${team.name} zelf komt <b>${subName}</b> op een nieuwe regel onder <b>${curName}</b> in hetzelfde slagvolgordevakje: alleen het kale cijfer <code>1</code> in de positiekolom (want werper is positie 1), met zijn naam en daarachter <code>${halfLabel}</code> (de speelhelft en inning van de wissel).`,
+    explain: `Bij een werperwissel plaats je aan de kant van de slagpartij (dus op de scorekaart van de tegenstander) een dikke horizontale streep met de uiteinden een stukje omhoog: het "bootje". Bij ${team.name} zelf komt <b>${subName}</b> op een nieuwe regel onder <b>${curName}</b> in hetzelfde slagvolgordevakje: alleen het kale cijfer <code>1</code> in de positiekolom (want werper is positie 1), met zijn naam en daarachter <code>${halfLabel}</code> (de speelhelft en inning van de wissel). Optioneel werk je na het bootje verder in een andere kleur inkt (zoals hier), zodat het overzicht van de werperresultaten per werper duidelijk blijft.`,
     applyBases: b=>({bases:b, runs:0}),
     pitcherChange: {teamKey:fieldingTeamKey, slot, newName:subName, halfLabel},
   };
@@ -2004,6 +2024,8 @@ function buildAdvanceCreditEvent(adv, battingOrderNum, batterName, priorHistory,
   else quadrant='2e';
   const triggerLabel = CREDIT_TRIGGER_LABEL[triggerCode]
     || (triggerCode && triggerCode[0]==='E' ? 'de fout na de slag van' : 'de slagbeurt van');
+  // Capture now (see buildForcedOutFollowUpEvent) in case this credit question is answered after G.inning moves on.
+  const playInning = G.inning;
   return {
     forBatter:false, outsDelta:0, targetQuadrant:quadrant,
     code:String(battingOrderNum),
@@ -2014,13 +2036,13 @@ function buildAdvanceCreditEvent(adv, battingOrderNum, batterName, priorHistory,
     applyBases: b=>{
       const finalHist = Object.assign({}, priorHistory, {[quadrant]:String(battingOrderNum)}, quadrant==='thuis'?{scored:true}:{});
       if(quadrant==='thuis'){
-        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, G.inning, finalHist);
+        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, playInning, finalHist);
       } else {
         const idx = b.findIndex(x=>x && x.name===adv.name);
         if(idx>=0){
           b[idx] = Object.assign({}, b[idx], {arrivedVia:String(battingOrderNum), history:finalHist});
         }
-        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, G.inning, finalHist);
+        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, playInning, finalHist);
       }
       return {bases:b, runs:0};
     },
@@ -2045,6 +2067,8 @@ function buildRunnerFollowUpEvent(adv, label, priorHistory, battingSlot, teamKey
   else if(adv.toIdx===1) quadrant='2e';
   else if(adv.toIdx===2) quadrant='3e';
   else quadrant='2e';
+  // Capture now (see buildForcedOutFollowUpEvent) in case this follow-up is answered after G.inning moves on.
+  const playInning = G.inning;
   return {
     forBatter:false, outsDelta:0, targetQuadrant:quadrant,
     code:label,
@@ -2055,13 +2079,13 @@ function buildRunnerFollowUpEvent(adv, label, priorHistory, battingSlot, teamKey
     applyBases: b=>{
       const finalHist = Object.assign({}, priorHistory, {[quadrant]:label}, quadrant==='thuis'?{scored:true}:{});
       if(quadrant==='thuis'){
-        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, G.inning, finalHist);
+        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, playInning, finalHist);
       } else {
         const idx = b.findIndex(x=>x && x.name===adv.name);
         if(idx>=0){
           b[idx] = Object.assign({}, b[idx], {arrivedVia:label, history:finalHist});
         }
-        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, G.inning, finalHist);
+        if(battingSlot!==undefined && teamKey) commitToScorecard(teamKey, battingSlot, playInning, finalHist);
       }
       return {bases:b, runs:0};
     },
@@ -2087,6 +2111,17 @@ function applyEventToState(ev){
   // queued before any OTHER runners' credit turns from the same play, not stuck behind them.
   if(ev.forBatter && ev.extraBaseErrorCode){
     G.pendingEvents.push(buildExtraBaseArrowEvent(batterName, ev.extraBaseErrorCode, '1e', '2e'));
+  }
+
+  // A defensive play put a non-batter runner out (FC/DP/CS/PO): this is the "second half" of the
+  // very same action the just-answered question described, and its own narrative only ever refers
+  // back to "dezelfde actie" without spelling it out again — so it must be queued (and asked) right
+  // after that question, before any OTHER runners' advance-credit turns from the same play (e.g. a
+  // DP with runners forced from 2nd/3rd on loaded bases), not stuck behind them.
+  if(result.outRunner){
+    const orig = result.outRunner;
+    const alsoOut = (ev.outsDelta || 0) >= 2;
+    G.pendingEvents.push(buildForcedOutFollowUpEvent(orig.name, orig.quadrant, orig.code, orig.priorHistory, orig.battingSlot, teamKey, null, alsoOut, orig.refs, orig.explain));
   }
 
   if(ev.forBatter && result.advanced && result.advanced.length){
@@ -2123,8 +2158,21 @@ function applyEventToState(ev){
   if(ev.lineupChange){
     const {teamKey:lcTeam, slot:lcSlot, newName, subType} = ev.lineupChange;
     G.slotEvents[lcTeam][lcSlot].push({type:'sub', name:newName, posDisplay:subType||'PH', halfLabel:halfInningLabel(), inning:G.inning, half:G.half});
-    if(!G.subMarkers[lcTeam][lcSlot]) G.subMarkers[lcTeam][lcSlot] = [];
-    G.subMarkers[lcTeam][lcSlot].push(G.inning);
+    // The "dikke streep" (p.20) marks where a new BATTER's own recorded turns begin — it doesn't
+    // apply to a pinch runner (p.21), who gets only the honk-vakje streepje above, not a generic
+    // substitution line across their row's cells.
+    if(subType !== 'PR'){
+      if(!G.subMarkers[lcTeam][lcSlot]) G.subMarkers[lcTeam][lcSlot] = [];
+      G.subMarkers[lcTeam][lcSlot].push(G.inning);
+    }
+  }
+
+  // A pinch runner takes over mid-basepath: the streepje marking the swap belongs in the outgoing
+  // runner's own scorecard cell (p.21), at the honk-vakje quadrant they were standing on when it
+  // happened — not in the incoming PR's own (otherwise blank) lineup row.
+  if(ev.pinchRunnerMarker){
+    const {teamKey:prTeam, battingSlot:prSlot, quadrant:prQ} = ev.pinchRunnerMarker;
+    commitToScorecard(prTeam, prSlot, G.inning, {_prQ: prQ});
   }
 
   if(ev.pitcherChange){
@@ -2159,13 +2207,6 @@ function applyEventToState(ev){
       const finalHist = Object.assign({}, ev.priorHistory, {thuis: ev.runnerAdvanceLabel, scored:true});
       commitToScorecard(teamKey, orig.battingSlot, G.inning, finalHist);
     }
-  }
-
-  // A defensive play put a non-batter runner out (FC/DP/CS/PO): commit their final line to the scorecard.
-  if(result.outRunner){
-    const orig = result.outRunner;
-    const alsoOut = (ev.outsDelta || 0) >= 2;
-    G.pendingEvents.push(buildForcedOutFollowUpEvent(orig.name, orig.quadrant, orig.code, orig.priorHistory, orig.battingSlot, teamKey, null, alsoOut, orig.refs, orig.explain));
   }
 
   // Sync any still-active runner's current progress to the scorecard now that this turn has been checked,
@@ -2330,7 +2371,7 @@ function honkslagMarkHTML(n){
   // stroke runs from ~(46,18) to ~(30,80) — a ~13deg lean off vertical spanning
   // the middle ~60% of the quadrant's height — and each tick is a ~22-unit-wide,
   // essentially horizontal bar crossing the stroke, starting near its top end.
-  const strokeStart = {x:46, y:18}, strokeEnd = {x:30, y:80};
+  const strokeStart = {x:54, y:18}, strokeEnd = {x:38, y:80};
   const tickYs = {1:[29], 2:[31,40], 3:[32,42,52]}[n] || [];
   const tickHalfLen = 11;
   const xAt = y => strokeStart.x + (strokeEnd.x - strokeStart.x) * (y - strokeStart.y) / (strokeEnd.y - strokeStart.y);
@@ -2372,6 +2413,12 @@ function renderScorecardCellHTML(cell){
     const dotCls = stints.thuis ? ' sc-stint-b' : '';
     html += `<span class="honk-dot${dotCls}" title="Punt gescoord"></span>`;
   }
+  if(cell._prQ){
+    // Pinch runner (p.21): the streepje sits exactly on the grid line between the honk-vakje
+    // quadrant the runner was standing on and the *next* quadrant in the base-running order — e.g.
+    // replaced on 1st, the line covers only the 1e/2e boundary, not the unrelated 3e/thuis divider.
+    html += `<span class="sc-pr-mark sc-pr-${cell._prQ}"></span>`;
+  }
   html += `</div>`;
   return html;
 }
@@ -2386,7 +2433,6 @@ function renderFullScorecard(){
       <tr><td class="mi-label">Gespeeld te:</td><td class="mi-value" colspan="3">—</td></tr>
       <tr><td class="mi-label">Datum:</td><td class="mi-value">${G.matchDate}</td><td class="mi-label">Wedstrijdnummer:</td><td class="mi-value">${G.matchNumber}</td></tr>
     </table>`;
-  document.getElementById('scStartTime').textContent = G.matchTime + ' uur';
 
   ['away','home'].forEach(teamKey=>{
     const team = G[teamKey];
