@@ -13,6 +13,10 @@ Elke wedstrijd is herhaalbaar: via een wedstrijdnummer in de URL
 (`?wedstrijd=...`) speel je exact dezelfde situaties opnieuw, handig om een
 lastige speelsituatie nogmaals te oefenen of te delen.
 
+Wedstrijdnummer `795231` (5 innings, Honkbal) lijkt van alle mogelijke
+wedstrijden qua plays het meest op de voorbeeldwedstrijd uit de officiële
+cursus (zie [`analysis/`](./analysis) voor de methodiek).
+
 Geen installatie nodig — de app draait volledig in de browser, er wordt
 niets opgeslagen of verzonden.
 
