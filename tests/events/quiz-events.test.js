@@ -215,4 +215,35 @@ describe("buildPitcherChangeQuizEvent", () => {
     });
     expect(dom.window.buildPitcherChangeQuizEvent("away")).toBeNull();
   });
+
+  it("targets the bootje at the opponent's actual last-faced at-bat, not just G.inning right now", () => {
+    // away's pitcher change is decided at the top-of-2-ending boundary (away is switching from
+    // batting to fielding), so the outgoing pitcher's last real outing was during home's *previous*
+    // batting half — bottom of inning 1 — a whole inning behind the decision point (G.inning=2).
+    const dom = setup();
+    evalIn(dom, "G.inning = 2;");
+    evalIn(dom, "G.battingIdx.home = 9;"); // last completed home batter: slot (9-1+9)%9 = 8
+    evalIn(dom, "G.atBatIndex.home[8] = {inning: 1, idx: 0};"); // that at-bat really happened in inning 1
+    const ev = dom.window.buildPitcherChangeQuizEvent("away");
+    expect(ev.pitcherChange.oppTeam).toBe("home");
+    expect(ev.pitcherChange.oppSlot).toBe(8);
+    expect(ev.pitcherChange.boatInning).toBe(1); // the bootje's column: inning 1, not 2
+  });
+
+  it("commits the bootje into G.boatMarkers at boatInning, but the guard bookkeeping stays tied to G.inning at answer time", () => {
+    // The guard (G.lastPitcherChangeInning) governs *whether a future pitcher change fires at
+    // all* — a game-generation decision — unlike boatInning, which is purely where a mark gets
+    // drawn. Backdating the guard the same way as boatInning would change which matches get
+    // offered a 2nd pitcher change, silently shifting the RNG sequence for every already-seeded
+    // matchNumber; it must stay G.inning right now, not the captured/earlier boatInning.
+    const dom = setup();
+    evalIn(dom, "G.inning = 2;");
+    evalIn(dom, "G.battingIdx.home = 9;");
+    evalIn(dom, "G.atBatIndex.home[8] = {inning: 1, idx: 0};");
+    const ev = dom.window.buildPitcherChangeQuizEvent("away");
+    dom.window.applyEventToState(ev);
+    const G = getG(dom);
+    expect(G.boatMarkers.home[8]).toEqual([{ inning: 1, color: expect.any(Number), atBat: 0 }]);
+    expect(G.lastPitcherChangeInning.away).toBe(2);
+  });
 });

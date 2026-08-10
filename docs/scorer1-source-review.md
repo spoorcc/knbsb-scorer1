@@ -615,3 +615,34 @@ instead of overwriting the first. See CLAUDE.md's "Batting around" section
 for the mechanism and `tests/integration/known-issues.test.js` for the
 regression test (matchNumber `100165`, previously a confirmed dot-count
 undercount, now exact).
+
+## Follow-up: bootje landed one inning late
+
+Spotted in the same conversation, on the same match: the pitcher-change
+"bootje" (p.21) was rendering one column later than it should — e.g. a
+wedstrijdnummer `795231` bootje that belongs at the end of Bal op het dak's
+inning-1 column (the last batter Honkvast's outgoing pitcher actually
+faced) was showing up at the start of inning 2 instead.
+
+Root cause: `buildPitcherChangeQuizEvent` is queued from `endHalfInning()`
+*before* `G.inning`/`G.half` toggle to the next half, but isn't answered
+until later — so the old code, which recomputed the opposing team's "last
+batter" slot and inning fresh at answer time, read `G.inning` *after* it
+had already advanced. Worse than a simple off-by-one: since the fielding
+team only pitches on alternating halves, the outgoing pitcher's actual last
+outing is commonly a whole inning further back than the half-inning
+boundary the change was decided at — not just "the previous G.inning".
+Fixed by reading the opposing slot's own `G.atBatIndex` record (which
+already has the inning that at-bat really happened in) at build time, the
+same capture-before-the-boundary pattern `buildForcedOutFollowUpEvent`
+already uses for `playInning`.
+
+Deliberately did *not* apply the same backdating to `G.lastPitcherChangeInning`
+(the "only one pitcher-change decision per team per half-inning-transition"
+guard) even though it looked like the same bug at first: that value feeds
+back into whether *future* pitcher-change quizzes get offered at all, so
+backdating it would change which matches get a 2nd pitcher change and
+silently shift the RNG sequence for every already-seeded matchNumber —
+confirmed by matchNumber `100002`'s previously-pinned double play briefly
+vanishing when tried. The bootje's own column is purely visual (never read
+back into game generation), so backdating *that* is safe.
