@@ -254,7 +254,7 @@ describe("buildBatterEvent(FC) — force-out branch selection by base state", ()
     expect(ev.outsDelta).toBe(1);
     expect(ev.targetQuadrant).toBe("1e");
     const result = ev.applyBases(bases);
-    expect(result.outRunner).toMatchObject({ name: "Loper1", battingSlot: 0, quadrant: "2e", code: ev.code });
+    expect(result.outRunner).toMatchObject({ name: "Loper1", battingSlot: 0, quadrant: "2e", code: `(${ev.code})` });
     expect(result.bases[0]).toMatchObject({ name: "Slagman" });
   });
 
@@ -271,7 +271,7 @@ describe("buildBatterEvent(FC) — force-out branch selection by base state", ()
     commonShape(ev);
     expect(ev.code).toMatch(/^FC\d5?$/);
     const result = ev.applyBases(bases);
-    expect(result.outRunner).toMatchObject({ name: "Loper2", battingSlot: 1, quadrant: "3e", code: ev.code });
+    expect(result.outRunner).toMatchObject({ name: "Loper2", battingSlot: 1, quadrant: "3e", code: `(${ev.code})` });
     expect(result.bases[1]).toMatchObject({ name: "Loper1" });
   });
 
@@ -288,7 +288,7 @@ describe("buildBatterEvent(FC) — force-out branch selection by base state", ()
     commonShape(ev);
     expect(ev.code).toMatch(/^FC\d2$/);
     const result = ev.applyBases(bases);
-    expect(result.outRunner).toMatchObject({ name: "Loper3", battingSlot: 2, quadrant: "thuis", code: ev.code });
+    expect(result.outRunner).toMatchObject({ name: "Loper3", battingSlot: 2, quadrant: "thuis", code: `(${ev.code})` });
     expect(result.bases[1]).toMatchObject({ name: "Loper1" });
     expect(result.bases[2]).toMatchObject({ name: "Loper2" });
   });
@@ -326,8 +326,8 @@ describe("buildBatterEvent(FCINT) — runner interference gives the batter FC, t
     const result = ev.applyBases(bases);
     expect(result.bases[0]).toMatchObject({ name: "Slagman" });
     expect(result.outRunner).toMatchObject({ name: "Loper1", battingSlot: 0, quadrant: "2e" });
-    // the runner's own code is the bare fielder digit, not the batter's FCx code
-    expect(result.outRunner.code).toMatch(/^[46]$/);
+    // the runner's own code is the bare fielder digit, circled, not the batter's FCx code
+    expect(result.outRunner.code).toMatch(/^\([46]\)$/);
     expect(Array.isArray(result.outRunner.refs)).toBe(true);
     expect(typeof result.outRunner.explain).toBe("string");
   });
@@ -411,7 +411,7 @@ describe("buildBatterEvent — sacrifice and double plays", () => {
     // throw chain across the two players' cells rather than duplicating the full chain.
     expect(ev.code).toBe("43");
     const result = ev.applyBases(bases);
-    expect(result.outRunner).toMatchObject({ name: "Loper", battingSlot: 0, quadrant: "2e", code: "64" });
+    expect(result.outRunner).toMatchObject({ name: "Loper", battingSlot: 0, quadrant: "2e", code: "(64)" });
     expect(Array.isArray(result.outRunner.refs)).toBe(true);
     expect(typeof result.outRunner.explain).toBe("string");
     expect(result.bases).toEqual([null, null, null]);
@@ -433,7 +433,7 @@ describe("buildBatterEvent — sacrifice and double plays", () => {
     // force — bare "5", not a throw chain like "DP"'s combos — then throws to first for "53".
     expect(ev.code).toBe("53");
     const result = ev.applyBases(bases);
-    expect(result.outRunner).toMatchObject({ name: "Tweede", battingSlot: 1, quadrant: "3e", code: "5" });
+    expect(result.outRunner).toMatchObject({ name: "Tweede", battingSlot: 1, quadrant: "3e", code: "(5)" });
     expect(Array.isArray(result.outRunner.refs)).toBe(true);
     expect(typeof result.outRunner.explain).toBe("string");
     // The batter is out (never reaches base); the runner originally on 1st safely advances to 2nd.

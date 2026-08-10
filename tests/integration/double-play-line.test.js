@@ -50,7 +50,7 @@ describe("dubbelspel connecting line — end-to-end through a real game", () => 
 
     // Both halves of the play really did land in the scorecard the way drawDpLines() expects:
     // the runner's own cell circled in the 2e quadrant, the batter's own cell as a whole-cell out.
-    expect(G.scorecard.home[5][3][0]).toMatchObject({ "2e": "54", _outQ: "2e" });
+    expect(G.scorecard.home[5][3][0]).toMatchObject({ "2e": "(54)" });
     expect(G.scorecard.home[6][3][0]).toMatchObject({ out: "43" });
 
     // renderFullScorecard() is already called after every answer during play, but call it once
@@ -76,7 +76,7 @@ describe("dubbelspel connecting line — end-to-end through a real game", () => 
       { inning: 3, runnerSlot: 7, runnerQuadrant: "3e", runnerAtBat: 0, batterSlot: 1, batterAtBat: 0 },
     ]);
 
-    expect(G.scorecard.home[7][3][0]).toMatchObject({ "3e": "5", _outQ: "3e" });
+    expect(G.scorecard.home[7][3][0]).toMatchObject({ "3e": "(5)" });
     expect(G.scorecard.home[1][3][0]).toMatchObject({ out: "53" });
 
     dom.window.renderFullScorecard();

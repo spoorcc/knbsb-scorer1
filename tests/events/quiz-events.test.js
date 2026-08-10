@@ -29,7 +29,7 @@ describe("buildForcedOutFollowUpEvent", () => {
     const result = ev.applyBases([null, null, null]);
     expect(result.runs).toBe(0);
     const G = getG(dom);
-    expect(G.scorecard.away[3][1][0]).toMatchObject({ "1e": "1B", "2e": "643", _outQ: "2e" });
+    expect(G.scorecard.away[3][1][0]).toMatchObject({ "1e": "1B", "2e": "643" });
   });
 
   it("phrases it as 'the only one out' when alsoOut is false (fielder's choice)", () => {
