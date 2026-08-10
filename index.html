@@ -1864,10 +1864,10 @@ function buildEndOfInningQuizEvent(){
     {
       narrative: `De achtervanger laat een aangegooide bal vallen, waardoor een honkloper een extra honk kan opschuiven die hij anders niet had gehaald. Was dit een fout van de achtervanger?`,
       options: [
-        'Ja, want zonder de fout was de loper niet zo ver gekomen.',
-        'Nee, dit soort onhandigheid tellen we nooit als fout.',
-        'Alleen als de bal ook nog buiten het speelveld terechtkomt.',
-        'Alleen als de scheidsrechter het aanwijst.'
+        'Ja, want zonder de fout was de loper niet verder gekomen dan hij al stond; dat hij dankzij de gemiste bal een extra honk haalt, telt als fout voor de achtervanger.',
+        'Nee, een gemiste vangbal telt alleen als fout wanneer de veldspeler de bal ook daadwerkelijk had moeten aanraken om hem goed te verwerken.',
+        'Alleen als de bal na het missen ook nog buiten het speelveld terechtkomt; anders reken je het toe aan het harde lopen van de loper zelf.',
+        'Nee, dit reken je toe aan de snelheid van de loper, niet aan de achtervanger, want die deed tenminste nog een poging tot de vangst.'
       ], correctIndex: 0,
       refs:['Fouten, p.11-12, Scoreregel 9.12'],
       explain: 'Een gemiste aangooi of vangbal die een loper in staat stelt verder te komen dan hij anders had gehaald, is een fout, ook als de veldspeler de bal niet had hoeven aanraken om hem wel goed te verwerken.',
@@ -1875,10 +1875,10 @@ function buildEndOfInningQuizEvent(){
     {
       narrative: `Er is een langzame, moeizame verwerking van de bal door een veldspeler, maar hij behandelt de bal verder niet verkeerd. Is dit een fout?`,
       options: [
-        'Nee, traagheid alleen is een denk- of beoordelingsfout en die scoren we niet als E.',
-        'Ja, elke aarzeling telt als fout.',
-        'Alleen bij de tweede honkman.',
-        'Alleen als de slagman daardoor een extra honk haalt.'
+        'Nee, traagheid alleen is een denk- of beoordelingsfout, en die scoren we niet als E, ook al kost het de veldpartij tijd.',
+        'Ja, want trage verwerking is net zo goed een fout als een verkeerd gevangen of gegooide bal, aangezien het de veldpartij evengoed tijd kost.',
+        'Alleen als de trage verwerking de slagman ook echt een extra honk oplevert dat hij anders niet had gehaald.',
+        'Ja, maar alleen wanneer de veldspeler de bal wél goed vasthoudt en gewoon te langzaam aangooit naar het honk.'
       ], correctIndex: 0,
       refs:['Fouten, p.11, Scoreregel 9.12'],
       explain: 'Langzame verwerking zonder de bal verkeerd te behandelen is geen fout. Dat zijn denk- of beoordelingsfouten, en die noteer je niet als E.',
@@ -1887,31 +1887,31 @@ function buildEndOfInningQuizEvent(){
       narrative: `Wanneer geldt "binnenhoog" (infield fly) precies?`,
       options: [
         'Bij een goed geslagen hoge bal die een binnenvelder redelijkerwijs kan vangen, met minstens 1e en 2e honk bezet en minder dan twee uit.',
-        'Bij elke hoge bal in het binnenveld, ongeacht hoeveel honken bezet zijn.',
-        'Alleen als er drie honken bezet zijn.',
-        'Alleen bij een stootslag.'
+        'Bij een goed geslagen hoge bal die een binnenvelder redelijkerwijs kan vangen, met minstens 1e en 2e honk bezet — ongeacht het aantal uit.',
+        'Bij een goed geslagen hoge bal die een binnenvelder kan vangen, zodra er minstens één honkloper op de honken staat en minder dan twee uit zijn.',
+        'Bij elke hoge bal die in de buurt van het binnenveld valt, ook line drives en stootslagen, zolang er een loper op het eerste honk staat.'
       ], correctIndex: 0,
       refs:['Uit door vangbal, Infield fly, p.17'],
       explain: 'Binnenhoog vereist een goed geslagen hoge bal (geen line-drive of stootslag), die een binnenvelder redelijkerwijs kan vangen, met 1e+2e honk (of alle honken) bezet en minder dan twee uit. Dit beschermt de lopers tegen een dubbelspel als de bal per ongeluk valt.',
     },
     {
-      narrative: `Wanneer telt een stootslag NIET als sacrifice hit (SH), ook al legt de slagman 'm netjes neer?`,
+      narrative: `Bij een keurig neergelegde stootslag zijn er nog geen twee uit, en de loper komt daadwerkelijk een honk verder. Wanneer telt dit ondanks dat tóch NIET als sacrifice hit (SH)?`,
       options: [
-        'Als de slagman zelf ook veilig het honk bereikt in plaats van uit te gaan.',
-        'Als er een loper op het derde honk staat.',
-        'Als er al twee uit zijn en de slagman toch uitgaat.',
-        'Een stootslag is altijd een SH, ongeacht de afloop.'
+        'Als de slagman zelf óók veilig het honk bereikt, in plaats van zelf uit te gaan.',
+        'Als de fout die de slagman alsnog veilig laat staan, wordt gemaakt door de derde honkman in plaats van de eerste honkman.',
+        'Als de slagman de bal niet recht voor de thuisplaat, maar meer richting het derde honk legt.',
+        'Als de loper die opschuift een invaller (pinch runner) is in plaats van de oorspronkelijke honkloper.'
       ], correctIndex: 0,
       refs:['Sacrifice hit, p.17, Scoreregel 9.08'],
-      explain: 'Een sacrifice hit vereist dat de slagman zelf daadwerkelijk uit gaat én de loper een honk verder brengt. Blijft de slagman ook veilig, dan is het geen SH meer maar een gewone honkslag of fout.',
+      explain: 'Een sacrifice hit vereist dat de slagman zelf daadwerkelijk uit gaat én de loper een honk verder brengt. Blijft de slagman ook veilig, dan is het geen SH meer maar een gewone honkslag of fout — ongeacht welke veldspeler erbij betrokken was, waar de stootslag precies neerkwam, of wie er als loper meeging.',
     },
     {
       narrative: `Welk verschil zit er tussen het scoreteken voor honkbal en voor softbal wanneer de slagman gehinderd wordt door de achtervanger bij het slaan?`,
       options: [
         'Honkbal noteert INT, softbal noteert OB, want hinderen door de veldpartij kan bij softbal reglementair niet.',
-        'Er is geen verschil, beide noteren INT.',
-        'Softbal noteert een fout met een pijltje erbij.',
-        'Bij softbal wordt dit nooit apart genoteerd.'
+        'Beide sporten noteren INT; het verschil zit alleen in de kolom waar je het scoreteken plaatst, niet in de code zelf.',
+        'Honkbal noteert INT, softbal noteert dezelfde code INT met een sterretje erachter om aan te geven dat het om softbal gaat.',
+        'Softbal noteert dit als een gewone fout (E) van de achtervanger, omdat obstructie in softbal geen apart scoreteken heeft.'
       ], correctIndex: 0,
       refs:['Interference/Obstruction tegen de slagman, p.12'],
       explain: 'Bij honkbal noteer je INT (interference). Bij softbal kan de veldpartij reglementair niet hinderen, dus daar noteer je in plaats daarvan OB (obstruction).',
@@ -1920,9 +1920,9 @@ function buildEndOfInningQuizEvent(){
       narrative: `Wat is het verschil tussen een dubbelspel (DP) en gewoon twee losse nullen na elkaar in dezelfde slagbeurt?`,
       options: [
         'Bij een dubbelspel horen de twee nullen bij één ononderbroken actie, en verbind je ze met een streep.',
-        'Een dubbelspel is gewoon hetzelfde, alleen sneller.',
-        'Bij een dubbelspel mag je maar één van de twee spelers noteren.',
-        'Een dubbelspel kan alleen bij drie honken bezet.'
+        'Bij een dubbelspel schrijf je de volledige aangooiketen twee keer helemaal over, één keer in elk honk-vakje van de uitgemaakte spelers.',
+        'Een dubbelspel onderscheid je alleen doordat je de afkorting "DP" apart in de kantlijn van de scorekaart erbij zet.',
+        'Bij een dubbelspel noteer je alleen de laatste stap van de aangooiketen, omdat de eerdere stappen al bij de vorige slagman zouden staan.'
       ], correctIndex: 0,
       refs:['Dubbelspel, p.19'],
       explain: 'Een dubbelspel is specifiek twee nullen in één ononderbroken actie, herkenbaar aan de streep die de twee cirkels met elkaar verbindt. Twee losse outs in aparte acties zijn geen dubbelspel.',
@@ -1931,9 +1931,9 @@ function buildEndOfInningQuizEvent(){
       narrative: `Wanneer een honkloper wordt uitgegeven omdat hij een andere honkloper passeert op de honkenpaden, voor welke veldspeler noteer je dan de "nul"?`,
       options: [
         'Voor de veldspeler die het dichtst stond bij de plek waar het passeren plaatsvond.',
-        'Voor de achtervanger, want die is altijd verantwoordelijk.',
-        'Voor de werper.',
-        'Dit wordt helemaal niet genoteerd.'
+        'Voor de veldspeler die als laatste de bal in bezit had, ook al stond die op dat moment niet in de buurt van het passeren.',
+        'Voor de veldspeler die het honk bewaakt waar de gepasseerde loper naartoe onderweg was, ongeacht waar het passeren plaatsvond.',
+        'Voor de honkloper zelf: je noteert een zelfstandige "nul" zonder daarbij een veldspeler te vermelden.'
       ], correctIndex: 0,
       refs:['De honkloper gaat uit, automatisch uit, p.19'],
       explain: 'Bij een honkloper die automatisch uit is (bijv. omdat hij een andere loper passeert), noteer je de nul voor de veldspeler die het dichtst bij die plek stond, ook al heeft die veldspeler feitelijk niets gedaan.',
@@ -1969,9 +1969,9 @@ function buildPinchRunnerQuizEvent(runner, teamKey, quadrant){
   const subName = sub.name;
   const shuffled = shuffleMcOptions([
     'Met de afkorting "PR" (pinch runner) in de positiekolom, en een streepje tussen de honken op het moment van wisselen.',
-    'Met de afkorting "PH" (pinch hitter) in de positiekolom.',
-    'Met een "bootje" in de slagkolom.',
-    'Dit hoeft niet apart genoteerd te worden, de naam blijft gewoon staan.'
+    'Met de afkorting "PH" (pinch hitter) in de positiekolom, en een streepje tussen de honken op het moment van wisselen.',
+    'Met een "bootje" in de slagkolom, net zoals bij een wisseling van werper aan de kant van de tegenstander.',
+    'Dit hoeft niet apart genoteerd te worden: de naam van de oorspronkelijke loper blijft gewoon op de kaart staan zoals die was.'
   ], 0);
   return {
     type:'mc', forBatter:false, outsDelta:0,
@@ -2005,10 +2005,10 @@ function buildPositionChangeQuizEvent(fieldingTeamKey){
   const oppTeam = fieldingTeamKey==='away' ? 'home' : 'away';
   const oppBatterName = currentBatterName(oppTeam, G.battingIdx[oppTeam] % 9);
   const shuffled = shuffleMcOptions([
-    `In het volgende positievakje van beide spelers komt hun nieuwe veldpositie (een kaal getal), en achter hun naam op een nieuwe regel komt "${halfLabel}" (de speelhelft en inning van de wissel). Ook komt er een dikke streep aan de andere kant van de scorekaart: bij de slagpartij, boven de eerste slagman die aan slag komt na de wissel.`,
-    'Met de letters "PR" in de kolom.',
-    'Met een schuine streep in het honkvakje.',
-    'Dit hoeft niet apart genoteerd te worden.'
+    `In het volgende positievakje van beide spelers komt hun nieuwe positienummer (een kaal getal), plus "${halfLabel}" (de speelhelft en inning van de wissel) op een nieuwe regel achter hun naam.`,
+    `Met de letters "PR" in de positiekolom van beide spelers, plus "${halfLabel}" op een nieuwe regel achter hun naam.`,
+    'Met een schuine streep door het huidige positienummer, en het nieuwe getal ernaast op dezelfde regel.',
+    'Dit hoeft niet apart genoteerd te worden: de posities op de kaart worden pas aan het eind van de wedstrijd bijgewerkt.'
   ], 0);
   return {
     type:'mc', forBatter:false, outsDelta:0,
@@ -2032,9 +2032,9 @@ function buildPinchHitterQuizEvent(teamKey){
   const halfLabel = halfInningLabel();
   const shuffled = shuffleMcOptions([
     `Met de afkorting "PH" in de positiekolom, en de naam van ${subName} eronder met "${halfLabel}" als moment van wisselen.`,
-    'Met de afkorting "PR" (pinch runner) in de positiekolom.',
-    'Met een "bootje" in de slagkolom.',
-    'Door zijn naam gewoon te doorstrepen.'
+    `Met de afkorting "PR" (pinch runner) in de positiekolom, en de naam van ${subName} eronder met "${halfLabel}" als moment van wisselen.`,
+    'Met een "bootje" in de slagkolom, op dezelfde manier als bij een wisseling van werper.',
+    `Door zijn naam gewoon door te strepen, en de naam van ${subName} er losstaand naast te zetten zonder verdere aanduiding.`
   ], 0);
   return {
     type:'mc', forBatter:false, outsDelta:0,
@@ -2064,10 +2064,10 @@ function buildPitcherChangeQuizEvent(fieldingTeamKey){
   const subName = sub.name;
   const halfLabel = halfInningLabel();
   const shuffled = shuffleMcOptions([
-    `Met een "bootje" op de kaart van de tegenstander, én bij ${team.name} zelf in de rij eronder de naam van ${subName}, met alleen het kale cijfer "1" in de positiekolom en "${halfLabel}" achter zijn naam.`,
-    'Alleen met de letters "PH" bij de naam van de nieuwe werper.',
-    'Door de oude werper van de kaart te schrappen.',
-    'Dit hoeft niet apart genoteerd te worden.'
+    `Met een "bootje" op de kaart van de tegenstander, en bij ${team.name} een nieuwe regel met ${subName}, het kale cijfer "1" in de positiekolom en "${halfLabel}" achter zijn naam.`,
+    `Alleen met de afkorting "PH" bij de naam van ${subName}, zonder verdere aanduiding op de kaart van de tegenstander.`,
+    `Door de naam van de oude werper van de kaart te schrappen, en die van ${subName} in dezelfde regel ervoor in de plaats te zetten.`,
+    `Alleen met een dikke streep in de slagkolom van ${team.name}, op dezelfde manier als bij een pinch hitter.`
   ], 0);
   return {
     type:'mc', forBatter:false, outsDelta:0,
