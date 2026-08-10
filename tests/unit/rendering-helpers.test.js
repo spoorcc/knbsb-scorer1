@@ -27,8 +27,8 @@ describe("renderCodeDisplay", () => {
 
   it("wraps CS/PO codes in the out-circle widget, on their own line from the throw sequence, same as the log/scorecard rendering", () => {
     const { window } = loadApp();
-    expect(window.renderCodeDisplay("CS24")).toBe('<span class="out-circle-inner">CS<br><span class="num-tail">24</span></span>');
-    expect(window.renderCodeDisplay("PO13")).toBe('<span class="out-circle-inner">PO<br><span class="num-tail">13</span></span>');
+    expect(window.renderCodeDisplay("CS24")).toBe('<span class="out-circle-inner"><span class="oc-line">CS</span><span class="oc-line num-tail">24</span></span>');
+    expect(window.renderCodeDisplay("PO13")).toBe('<span class="out-circle-inner"><span class="oc-line">PO</span><span class="oc-line num-tail">13</span></span>');
   });
 
   it("renders PIJL / the arrow character as the arrow-mark widget", () => {

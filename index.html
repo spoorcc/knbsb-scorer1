@@ -271,12 +271,14 @@
   .hist-text.q-2e{top:2px; left:50%; right:2px; bottom:50%;}
   .hist-text.q-3e{top:2px; left:2px; right:50%; bottom:50%;}
   .out-circle-inner{
-    /* Deliberately not display:flex — a flex container lays its children out as separate flex
-       items on one row (flex-wrap defaults to nowrap, and a <br> doesn't force a new flex line),
-       so it can't reliably honor the forced break below. Plain inline-block + text-align lets the
-       "PO"/"CS" prefix and its throw sequence stack as two ordinary, centered text lines instead —
-       matching how this same code stacks in the log entries and the printed scorecard. */
-    display:inline-block;
+    /* flex-direction:column (not row) so a two-line code ("PO"/"13", each its own <span class="oc-line">
+       — see outCircleContent()) stacks as two ordinary flex items instead of sitting side by side; a
+       single-line code (a bare digit sequence like a DP's "64", with no wrapping span at all) becomes
+       one anonymous flex item. Either way align-items/justify-content:center genuinely centers the
+       content in the circle — plain inline-block + line-height centered only a *single* line, leaving
+       a single-line code sitting top-aligned with dead space below (the box is sized tall enough for
+       two lines; see the width/height comment below). */
+    display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
     border:1.3px solid currentColor; border-radius:50%; padding:.15em; line-height:1.15;
     white-space:normal; overflow-wrap:anywhere; text-align:center; max-width:100%; min-width:0;
     /* Two stacked lines ("PO" / "13") naturally come out taller than wide, which with a 50%
@@ -287,7 +289,7 @@
        size this renders at (live builder, log entries, printed scorecard). */
     width:2.6em; height:2.6em; box-sizing:border-box;
   }
-  /* Keeps a multi-digit throw sequence (e.g. the "15" in "PO<br>15") from splitting mid-number —
+  /* Keeps a multi-digit throw sequence (e.g. the "15" in "PO"/"15") from splitting mid-number —
      word-break:break-all above will otherwise happily break between the digits themselves if they
      alone don't fit on their own forced line. */
   .out-circle-inner .num-tail{white-space:nowrap;}
@@ -2519,7 +2521,11 @@ function honkslagMarkHTML(n){
 // instead of overflowing the circle's fixed size; a bare digit-only code like "643" has no prefix
 // to split on and is left on its single line, which already fits.
 function outCircleContent(code){
-  return /^([A-Za-z]+)(\d+)$/.test(code) ? code.replace(/^([A-Za-z]+)(\d+)$/, '$1<br><span class="num-tail">$2</span>') : code;
+  // Each line is its own <span> (not a bare "$1<br>...") so .out-circle-inner's column-flex
+  // layout — which centers the content vertically instead of leaving a single-line code
+  // top-aligned — stacks them as two flex items; a flex container doesn't honor a <br> as a
+  // line break the way normal text flow does.
+  return /^([A-Za-z]+)(\d+)$/.test(code) ? code.replace(/^([A-Za-z]+)(\d+)$/, '<span class="oc-line">$1</span><span class="oc-line num-tail">$2</span>') : code;
 }
 
 function renderCodeDisplay(code){
