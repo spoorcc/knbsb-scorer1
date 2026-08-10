@@ -555,6 +555,42 @@ prior pass's paraphrase:
   hardcoded rather than derived — now carried explicitly as
   `dpLinks[].runnerQuadrant` so a future `case 'DP'` variant forcing the
   runner at 3rd (`3e`) wouldn't silently fail to draw its line. The
-  unassisted-5/53 combo itself is still not implemented — left for a
-  future PR alongside the p.20 example's variant narrative ("goed onder
-  controle... hoeft alleen zijn honk aan te raken").
+  unassisted-5/53 combo itself is now implemented as its own case (`DP3`)
+  — see the follow-up below.
+
+## Follow-up: implemented p.20's unassisted double play (`DP3`)
+
+Added a new `buildBatterEvent` case, `DP3`, modeling p.20's second worked
+example verbatim rather than folding it into `DP`'s combo array — the
+underlying mechanic is genuinely different (single fielder, no throw
+chain for the first out, and the *runner on 2nd* is the one forced out
+instead of the runner on 1st), not just another fielder-combo variant of
+the same relay shape `DP`'s three combos already cover.
+
+- **Precondition**: 1st *and* 2nd occupied (`b0 && b1 && outs<2`), matching
+  the source's own setup ("het eerste en tweede honk zijn bezet") and
+  mirroring how `IF` is already gated on the same base state. Wired into
+  `generateBatterEvent`'s pool at weight 1 — secondary/rarer than `DP`'s
+  weight 4, matching its role as a supplementary example in the source
+  rather than the primary taught shape.
+- **Mechanics**: the third baseman already has the ball in hand and only
+  touches his own base to force out the runner advancing from 2nd to 3rd
+  — bare code `"5"`, no assist chain, landing in the runner's own `3e`
+  quadrant (not `2e`, since this force happens between 2nd and 3rd). He
+  then throws to first for the batter: `"53"`. The runner originally on
+  1st safely reaches 2nd (routed through the existing "door de volgende
+  slagman" advance-credit mechanism, same as any other runner who
+  advances but isn't put out); a runner on 3rd, if present, is forced
+  home exactly like `DP`'s analogous b2-scores case.
+- Deliberately kept to the *one* fielder combo the source actually shows
+  (3B unassisted, then 5-3) rather than inventing unshown variants (e.g.
+  an unassisted force at 2nd) — consistent with this file's existing
+  practice of not expanding beyond what Scorer 1's own material
+  demonstrates (see "te vroeg los" above).
+- The DP connecting line "just works" for this case with no further
+  changes: it was the exact scenario the `dpLinks[].runnerQuadrant`
+  robustness fix (previous follow-up) was future-proofing for, and it
+  does — verified end-to-end (real game play through `generateEvent` ->
+  `applyEventToState`, twice, into the rendered DOM) with matchNumber
+  `100026`, 3 innings, Honkbal, in
+  `tests/integration/double-play-line.test.js`.

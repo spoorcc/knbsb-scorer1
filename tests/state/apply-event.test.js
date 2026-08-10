@@ -129,6 +129,28 @@ describe("applyEventToState — batter events", () => {
     expect(G.dpLinks.home).toEqual([{ inning: 1, runnerSlot: 4, runnerQuadrant: "2e", batterSlot: 0 }]);
   });
 
+  it("DP3 (p.20's unassisted force at 3rd) records a dpLinks entry with runnerQuadrant '3e', not '2e'", () => {
+    const dom = setup();
+    evalIn(dom, "G.battingIdx.away = 2");
+    evalIn(dom, "G.bases = [{name:'First', battingSlot:4, history:{}}, {name:'Second', battingSlot:5, history:{}}, null]");
+    const ev = dom.window.buildBatterEvent("DP3", { name: "Slagman" }, getG(dom).bases, 2);
+    dom.window.applyEventToState(ev);
+    const G = getG(dom);
+    expect(G.outs).toBe(2);
+    expect(G.dpLinks.away).toEqual([{ inning: 1, runnerSlot: 5, runnerQuadrant: "3e", batterSlot: 2 }]);
+
+    // The forced-out runner (from 2nd) gets the bare unassisted code; the batter's own cell
+    // gets the full "53" throw. Confirms drawDpLines() will find both marks: the runner's in
+    // the 3e quadrant (not the 2e a plain 'q-2e' lookup would have assumed), the batter's as
+    // the whole-cell 'out'.
+    const followUp = G.pendingEvents.find((e) => e.targetQuadrant === "3e");
+    expect(followUp).toBeTruthy();
+    expect(followUp.code).toBe("5");
+    dom.window.applyEventToState(followUp);
+    expect(getG(dom).scorecard.away[5][1]).toMatchObject({ "3e": "5", _outQ: "3e" });
+    expect(getG(dom).scorecard.away[2][1]).toMatchObject({ out: "53" });
+  });
+
   it("a sacrifice fly that itself ends the half-inning still commits the scoring runner's advance-credit to the inning the play happened in", () => {
     const dom = setup();
     // Bottom of inning 1, home batting, already 2 outs: the SF's own out (outsDelta 1) ends the

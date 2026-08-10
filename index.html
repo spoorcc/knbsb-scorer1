@@ -1120,6 +1120,7 @@ function generateBatterEvent(){
   if(b2 && outs<2){ pool.push({key:'SF', w:3},{key:'SFE', w:1}); }
   if(b0 && b1 && outs<2){ pool.push({key:'IF', w:2}); }
   if(b0 && outs<2){ pool.push({key:'DP', w:4}); }
+  if(b0 && b1 && outs<2){ pool.push({key:'DP3', w:1}); }
 
   const key = weightedPick(pool);
   return buildBatterEvent(key, batter, G.bases, idx);
@@ -1505,6 +1506,34 @@ function buildBatterEvent(key, batter, bases, battingSlot){
         } else if(b2){
           nb[2] = b2;
         }
+        return {bases:nb, runs, advanced, outRunner};
+      };
+      ev.outsDelta=2;
+      break; }
+    case 'DP3': {
+      // p.20's second dubbelspel example: 1e en 2e honk bezet, bal naar de derde honkman, die de
+      // bal al zelf in bezit heeft en alleen zijn eigen honk hoeft aan te raken om de van het 2e
+      // naar het 3e honk gedwongen loper uit te maken — een ongeassisteerde honkloop-uit, geen
+      // aangooiketen (bare code "5"), in tegenstelling tot de relay-vorm van 'DP' hierboven.
+      // Daarna gooit hij naar het eerste honk voor de slagman: "53".
+      const runnerCode = '5';
+      const batterCode = '53';
+      ev.narrative = `<b>${batter.name}</b> slaat een grondbal recht naar de derde honkman. Die heeft de bal al goed onder controle en hoeft alleen zijn honk aan te raken om de loper van het tweede honk (die gedwongen naar het derde honk moet) uit te maken. Daarna gooit hij naar het eerste honk: dubbelspel!`;
+      ev.code = batterCode; ev.refs=['Dubbelspel, p.20'];
+      ev.explain=`Dit dubbelspel gaat zonder aangooi voor de eerste uit: de derde honkman heeft de bal al zelf in bezit en hoeft alleen zijn honk aan te raken om de gedwongen loper uit te maken — een ongeassisteerde honkloop-uit, code <code>${runnerCode}</code> (geen aangooiketen), in zíjn eigen honk-vakje. Voor jou als slagman noteer je wél de aangooiketen tot en met jóuw out: code <code>${batterCode}</code>. Ook bij dit dubbelspel verbindt een streep de twee cirkels.`;
+      ev.applyBases = b=>{
+        const b0=b[0], b1=b[1], b2=b[2];
+        const nb=[null,null,null];
+        let runs=0;
+        const advanced=[];
+        const outRunner = b1 ? {
+          name:b1.name, battingSlot:b1.battingSlot, quadrant:'3e', code:runnerCode, priorHistory:Object.assign({}, b1.history),
+          refs:['Dubbelspel, p.20'],
+          explain:`Bij deze ongeassisteerde honkloop-uit heeft de veldspeler de bal al zelf in bezit: de loper krijgt alléén de bare code van die veldspeler, zonder aangooiketen: code <code>${runnerCode}</code>. Nu allebei de cirkels genoteerd zijn, tekent het scoreformulier hierboven automatisch de verbindende streep tussen jouw cirkel en die van de slagman (code <code>${batterCode}</code>), om te laten zien dat het één ononderbroken actie was.`,
+        } : null;
+        if(b2){ runs++; advanced.push({name:b2.name, toIdx:'home'}); }
+        nb[1] = b0 ? Object.assign({}, b0, {arrivedVia:runnerCode, history:Object.assign({}, b0.history, {'2e':runnerCode})}) : null;
+        if(b0){ advanced.push({name:b0.name, toIdx:1}); }
         return {bases:nb, runs, advanced, outRunner};
       };
       ev.outsDelta=2;

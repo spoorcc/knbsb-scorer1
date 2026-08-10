@@ -416,6 +416,51 @@ describe("buildBatterEvent — sacrifice and double plays", () => {
     expect(typeof result.outRunner.explain).toBe("string");
     expect(result.bases).toEqual([null, null, null]);
   });
+
+  it("DP3: the p.20 unassisted double play forces the runner from 2nd at 3rd with a bare code, no throw chain", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    const bases = [
+      { name: "Eerste", battingSlot: 0, history: {} },
+      { name: "Tweede", battingSlot: 1, history: {} },
+      null,
+    ];
+    const ev = dom.window.buildBatterEvent("DP3", batter(), bases, 2);
+    commonShape(ev);
+    expect(ev.outsDelta).toBe(2);
+    expect(ev.targetQuadrant).toBe("any");
+    // The third baseman already has the ball in hand and only touches his own base for the
+    // force — bare "5", not a throw chain like "DP"'s combos — then throws to first for "53".
+    expect(ev.code).toBe("53");
+    const result = ev.applyBases(bases);
+    expect(result.outRunner).toMatchObject({ name: "Tweede", battingSlot: 1, quadrant: "3e", code: "5" });
+    expect(Array.isArray(result.outRunner.refs)).toBe(true);
+    expect(typeof result.outRunner.explain).toBe("string");
+    // The batter is out (never reaches base); the runner originally on 1st safely advances to 2nd.
+    expect(result.bases[0]).toBeNull();
+    expect(result.bases[1]).toMatchObject({ name: "Eerste" });
+    expect(result.bases[2]).toBeNull();
+    expect(result.advanced).toEqual(expect.arrayContaining([{ name: "Eerste", toIdx: 1 }]));
+  });
+
+  it("DP3 with the bases loaded also forces the runner on 3rd home", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    const bases = [
+      { name: "Eerste", battingSlot: 0, history: {} },
+      { name: "Tweede", battingSlot: 1, history: {} },
+      { name: "Derde", battingSlot: 2, history: {} },
+    ];
+    const ev = dom.window.buildBatterEvent("DP3", batter(), bases, 3);
+    const result = ev.applyBases(bases);
+    expect(result.runs).toBe(1);
+    expect(result.advanced).toEqual(
+      expect.arrayContaining([
+        { name: "Derde", toIdx: "home" },
+        { name: "Eerste", toIdx: 1 },
+      ]),
+    );
+  });
 });
 
 describe("buildBatterEvent — sanity across every key with fuzzed base states", () => {
@@ -424,7 +469,7 @@ describe("buildBatterEvent — sanity across every key with fuzzed base states",
   // occupied; buildBatterEvent itself trusts that precondition and doesn't re-check it.
   const GENERAL_KEYS = [
     "1B", "2B", "3B", "HR", "BB", "IBB", "HP", "INT", "K", "KWP", "KPB", "KTHROW",
-    "GO", "GOU", "F", "L", "FF", "FL", "IF", "E", "EEXTRA", "SH", "SHE", "DP",
+    "GO", "GOU", "F", "L", "FF", "FL", "IF", "E", "EEXTRA", "SH", "SHE", "DP", "DP3",
     "AUTOOUT", "OBBATTER",
   ];
   const BASE_STATES = [
@@ -502,6 +547,21 @@ describe("buildBatterEvent — sanity across every key with fuzzed base states",
       expect(ev.code).toMatch(/^IF[3-6]$/);
       expect(ev.outsDelta).toBe(1);
       expect(() => ev.applyBases(dom.window.cloneBases(bases))).not.toThrow();
+    }
+  });
+
+  it("DP3 is only fuzzed with 1st+2nd occupied, matching how the pool restricts it", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    for (const bases of BASE_STATES.filter((b) => b[0] && b[1])) {
+      for (let i = 0; i < 8; i++) {
+        stubRngConstant(dom, i / 8);
+        const ev = dom.window.buildBatterEvent("DP3", batter(), bases, 0);
+        commonShape(ev);
+        expect(ev.code).toBe("53");
+        expect(ev.outsDelta).toBe(2);
+        expect(() => ev.applyBases(dom.window.cloneBases(bases))).not.toThrow();
+      }
     }
   });
 });
