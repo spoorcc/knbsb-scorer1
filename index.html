@@ -2500,11 +2500,14 @@ function honkslagMarkHTML(n){
 }
 
 // Shared by renderCodeDisplay (CS/PO codes) and renderScorecardCellHTML (every _outQ cell, which
-// also includes plain DP/FC/automatic-out codes like "643" or "6" that don't match this pattern
-// and so pass through unchanged) — keeps the "prefix on its own line from the throw sequence"
+// also includes fielder's-choice forced-out codes like "FC12"/"FC5" and bare DP-chain/automatic-out
+// codes like "643" or "6") — keeps the "letter prefix on its own line from the throw sequence"
 // treatment identical everywhere an out-circle-inner gets built, instead of two codepaths drifting.
+// Deliberately matches ANY letter prefix (not just CS/PO) so a code like "FC12" also breaks cleanly
+// instead of overflowing the circle's fixed size; a bare digit-only code like "643" has no prefix
+// to split on and is left on its single line, which already fits.
 function outCircleContent(code){
-  return /^(CS|PO)\d+$/.test(code) ? code.replace(/^(CS|PO)(\d+)$/, '$1<br><span class="num-tail">$2</span>') : code;
+  return /^([A-Za-z]+)(\d+)$/.test(code) ? code.replace(/^([A-Za-z]+)(\d+)$/, '$1<br><span class="num-tail">$2</span>') : code;
 }
 
 function renderCodeDisplay(code){
