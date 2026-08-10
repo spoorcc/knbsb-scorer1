@@ -109,6 +109,48 @@ describe("renderFullScorecard", () => {
     dom.window.renderFullScorecard();
     expect(dom.window.document.querySelector("#scorecard-away svg.dp-links")).toBeNull();
   });
+
+  it("draws one line per dpLinks entry when several double plays are on the card at once", () => {
+    const dom = startGame(loadApp(), { innings: 6 });
+    evalIn(dom, "G.scorecard.away[4][1] = {'2e':'64', _outQ:'2e'}; G.scorecard.away[0][1] = {out:'43'};");
+    evalIn(dom, "G.scorecard.away[7][4] = {'2e':'54', _outQ:'2e'}; G.scorecard.away[2][4] = {out:'43'};");
+    evalIn(dom, `G.dpLinks.away = [
+      {inning:1, runnerSlot:4, runnerQuadrant:'2e', batterSlot:0},
+      {inning:4, runnerSlot:7, runnerQuadrant:'2e', batterSlot:2}
+    ];`);
+    dom.window.renderFullScorecard();
+    const lines = dom.window.document.querySelectorAll("#scorecard-away svg.dp-links line.dp-link-line");
+    expect(lines).toHaveLength(2);
+    const innings = Array.from(lines).map((l) => l.getAttribute("data-dp-inning")).sort();
+    expect(innings).toEqual(["1", "4"]);
+  });
+
+  it("doesn't accumulate stale lines across re-renders", () => {
+    const dom = startGame(loadApp());
+    evalIn(dom, "G.scorecard.away[4][1] = {'2e':'64', _outQ:'2e'}; G.scorecard.away[0][1] = {out:'43'};");
+    evalIn(dom, "G.dpLinks.away = [{inning:1, runnerSlot:4, runnerQuadrant:'2e', batterSlot:0}];");
+    dom.window.renderFullScorecard();
+    dom.window.renderFullScorecard();
+    dom.window.renderFullScorecard();
+    const container = dom.window.document.getElementById("scorecard-away");
+    expect(container.querySelectorAll("svg.dp-links")).toHaveLength(1);
+    expect(container.querySelectorAll("line.dp-link-line")).toHaveLength(1);
+  });
+
+  it("finds the runner's out-circle by its recorded quadrant, not a hardcoded '2e'", () => {
+    // Today's actual DP combos always force the runner at 2nd (quadrant '2e'), but the line
+    // renderer takes the quadrant from the dpLinks entry itself (see index.html's applyEventToState
+    // comment on why) — this proves that path actually works, using a hypothetical '3e' force
+    // (e.g. the source material's own p.20 unassisted-5 example, forced at 3rd) that the app
+    // doesn't generate yet. If this ever regresses to a hardcoded 'q-2e' lookup, this is the only
+    // test that would catch it, since every real DP today only ever produces '2e'.
+    const dom = startGame(loadApp());
+    evalIn(dom, "G.scorecard.away[4][1] = {'3e':'5', _outQ:'3e'}; G.scorecard.away[0][1] = {out:'53'};");
+    evalIn(dom, "G.dpLinks.away = [{inning:1, runnerSlot:4, runnerQuadrant:'3e', batterSlot:0}];");
+    dom.window.renderFullScorecard();
+    const line = dom.window.document.querySelector("#scorecard-away svg.dp-links line.dp-link-line");
+    expect(line).toBeTruthy();
+  });
 });
 
 describe("renderHeaderStats", () => {

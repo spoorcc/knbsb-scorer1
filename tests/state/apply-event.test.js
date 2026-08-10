@@ -122,6 +122,11 @@ describe("applyEventToState — batter events", () => {
     // The forced-out runner's line belongs to the play that happened in inning 1, not inning 2.
     expect(G.scorecard.home[4][1]).toMatchObject({ _outQ: "2e" });
     expect(G.scorecard.home[4][2]).toBeUndefined();
+
+    // Same for the dpLinks bookkeeping that drives the printed connecting line: it must stay
+    // pinned to inning 1 (the half-inning that had already ended by the time this was pushed),
+    // not the inning G.inning had already advanced to.
+    expect(G.dpLinks.home).toEqual([{ inning: 1, runnerSlot: 4, runnerQuadrant: "2e", batterSlot: 0 }]);
   });
 
   it("a sacrifice fly that itself ends the half-inning still commits the scoring runner's advance-credit to the inning the play happened in", () => {
