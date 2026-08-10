@@ -91,7 +91,7 @@ describe("renderFullScorecard", () => {
 
   it("draws a dubbelspel connecting line once both out-circles are committed to the scorecard", () => {
     const dom = startGame(loadApp());
-    evalIn(dom, "G.scorecard.away[4][1] = [{'2e':'64', _outQ:'2e'}];"); // forced-out runner's own cell
+    evalIn(dom, "G.scorecard.away[4][1] = [{'2e':'(64)'}];"); // forced-out runner's own cell
     evalIn(dom, "G.scorecard.away[0][1] = [{out:'43'}];"); // batter's own cell
     evalIn(dom, "G.dpLinks.away = [{inning:1, runnerSlot:4, runnerQuadrant:'2e', runnerAtBat:0, batterSlot:0, batterAtBat:0}];");
     dom.window.renderFullScorecard();
@@ -112,8 +112,8 @@ describe("renderFullScorecard", () => {
 
   it("draws one line per dpLinks entry when several double plays are on the card at once", () => {
     const dom = startGame(loadApp(), { innings: 6 });
-    evalIn(dom, "G.scorecard.away[4][1] = [{'2e':'64', _outQ:'2e'}]; G.scorecard.away[0][1] = [{out:'43'}];");
-    evalIn(dom, "G.scorecard.away[7][4] = [{'2e':'54', _outQ:'2e'}]; G.scorecard.away[2][4] = [{out:'43'}];");
+    evalIn(dom, "G.scorecard.away[4][1] = [{'2e':'(64)'}]; G.scorecard.away[0][1] = [{out:'43'}];");
+    evalIn(dom, "G.scorecard.away[7][4] = [{'2e':'(54)'}]; G.scorecard.away[2][4] = [{out:'43'}];");
     evalIn(dom, `G.dpLinks.away = [
       {inning:1, runnerSlot:4, runnerQuadrant:'2e', runnerAtBat:0, batterSlot:0, batterAtBat:0},
       {inning:4, runnerSlot:7, runnerQuadrant:'2e', runnerAtBat:0, batterSlot:2, batterAtBat:0}
@@ -127,7 +127,7 @@ describe("renderFullScorecard", () => {
 
   it("doesn't accumulate stale lines across re-renders", () => {
     const dom = startGame(loadApp());
-    evalIn(dom, "G.scorecard.away[4][1] = [{'2e':'64', _outQ:'2e'}]; G.scorecard.away[0][1] = [{out:'43'}];");
+    evalIn(dom, "G.scorecard.away[4][1] = [{'2e':'(64)'}]; G.scorecard.away[0][1] = [{out:'43'}];");
     evalIn(dom, "G.dpLinks.away = [{inning:1, runnerSlot:4, runnerQuadrant:'2e', runnerAtBat:0, batterSlot:0, batterAtBat:0}];");
     dom.window.renderFullScorecard();
     dom.window.renderFullScorecard();
@@ -145,7 +145,7 @@ describe("renderFullScorecard", () => {
     // doesn't generate yet. If this ever regresses to a hardcoded 'q-2e' lookup, this is the only
     // test that would catch it, since every real DP today only ever produces '2e'.
     const dom = startGame(loadApp());
-    evalIn(dom, "G.scorecard.away[4][1] = [{'3e':'5', _outQ:'3e'}]; G.scorecard.away[0][1] = [{out:'53'}];");
+    evalIn(dom, "G.scorecard.away[4][1] = [{'3e':'(5)'}]; G.scorecard.away[0][1] = [{out:'53'}];");
     evalIn(dom, "G.dpLinks.away = [{inning:1, runnerSlot:4, runnerQuadrant:'3e', runnerAtBat:0, batterSlot:0, batterAtBat:0}];");
     dom.window.renderFullScorecard();
     const line = dom.window.document.querySelector("#scorecard-away svg.dp-links line.dp-link-line");

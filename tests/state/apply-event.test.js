@@ -62,7 +62,7 @@ describe("applyEventToState — batter events", () => {
     expect(G.pendingEvents.length).toBeGreaterThanOrEqual(1);
     const followUp = G.pendingEvents.find((e) => e.targetQuadrant === "2e");
     expect(followUp).toBeTruthy();
-    expect(followUp.code).toBe("64");
+    expect(followUp.code).toBe("(64)");
     expect(followUp.code).not.toBe(ev.code);
     expect(followUp.narrative).toContain("First");
   });
@@ -81,7 +81,7 @@ describe("applyEventToState — batter events", () => {
     const G = getG(dom);
     expect(G.pendingEvents.length).toBeGreaterThanOrEqual(2);
     expect(G.pendingEvents[0].targetQuadrant).toBe("2e");
-    expect(G.pendingEvents[0].code).toBe("64");
+    expect(G.pendingEvents[0].code).toBe("(64)");
     expect(G.pendingEvents[0].narrative).toContain("First");
     expect(G.pendingEvents[1].targetQuadrant).toBe("3e");
     expect(G.pendingEvents[1].narrative).toContain("Second");
@@ -122,7 +122,7 @@ describe("applyEventToState — batter events", () => {
     G = getG(dom);
 
     // The forced-out runner's line belongs to the play that happened in inning 1, not inning 2.
-    expect(G.scorecard.home[4][1][0]).toMatchObject({ _outQ: "2e" });
+    expect(G.scorecard.home[4][1][0]).toMatchObject({ "2e": "(64)" });
     expect(G.scorecard.home[4][2]).toBeUndefined();
 
     // Same for the dpLinks bookkeeping that drives the printed connecting line: it must stay
@@ -151,9 +151,9 @@ describe("applyEventToState — batter events", () => {
     // the whole-cell 'out'.
     const followUp = G.pendingEvents.find((e) => e.targetQuadrant === "3e");
     expect(followUp).toBeTruthy();
-    expect(followUp.code).toBe("5");
+    expect(followUp.code).toBe("(5)");
     dom.window.applyEventToState(followUp);
-    expect(getG(dom).scorecard.away[5][1][0]).toMatchObject({ "3e": "5", _outQ: "3e" });
+    expect(getG(dom).scorecard.away[5][1][0]).toMatchObject({ "3e": "(5)" });
     expect(getG(dom).scorecard.away[2][1][0]).toMatchObject({ out: "53" });
   });
 

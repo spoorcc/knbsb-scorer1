@@ -72,7 +72,7 @@ describe("buildRunnerEvent(CS1) / (CS2) / (PO1) — caught stealing / pick off",
     stubRngConstant(dom, randomForPickIndex(0, 2));
     const ev = dom.window.buildRunnerEvent("CS1");
     commonShape(ev);
-    expect(ev.code).toMatch(/^CS2[46]$/);
+    expect(ev.code).toMatch(/^\(CS2[46]\)$/);
     expect(ev.outsDelta).toBe(1);
     expect(ev.targetQuadrant).toBe("2e");
     const result = ev.applyBases([{ name: "Loper", battingSlot: 2, history: {} }, null, null]);
@@ -97,7 +97,7 @@ describe("buildRunnerEvent(CS1) / (CS2) / (PO1) — caught stealing / pick off",
     const dom = setupWithBases([null, { name: "Loper", battingSlot: 4, history: {} }, null]);
     const ev = dom.window.buildRunnerEvent("CS2");
     commonShape(ev);
-    expect(ev.code).toBe("CS25");
+    expect(ev.code).toBe("(CS25)");
     expect(ev.outsDelta).toBe(1);
     expect(ev.targetQuadrant).toBe("3e");
   });
@@ -106,11 +106,11 @@ describe("buildRunnerEvent(CS1) / (CS2) / (PO1) — caught stealing / pick off",
     const dom = setupWithBases([{ name: "Loper", battingSlot: 1, history: {} }, null, null]);
     const ev = dom.window.buildRunnerEvent("PO1");
     commonShape(ev);
-    expect(ev.code).toBe("PO13");
+    expect(ev.code).toBe("(PO13)");
     expect(ev.outsDelta).toBe(1);
     const result = ev.applyBases([{ name: "Loper", battingSlot: 1, history: {} }, null, null]);
     expect(result.bases[0]).toBeNull();
-    expect(dom.window.eval("G.scorecard.away[1][1][0]")).toMatchObject({ "2e": "PO13" });
+    expect(dom.window.eval("G.scorecard.away[1][1][0]")).toMatchObject({ "2e": "(PO13)" });
   });
 });
 
@@ -162,12 +162,12 @@ describe("buildRunnerEvent(SB3) / (CS3) — stealing home", () => {
     const dom = setupWithBases([null, null, { name: "Loper", battingSlot: 5, history: {} }]);
     const ev = dom.window.buildRunnerEvent("CS3");
     commonShape(ev);
-    expect(ev.code).toBe("CS2");
+    expect(ev.code).toBe("(CS2)");
     expect(ev.targetQuadrant).toBe("thuis");
     expect(ev.outsDelta).toBe(1);
     const result = ev.applyBases([null, null, { name: "Loper", battingSlot: 5, history: {} }]);
     expect(result.bases[2]).toBeNull();
-    expect(dom.window.eval("G.scorecard.away[5][1][0]")).toMatchObject({ thuis: "CS2" });
+    expect(dom.window.eval("G.scorecard.away[5][1][0]")).toMatchObject({ thuis: "(CS2)" });
   });
 });
 
@@ -177,7 +177,7 @@ describe("buildRunnerEvent(PO2) / (PO3) — pickoff at second and third", () => 
     stubRngConstant(dom, randomForPickIndex(0, 2));
     const ev = dom.window.buildRunnerEvent("PO2");
     commonShape(ev);
-    expect(ev.code).toMatch(/^PO1[46]$/);
+    expect(ev.code).toMatch(/^\(PO1[46]\)$/);
     expect(ev.outsDelta).toBe(1);
     expect(ev.targetQuadrant).toBe("3e");
     const result = ev.applyBases([null, { name: "Loper", battingSlot: 3, history: {} }, null]);
@@ -189,7 +189,7 @@ describe("buildRunnerEvent(PO2) / (PO3) — pickoff at second and third", () => 
     const dom = setupWithBases([null, null, { name: "Loper", battingSlot: 4, history: {} }]);
     const ev = dom.window.buildRunnerEvent("PO3");
     commonShape(ev);
-    expect(ev.code).toBe("PO15");
+    expect(ev.code).toBe("(PO15)");
     expect(ev.outsDelta).toBe(1);
     expect(ev.targetQuadrant).toBe("thuis");
     const result = ev.applyBases([null, null, { name: "Loper", battingSlot: 4, history: {} }]);
@@ -203,7 +203,7 @@ describe("buildRunnerEvent(EVADE1) / (EVADE2) — automatic out for evading a ta
     stubRngConstant(dom, randomForPickIndex(0, 3));
     const ev = dom.window.buildRunnerEvent("EVADE1");
     commonShape(ev);
-    expect(ev.code).toMatch(/^[346]$/);
+    expect(ev.code).toMatch(/^\([346]\)$/);
     expect(ev.outsDelta).toBe(1);
     expect(ev.targetQuadrant).toBe("2e");
     const result = ev.applyBases([{ name: "Loper", battingSlot: 0, history: {} }, null, null]);
@@ -215,7 +215,7 @@ describe("buildRunnerEvent(EVADE1) / (EVADE2) — automatic out for evading a ta
     stubRngConstant(dom, randomForPickIndex(0, 3));
     const ev = dom.window.buildRunnerEvent("EVADE2");
     commonShape(ev);
-    expect(ev.code).toMatch(/^[456]$/);
+    expect(ev.code).toMatch(/^\([456]\)$/);
     expect(ev.outsDelta).toBe(1);
     expect(ev.targetQuadrant).toBe("3e");
   });
@@ -231,7 +231,7 @@ describe("buildRunnerEvent(PASS1) — passing the preceding runner is an automat
     stubRngConstant(dom, randomForPickIndex(0, 2));
     const ev = dom.window.buildRunnerEvent("PASS1");
     commonShape(ev);
-    expect(ev.code).toMatch(/^[46]$/);
+    expect(ev.code).toMatch(/^\([46]\)$/);
     expect(ev.outsDelta).toBe(1);
     expect(ev.targetQuadrant).toBe("2e");
     const result = ev.applyBases([
