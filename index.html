@@ -392,7 +392,7 @@
   .builder-text.slot-any.state-wrong{border-color:var(--red);}
   /* The full printed scorecard (.sc-cell) is deliberately fixed black/white/gray "paper" in
      both themes — see the scorecard section below, which this rule intentionally matches. */
-  .honk-cell.sc-cell .builder-text.slot-any{inset:8px; border-width:1.5px; font-size:.9rem; background:rgba(255,255,255,.55); border-color:#000 !important; color:#000;}
+  .honk-cell.sc-cell .builder-text.slot-any{inset:8px; border-width:1px; font-size:.9rem; background:rgba(255,255,255,.55); border-color:#000 !important; color:#000;}
   .builder-text.slot-1e{top:50%; left:50%; right:2px; bottom:2px; font-size:1rem;}
   .builder-text.slot-2e{top:2px; left:50%; right:2px; bottom:50%; font-size:1rem;}
   .builder-text.slot-3e{top:2px; left:2px; right:50%; bottom:50%; font-size:1rem;}
@@ -562,7 +562,7 @@
   table.sc-matchinfo-table td.mi-value{text-align:center;}
 
   table.scorecard-table{border-collapse:collapse; font-size:.85rem; white-space:nowrap; background:#fff;}
-  table.scorecard-table th, table.scorecard-table td{border:1px solid #999; text-align:center; padding:0;}
+  table.scorecard-table th, table.scorecard-table td{border:1px solid #000; text-align:center; padding:0;}
   table.scorecard-table th{background:#fff; color:#000; font-weight:700; font-size:.72rem; text-transform:uppercase; border-bottom:2px solid #000; padding:6px 8px;}
   table.scorecard-table td.sc-pos{color:#444; font-family:'IBM Plex Mono',monospace; padding:0;}
   table.scorecard-table td.sc-name{text-align:left; font-weight:600; color:#000; font-family:'Inter',sans-serif; padding:0 10px; min-width:170px;}
@@ -573,7 +573,7 @@
   .ph-label{font-weight:400; color:#666; margin-left:.35em;}
   table.scorecard-table td.sc-volg{padding:6px 2px; width:22px; max-width:22px; text-align:center; color:#000; font-weight:700; font-family:'IBM Plex Mono',monospace;}
   .pos-grid{display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); width:100%; height:58px; margin:0;}
-  .pg-cell{border-right:1px solid #000; border-bottom:1px solid #000; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:.68rem; color:#000;}
+  .pg-cell{border-right:.75px solid #000; border-bottom:.75px solid #000; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:.68rem; color:#000;}
   .pg-cell.pg-noR{border-right:none;}
   .pg-cell.pg-noB{border-bottom:none;}
   .honk-cell.sc-cell{
@@ -582,12 +582,13 @@
     background-image:
       linear-gradient(#000, #000),
       linear-gradient(#000, #000);
-    background-size: 100% 1px, 1px 100%;
+    background-size: 100% .75px, .75px 100%;
     background-position: center, center;
     background-repeat: no-repeat;
   }
   .honk-cell.sc-cell .hist-text{font-size:.68rem; padding-top:3px; color:#000;}
   .honk-cell.sc-cell .hist-text.sc-stint-b{color:#d21f1f;}
+  .honk-cell.sc-cell .out-circle-inner{border-width:1px;}
   /* Pinch runner: "een streepje tussen de honken op het moment van wisselen" (p.21) — a thick
      line over just the segment of the honk-vakje's own grid that borders the quadrant the runner
      was standing on and the *next* quadrant in the base-running order (1e->2e->3e->thuis), not
@@ -635,7 +636,7 @@
      column instead of overwriting the first — labeled with the same inning number, set apart by
      a dashed divider so it doesn't read as a fresh (mislabeled) inning. */
   table.scorecard-table th.sc-extra-inning,
-  table.scorecard-table td.sc-extra-inning{border-left:1px dashed #999;}
+  table.scorecard-table td.sc-extra-inning{border-left:1px dashed #000;}
   /* Dubbelspel connecting line (p.19): drawn by drawDpLines() once both out-circles are on the
      page, on top of everything else in the scorecard (including the opaque .sc-cell backgrounds
      of the rows in between, which would otherwise paint over a CSS-only line crossing them). */
