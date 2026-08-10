@@ -87,6 +87,17 @@ describe("applyEventToState — batter events", () => {
     expect(G.pendingEvents[1].narrative).toContain("Second");
   });
 
+  it("a double-play records a dpLinks entry connecting the runner's and the batter's cells, for the connecting line on the printed scorecard", () => {
+    const dom = setup();
+    evalIn(dom, "G.battingIdx.away = 0");
+    evalIn(dom, "G.bases = [{name:'First', battingSlot:4, history:{}}, null, null]");
+    stubRngConstant(dom, 0); // pin the [6,4,3] combo deterministically
+    const ev = dom.window.buildBatterEvent("DP", { name: "Slagman" }, getG(dom).bases, 0);
+    dom.window.applyEventToState(ev);
+    const G = getG(dom);
+    expect(G.dpLinks.away).toEqual([{ inning: 1, runnerSlot: 4, batterSlot: 0 }]);
+  });
+
   it("a double-play that itself ends the half-inning still commits the forced-out follow-up to the inning the play happened in", () => {
     const dom = setup();
     // Bottom of inning 1, home batting, already 1 out: this DP's outsDelta of 2 pushes the
