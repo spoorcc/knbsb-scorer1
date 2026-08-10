@@ -271,14 +271,18 @@
   .hist-text.q-2e{top:2px; left:50%; right:2px; bottom:50%;}
   .hist-text.q-3e{top:2px; left:2px; right:50%; bottom:50%;}
   .out-circle-inner{
-    display:inline-flex; align-items:center; justify-content:center;
+    /* Deliberately not display:flex — a flex container lays its children out as separate flex
+       items on one row (flex-wrap defaults to nowrap, and a <br> doesn't force a new flex line),
+       so it can't reliably honor the forced break below. Plain inline-block + text-align lets the
+       "PO"/"CS" prefix and its throw sequence stack as two ordinary, centered text lines instead —
+       matching how this same code stacks in the log entries and the printed scorecard. */
+    display:inline-block;
     border:1.3px solid currentColor; border-radius:50%; padding:.15em .38em; line-height:1.15;
     white-space:normal; overflow-wrap:anywhere; text-align:center; max-width:100%; min-width:0;
   }
-  /* Keeps a multi-digit throw sequence (e.g. the "15" in "PO 15") from splitting mid-number when
-     the circle wraps to a second line — word-break:break-all above will otherwise happily break
-     between the digits themselves instead of at the space before them, once the digits alone no
-     longer fit next to the "PO"/"CS" prefix on the first line. */
+  /* Keeps a multi-digit throw sequence (e.g. the "15" in "PO<br>15") from splitting mid-number —
+     word-break:break-all above will otherwise happily break between the digits themselves if they
+     alone don't fit on their own forced line. */
   .out-circle-inner .num-tail{white-space:nowrap;}
   .hist-text.q-thuis{top:50%; left:2px; right:50%; bottom:2px;}
 
@@ -2493,7 +2497,7 @@ function renderCodeDisplay(code){
   if(code === '2B') return honkslagMarkHTML(2);
   if(code === '3B') return honkslagMarkHTML(3);
   if(code === 'PIJL' || code === '↑') return '<span class="arrow-mark"></span>';
-  if(/^(CS|PO)\d+$/.test(code)) return `<span class="out-circle-inner">${code.replace(/^(CS|PO)(\d+)$/, '$1 <span class="num-tail">$2</span>')}</span>`;
+  if(/^(CS|PO)\d+$/.test(code)) return `<span class="out-circle-inner">${code.replace(/^(CS|PO)(\d+)$/, '$1<br><span class="num-tail">$2</span>')}</span>`;
   return code;
 }
 
@@ -2660,7 +2664,7 @@ function addLogEntry(ev, userStr, slot, codeOK, slotOK, fullyCorrect){
         ${histSpans}
         <div class="q-highlight ${slotCls} ${stateCls}"></div>
         <span class="builder-text ${slotCls} ${stateCls}">${userDisplay}</span>
-        ${slot==='thuis' ? '<span class="honk-dot" title="Punt gescoord"></span>' : ''}
+        ${ev.scoresRun ? '<span class="honk-dot" title="Punt gescoord"></span>' : ''}
       </div>
       <div class="log-grid-caption ${stateCls}">${slotLabel}</div>
     </div>
