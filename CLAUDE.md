@@ -185,15 +185,25 @@ fielding positions `1`–`9`) is defined near the bottom of the script in
 corresponding `case` in `buildBatterEvent`/`buildRunnerEvent`, plus tests in
 `tests/events/`) when adding a new scoring situation.
 
-### Known limitation (tracked, not fixed)
+### Batting around: a lineup slot at bat twice in one inning
 
-`G.scorecard[teamKey][battingSlot][inning]` is keyed only by lineup slot +
-inning, which assumes a player bats at most once per inning. In a big inning
-(batting around the order), the same slot can bat twice; the second at-bat's
-`commitToScorecard` call merges into the same cell as the first, which can
-under-report the scorecard's "scored dot count == final score" invariant.
-Confirmed repro: `matchNumber="100002"`, 3 innings, Honkbal — pinned down in
-`tests/integration/known-issues.test.js`. Fixing it means giving each cell an
-at-bat index in addition to slot+inning, plus updating `renderFullScorecard`
-to display multiple at-bats in one inning cell — out of scope for casual
-changes; coordinate before touching `commitToScorecard`'s keying.
+`G.scorecard[teamKey][battingSlot][inning]` is an *array* of at-bat cells,
+not a single cell — a big inning can send a lineup slot to the plate more
+than once, and each trip gets its own array entry (`col[inning][atBatIdx]`)
+instead of the second at-bat silently overwriting the first.
+`G.atBatIndex[teamKey][slot]` tracks `{inning, idx}`, the slot's current
+at-bat-within-this-inning counter; `currentAtBatIdx()`/`nextAtBatIdx()` in
+`index.html` read/advance it (advanced exactly once, in
+`applyEventToState`, on every fresh `forBatter` turn — see the comment
+there for why every other reader can just read the current value lazily).
+`commitToScorecard` and the visual markers that target a specific cell
+(`endMarker`, `boatMarkers`, `subMarkers`, `fieldSubMarkers`, `dpLinks`) all
+carry/derive an at-bat index so they land in the right column.
+
+`renderFullScorecard` computes, per inning, the max at-bat count across a
+team's 9 slots and renders that many `<td>` sub-columns (same inning number,
+marked `.sc-extra-inning`, dashed left border) — so a slot's second at-bat
+gets its own column instead of disappearing into the first. Confirmed
+end-to-end with `matchNumber="100165"`, 3 innings, Honkbal in
+`tests/integration/known-issues.test.js` (the scorecard's "scored dot count
+== final score" invariant, which this used to violate).

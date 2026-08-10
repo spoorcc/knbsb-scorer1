@@ -34,8 +34,10 @@ function countScoredDots(G) {
   let n = 0;
   for (const teamKey of ["away", "home"]) {
     for (const slotCols of G.scorecard[teamKey]) {
-      for (const cell of Object.values(slotCols)) {
-        if (cell && cell.scored) n++;
+      for (const atBats of Object.values(slotCols)) {
+        for (const cell of atBats) {
+          if (cell && cell.scored) n++;
+        }
       }
     }
   }
@@ -58,11 +60,11 @@ describe.each(SEEDS)("full game simulation (seed %s, 3 innings, Honkbal)", (seed
     expect(G.correctCount).toBe(G.totalCount);
     expect(G.totalCount).toBeGreaterThan(0);
 
-    // The KNBSB scorecard invariant: total scored-dots == final combined score. This holds for
-    // these specific seeds, but is NOT universally guaranteed by the current implementation —
-    // see tests/integration/known-issues.test.js for a confirmed counter-example (a lineup slot
-    // batting twice in one big inning). Don't read this as "the invariant is proven"; it's
-    // "these particular games happen not to trigger the known gap".
+    // The KNBSB scorecard invariant: total scored-dots == final combined score. Each at-bat gets
+    // its own array slot in G.scorecard (see G.atBatIndex), so a lineup slot batting twice in one
+    // big inning no longer merges its two at-bats' data together — see
+    // tests/integration/known-issues.test.js for the regression test on the specific seed that
+    // used to violate this.
     expect(countScoredDots(G)).toBe(G.score.away + G.score.home);
 
     // per-inning run totals must sum to the final score for each team

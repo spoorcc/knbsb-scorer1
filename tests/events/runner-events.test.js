@@ -79,7 +79,7 @@ describe("buildRunnerEvent(CS1) / (CS2) / (PO1) — caught stealing / pick off",
     expect(result.bases[0]).toBeNull();
     expect(result.outRunner).toBeUndefined();
     // the commit happens as a side effect inside applyBases via commitToScorecard
-    expect(dom.window.eval("G.scorecard.away[2][1]")).toMatchObject({ "2e": ev.code });
+    expect(dom.window.eval("G.scorecard.away[2][1][0]")).toMatchObject({ "2e": ev.code });
   });
 
   it("CS1E: caught stealing but an error keeps the runner safe on second", () => {
@@ -110,7 +110,7 @@ describe("buildRunnerEvent(CS1) / (CS2) / (PO1) — caught stealing / pick off",
     expect(ev.outsDelta).toBe(1);
     const result = ev.applyBases([{ name: "Loper", battingSlot: 1, history: {} }, null, null]);
     expect(result.bases[0]).toBeNull();
-    expect(dom.window.eval("G.scorecard.away[1][1]")).toMatchObject({ "2e": "PO13" });
+    expect(dom.window.eval("G.scorecard.away[1][1][0]")).toMatchObject({ "2e": "PO13" });
   });
 });
 
@@ -167,7 +167,7 @@ describe("buildRunnerEvent(SB3) / (CS3) — stealing home", () => {
     expect(ev.outsDelta).toBe(1);
     const result = ev.applyBases([null, null, { name: "Loper", battingSlot: 5, history: {} }]);
     expect(result.bases[2]).toBeNull();
-    expect(dom.window.eval("G.scorecard.away[5][1]")).toMatchObject({ thuis: "CS2" });
+    expect(dom.window.eval("G.scorecard.away[5][1][0]")).toMatchObject({ thuis: "CS2" });
   });
 });
 
@@ -182,7 +182,7 @@ describe("buildRunnerEvent(PO2) / (PO3) — pickoff at second and third", () => 
     expect(ev.targetQuadrant).toBe("3e");
     const result = ev.applyBases([null, { name: "Loper", battingSlot: 3, history: {} }, null]);
     expect(result.bases[1]).toBeNull();
-    expect(dom.window.eval("G.scorecard.away[3][1]")).toMatchObject({ "3e": ev.code });
+    expect(dom.window.eval("G.scorecard.away[3][1][0]")).toMatchObject({ "3e": ev.code });
   });
 
   it("PO3: picked off third, out, commits directly", () => {
