@@ -631,6 +631,11 @@
   }
   table.scorecard-table td.sc-lid{padding:6px 8px; color:#777; font-size:.62rem;}
   table.scorecard-table td:not(.sc-pos):not(.sc-name):not(.sc-volg){min-width:64px;}
+  /* A slot batting twice in one big inning (batting around) gets its 2nd at-bat in an extra
+     column instead of overwriting the first — labeled with the same inning number, set apart by
+     a dashed divider so it doesn't read as a fresh (mislabeled) inning. */
+  table.scorecard-table th.sc-extra-inning,
+  table.scorecard-table td.sc-extra-inning{border-left:1px dashed #999;}
   /* Dubbelspel connecting line (p.19): drawn by drawDpLines() once both out-circles are on the
      page, on top of everything else in the scorecard (including the opaque .sc-cell backgrounds
      of the rows in between, which would otherwise paint over a CSS-only line crossing them). */
@@ -957,6 +962,11 @@ function initGame(maxInnings, sport, matchNumber){
       away: Array.from({length:9},()=>({})),
       home: Array.from({length:9},()=>({})),
     },
+    // Tracks, per (team, lineup slot), the most recent {inning, idx} the slot came to bat in —
+    // idx counts *at-bats within that inning* (0 for the first, 1 for a second trip through the
+    // order in a big inning, ...). Read/advanced via currentAtBatIdx(); see its comment for why
+    // this is safe to update once per forBatter turn and read lazily everywhere else.
+    atBatIndex:{away:{}, home:{}},
     endMarker:{away:{}, home:{}},
     slotEvents:{away:Array.from({length:9},()=>[]), home:Array.from({length:9},()=>[])},
     boatMarkers:{away:{}, home:{}},
@@ -987,17 +997,42 @@ function currentBatterName(teamKey, slot){
 
 function cloneBases(b){ return b.map(x=>x?Object.assign({},x):null); }
 
+// A lineup slot can bat more than once in one big inning (batting around) — G.atBatIndex tracks
+// which trip through the order is "current" for that slot. It only ever gets *advanced* in one
+// place (applyEventToState, on a fresh forBatter turn, via the same idx math as nextAtBatIdx()
+// below). Every other reader just reads the current value: commitToScorecard, and most marker
+// pushes (dpLinks, boatMarkers — both target a slot whose at-bat this turn has already started),
+// can use currentAtBatIdx(). That's safe because nextTurn() always drains G.pendingEvents (a
+// slot's own follow-up questions, and any other runner's advance-credit questions from the same
+// play) before ever generating a genuinely new event, so every commit belonging to at-bat N for a
+// slot is guaranteed to happen before that slot's at-bat N+1 begins.
+function currentAtBatIdx(teamKey, slot, inning){
+  const rec = G.atBatIndex[teamKey][slot];
+  return (rec && rec.inning === inning) ? rec.idx : 0;
+}
+
+// A few markers (fieldSubMarkers/subMarkers) target a slot's *upcoming* at-bat — e.g. "the dikke
+// streep goes above the first batter who comes to bat after the swap" — asked about before that
+// slot's own next forBatter turn has run, so its G.atBatIndex record (if any) still reflects its
+// *last completed* at-bat this inning, not the one the marker is meant to land on.
+function nextAtBatIdx(teamKey, slot, inning){
+  const rec = G.atBatIndex[teamKey][slot];
+  return (rec && rec.inning === inning) ? rec.idx + 1 : 0;
+}
+
 function commitToScorecard(teamKey, battingSlot, inning, hist){
   if(battingSlot===undefined || battingSlot===null || !hist) return;
+  const atBatIdx = currentAtBatIdx(teamKey, battingSlot, inning);
   const col = G.scorecard[teamKey][battingSlot];
+  if(!col[inning]) col[inning] = [];
   const stint = (G.stintColor && G.stintColor[teamKey]) || 0;
-  const existing = col[inning] || {};
+  const existing = col[inning][atBatIdx] || {};
   const existingStints = Object.assign({}, existing._stintQ);
   ['1e','2e','3e','thuis'].forEach(q=>{
     if(hist[q] !== undefined && existingStints[q] === undefined) existingStints[q] = stint;
   });
   if(hist.out !== undefined && existingStints.out === undefined) existingStints.out = stint;
-  col[inning] = Object.assign({}, existing, hist, {_stintQ: existingStints});
+  col[inning][atBatIdx] = Object.assign({}, existing, hist, {_stintQ: existingStints});
 }
 
 function hitAdvance(oldBases, batterName, n, code, battingSlot){
@@ -2248,6 +2283,13 @@ function applyEventToState(ev){
   const battingOrderNum = (G.battingIdx[teamKey] % 9) + 1;
   const battingSlotNow = G.battingIdx[teamKey] % 9;
   const batterName = currentBatterName(teamKey, battingSlotNow);
+  // A fresh plate appearance for this slot: advance its at-bat-within-this-inning counter
+  // *before* anything below can commit to the scorecard, so every commit for this turn (and any
+  // follow-up questions it queues) lands in the right column even if the slot already batted
+  // earlier this same inning (batting around).
+  if(ev.forBatter){
+    G.atBatIndex[teamKey][battingSlotNow] = {inning: G.inning, idx: nextAtBatIdx(teamKey, battingSlotNow, G.inning)};
+  }
   const oldBasesSnapshot = G.bases;
   const result = ev.applyBases(G.bases);
   G.bases = result.bases;
@@ -2280,7 +2322,11 @@ function applyEventToState(ev){
     // runner at 2nd, but p.20's worked example is a force at 3rd (bare unassisted "5"/"53") —
     // not modeled by case 'DP' yet, but if it ever is, this stays correct without a matching fix here.
     if(alsoOut && orig.battingSlot!==undefined){
-      G.dpLinks[teamKey].push({inning: G.inning, runnerSlot: orig.battingSlot, runnerQuadrant: orig.quadrant, batterSlot: battingSlotNow});
+      G.dpLinks[teamKey].push({
+        inning: G.inning,
+        runnerSlot: orig.battingSlot, runnerQuadrant: orig.quadrant, runnerAtBat: currentAtBatIdx(teamKey, orig.battingSlot, G.inning),
+        batterSlot: battingSlotNow, batterAtBat: currentAtBatIdx(teamKey, battingSlotNow, G.inning),
+      });
     }
   }
 
@@ -2312,7 +2358,9 @@ function applyEventToState(ev){
     const oppTeam = pcTeam==='away' ? 'home' : 'away';
     const oppSlot = G.battingIdx[oppTeam] % 9;
     if(!G.fieldSubMarkers[oppTeam][oppSlot]) G.fieldSubMarkers[oppTeam][oppSlot] = [];
-    G.fieldSubMarkers[oppTeam][oppSlot].push(G.inning);
+    // oppSlot's own forBatter turn for this inning hasn't run yet (this marker is queued ahead of
+    // it), so its at-bat index isn't in G.atBatIndex yet — use the *next* one, not the current one.
+    G.fieldSubMarkers[oppTeam][oppSlot].push({inning: G.inning, atBat: nextAtBatIdx(oppTeam, oppSlot, G.inning)});
   }
 
   if(ev.lineupChange){
@@ -2323,7 +2371,7 @@ function applyEventToState(ev){
     // substitution line across their row's cells.
     if(subType !== 'PR'){
       if(!G.subMarkers[lcTeam][lcSlot]) G.subMarkers[lcTeam][lcSlot] = [];
-      G.subMarkers[lcTeam][lcSlot].push(G.inning);
+      G.subMarkers[lcTeam][lcSlot].push({inning: G.inning, atBat: nextAtBatIdx(lcTeam, lcSlot, G.inning)});
     }
   }
 
@@ -2343,7 +2391,10 @@ function applyEventToState(ev){
     const oppSlot = (G.battingIdx[oppTeam] - 1 + 9) % 9;
     if(!G.boatMarkers[oppTeam][oppSlot]) G.boatMarkers[oppTeam][oppSlot] = [];
     const newStint = (G.stintColor[oppTeam] + 1) % 2;
-    G.boatMarkers[oppTeam][oppSlot].push({inning:G.inning, color:newStint});
+    // oppSlot just completed its most recent at-bat this inning (battingIdx already moved past
+    // it), so its G.atBatIndex record already reflects the right column — unlike
+    // fieldSubMarkers/subMarkers above, no "next" bump needed here.
+    G.boatMarkers[oppTeam][oppSlot].push({inning:G.inning, color:newStint, atBat: currentAtBatIdx(oppTeam, oppSlot, G.inning)});
     G.stintColor[oppTeam] = newStint;
   }
 
@@ -2395,7 +2446,7 @@ function endHalfInning(){
   G.bases.forEach(occ=>{ if(occ) commitToScorecard(key, occ.battingSlot, G.inning, occ.history); });
   const lastSlot = (G.battingIdx[key] - 1 + 9) % 9;
   if(!G.endMarker[key]) G.endMarker[key] = {};
-  G.endMarker[key][G.inning] = lastSlot;
+  G.endMarker[key][G.inning] = {slot: lastSlot, atBat: currentAtBatIdx(key, lastSlot, G.inning)};
   G.outs=0;
   G.bases=[null,null,null];
   G.pendingEvents.push(buildEndOfInningQuizEvent());
@@ -2612,22 +2663,45 @@ function renderFullScorecard(){
   ['away','home'].forEach(teamKey=>{
     const team = G[teamKey];
     const container = document.getElementById('scorecard-'+teamKey);
+
+    // How many sub-columns (at-bats) each inning needs on this team's card — almost always 1;
+    // more only when a big inning sends some lineup slot to the plate more than once (batting
+    // around), in which case that slot's 2nd+ at-bat gets its own extra "inning N" column instead
+    // of silently overwriting the first (see G.atBatIndex / commitToScorecard).
+    const subCols = {};
+    for(let inn=1; inn<=G.maxInnings; inn++){
+      let max = 1;
+      for(let slot=0; slot<9; slot++){
+        const arr = G.scorecard[teamKey][slot] && G.scorecard[teamKey][slot][inn];
+        if(arr && arr.length > max) max = arr.length;
+      }
+      subCols[inn] = max;
+    }
+
     let header = `<tr><th>Pos</th><th>${team.name}</th><th></th>`;
-    for(let i=1;i<=G.maxInnings;i++) header += `<th>${i}</th>`;
+    for(let i=1;i<=G.maxInnings;i++){
+      header += `<th>${i}</th>`;
+      for(let extra=1; extra<subCols[i]; extra++) header += `<th class="sc-extra-inning">${i}</th>`;
+    }
     header += '</tr>';
     let rows = '';
     for(let slot=0; slot<9; slot++){
       const player = team.lineup[slot];
       let cells = '';
       for(let inn=1; inn<=G.maxInnings; inn++){
-        const data = G.scorecard[teamKey][slot] ? G.scorecard[teamKey][slot][inn] : null;
-        const isEnd = G.endMarker[teamKey] && G.endMarker[teamKey][inn] === slot;
-        const boatEntry = G.boatMarkers[teamKey][slot] && G.boatMarkers[teamKey][slot].find(b=>b.inning===inn);
-        const boatCls = boatEntry ? ('sc-boatmark' + (boatEntry.color ? ' sc-boatmark-b' : '')) : '';
-        const isSubLine = G.subMarkers[teamKey][slot] && G.subMarkers[teamKey][slot].includes(inn);
-        const isFieldSubLine = G.fieldSubMarkers[teamKey][slot] && G.fieldSubMarkers[teamKey][slot].includes(inn);
-        const cls = [isEnd?'sc-endmark':'', boatCls, isSubLine?'sc-subline':'', isFieldSubLine?'sc-subline':''].filter(Boolean).join(' ');
-        cells += `<td class="${cls}" data-slot="${slot}" data-inn="${inn}">${renderScorecardCellHTML(data)}</td>`;
+        for(let atBat=0; atBat<subCols[inn]; atBat++){
+          const arr = G.scorecard[teamKey][slot] && G.scorecard[teamKey][slot][inn];
+          const data = arr ? arr[atBat] : null;
+          const em = G.endMarker[teamKey] && G.endMarker[teamKey][inn];
+          const isEnd = !!em && em.slot === slot && em.atBat === atBat;
+          const boatEntry = G.boatMarkers[teamKey][slot] && G.boatMarkers[teamKey][slot].find(b=>b.inning===inn && b.atBat===atBat);
+          const boatCls = boatEntry ? ('sc-boatmark' + (boatEntry.color ? ' sc-boatmark-b' : '')) : '';
+          const isSubLine = G.subMarkers[teamKey][slot] && G.subMarkers[teamKey][slot].some(m=>m.inning===inn && m.atBat===atBat);
+          const isFieldSubLine = G.fieldSubMarkers[teamKey][slot] && G.fieldSubMarkers[teamKey][slot].some(m=>m.inning===inn && m.atBat===atBat);
+          const isExtra = atBat > 0 ? ' sc-extra-inning' : '';
+          const cls = [isEnd?'sc-endmark':'', boatCls, isSubLine?'sc-subline':'', isFieldSubLine?'sc-subline':''].filter(Boolean).join(' ') + isExtra;
+          cells += `<td class="${cls}" data-slot="${slot}" data-inn="${inn}" data-atbat="${atBat}">${renderScorecardCellHTML(data)}</td>`;
+        }
       }
       const events = G.slotEvents[teamKey][slot] || [];
       const subEvents = events.filter(e=>e.type==='pos' || e.type==='sub');
@@ -2661,8 +2735,9 @@ function renderFullScorecard(){
     let cum = 0;
     for(let i=1;i<=G.maxInnings;i++){
       const r = G.inningRuns[teamKey][i-1];
-      totalPerInning += `<td>${r!==undefined ? r : ''}</td>`;
-      if(r!==undefined){ cum += r; totalCum += `<td>${cum}</td>`; } else { totalCum += `<td></td>`; }
+      const span = subCols[i] > 1 ? ` colspan="${subCols[i]}"` : '';
+      totalPerInning += `<td${span}>${r!==undefined ? r : ''}</td>`;
+      if(r!==undefined){ cum += r; totalCum += `<td${span}>${cum}</td>`; } else { totalCum += `<td${span}></td>`; }
     }
     totalPerInning += '</tr>';
     totalCum += '</tr>';
@@ -2691,8 +2766,8 @@ function drawDpLines(teamKey, container){
   svg.setAttribute('height', container.scrollHeight);
   let drawn = 0;
   links.forEach(link=>{
-    const runnerTd = container.querySelector(`td[data-slot="${link.runnerSlot}"][data-inn="${link.inning}"]`);
-    const batterTd = container.querySelector(`td[data-slot="${link.batterSlot}"][data-inn="${link.inning}"]`);
+    const runnerTd = container.querySelector(`td[data-slot="${link.runnerSlot}"][data-inn="${link.inning}"][data-atbat="${link.runnerAtBat}"]`);
+    const batterTd = container.querySelector(`td[data-slot="${link.batterSlot}"][data-inn="${link.inning}"][data-atbat="${link.batterAtBat}"]`);
     const runnerMark = runnerTd && runnerTd.querySelector(`.hist-text.q-${link.runnerQuadrant} .out-circle-inner`);
     const batterMark = batterTd && batterTd.querySelector('.builder-text.slot-any.out-mark');
     if(!runnerMark || !batterMark) return; // the follow-up out hasn't been answered/committed yet

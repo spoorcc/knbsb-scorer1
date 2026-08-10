@@ -19,7 +19,7 @@ describe("endHalfInning", () => {
     expect(G.outs).toBe(0);
     expect(G.bases).toEqual([null, null, null]);
     // the stranded runner's progress is committed before the bases are cleared
-    expect(G.scorecard.away[1][1]).toMatchObject({ "1e": "1B" });
+    expect(G.scorecard.away[1][1][0]).toMatchObject({ "1e": "1B" });
     expect(G.pendingEvents).toHaveLength(1);
     expect(G.pendingEvents[0].type).toBe("mc");
   });
@@ -91,6 +91,6 @@ describe("endHalfInning", () => {
     evalIn(dom, "G.battingIdx.away = 4; G.outs = 3;");
     dom.window.endHalfInning();
     const G = getG(dom);
-    expect(G.endMarker.away[1]).toBe(3);
+    expect(G.endMarker.away[1]).toMatchObject({ slot: 3 });
   });
 });

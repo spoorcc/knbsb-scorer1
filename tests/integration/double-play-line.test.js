@@ -44,12 +44,14 @@ describe("dubbelspel connecting line — end-to-end through a real game", () => 
     const G = getG(dom);
 
     expect(G.gameOver).toBe(true);
-    expect(G.dpLinks.home).toEqual([{ inning: 3, runnerSlot: 5, runnerQuadrant: "2e", batterSlot: 6 }]);
+    expect(G.dpLinks.home).toEqual([
+      { inning: 3, runnerSlot: 5, runnerQuadrant: "2e", runnerAtBat: 0, batterSlot: 6, batterAtBat: 0 },
+    ]);
 
     // Both halves of the play really did land in the scorecard the way drawDpLines() expects:
     // the runner's own cell circled in the 2e quadrant, the batter's own cell as a whole-cell out.
-    expect(G.scorecard.home[5][3]).toMatchObject({ "2e": "54", _outQ: "2e" });
-    expect(G.scorecard.home[6][3]).toMatchObject({ out: "43" });
+    expect(G.scorecard.home[5][3][0]).toMatchObject({ "2e": "54", _outQ: "2e" });
+    expect(G.scorecard.home[6][3][0]).toMatchObject({ out: "43" });
 
     // renderFullScorecard() is already called after every answer during play, but call it once
     // more explicitly (as the app does on every turn) and check the actual DOM it produced.
@@ -70,10 +72,12 @@ describe("dubbelspel connecting line — end-to-end through a real game", () => 
     const G = getG(dom);
 
     expect(G.gameOver).toBe(true);
-    expect(G.dpLinks.home).toEqual([{ inning: 3, runnerSlot: 7, runnerQuadrant: "3e", batterSlot: 1 }]);
+    expect(G.dpLinks.home).toEqual([
+      { inning: 3, runnerSlot: 7, runnerQuadrant: "3e", runnerAtBat: 0, batterSlot: 1, batterAtBat: 0 },
+    ]);
 
-    expect(G.scorecard.home[7][3]).toMatchObject({ "3e": "5", _outQ: "3e" });
-    expect(G.scorecard.home[1][3]).toMatchObject({ out: "53" });
+    expect(G.scorecard.home[7][3][0]).toMatchObject({ "3e": "5", _outQ: "3e" });
+    expect(G.scorecard.home[1][3][0]).toMatchObject({ out: "53" });
 
     dom.window.renderFullScorecard();
     const line = dom.window.document.querySelector('#scorecard-home svg.dp-links line.dp-link-line[data-dp-inning="3"]');

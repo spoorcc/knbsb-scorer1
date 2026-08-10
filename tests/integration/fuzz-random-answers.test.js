@@ -40,8 +40,10 @@ function countScoredDots(G) {
   let n = 0;
   for (const teamKey of ["away", "home"]) {
     for (const slotCols of G.scorecard[teamKey]) {
-      for (const cell of Object.values(slotCols)) {
-        if (cell && cell.scored) n++;
+      for (const atBats of Object.values(slotCols)) {
+        for (const cell of atBats) {
+          if (cell && cell.scored) n++;
+        }
       }
     }
   }
@@ -56,12 +58,12 @@ describe.each([1, 2, 3])("fuzzed game with mixed right/wrong answers (test-seed 
 
     expect(turns).toBeGreaterThan(0);
     expect(G.gameOver).toBe(true);
-    // Wrong answers never change what actually happened in the (simulated) game, so the
-    // scored-dot count can never *exceed* the real score. It can legitimately fall short of
-    // it, though: see tests/integration/known-issues.test.js for a confirmed scorecard bug
-    // (a lineup slot batting twice in one big inning can collide onto the same cell), so we
-    // only assert the direction that's actually guaranteed here rather than exact equality.
-    expect(countScoredDots(G)).toBeLessThanOrEqual(G.score.away + G.score.home);
+    // Wrong answers never change what actually happened in the (simulated) game — the scorecard
+    // always reflects the real outcome, regardless of what the user typed — so the scored-dot
+    // count should match the real score exactly, same as full-game-simulation.test.js's
+    // always-correct runs. (Used to be a <= check: a lineup slot batting twice in one big inning
+    // could collide onto the same cell and undercount; see known-issues.test.js.)
+    expect(countScoredDots(G)).toBe(G.score.away + G.score.home);
     expect(G.inningRuns.away.reduce((a, b) => a + b, 0)).toBe(G.score.away);
     expect(G.inningRuns.home.reduce((a, b) => a + b, 0)).toBe(G.score.home);
     expect(G.totalCount).toBeGreaterThan(0);

@@ -594,3 +594,24 @@ the same relay shape `DP`'s three combos already cover.
   `applyEventToState`, twice, into the rendered DOM) with matchNumber
   `100026`, 3 innings, Honkbal, in
   `tests/integration/double-play-line.test.js`.
+
+## Follow-up: batting-around now gets its own extra inning column
+
+While walking through a real game's printed scorecard (wedstrijdnummer
+`795231`) in conversation, a lineup slot batting twice in one big inning
+turned out to visibly lose data on the card — the second at-bat's
+`commitToScorecard` call silently merged into the same cell as the first
+(CLAUDE.md's former "Known limitation" section). Checked the Scorer 1 PDF
+directly (full-text search across all 28 pages for anything about a second
+at-bat in the same inning, an extra column, "rond", etc.) and it says
+nothing about this scenario at all — it's out of Scorer 1's scope the same
+way the PA–E columns are ("Scorer 2" territory), not a documented
+convention this app was getting wrong.
+
+Implemented anyway, per direct request: `G.scorecard[team][slot][inning]`
+is now an array of at-bat cells; `renderFullScorecard` gives a slot's 2nd+
+at-bat its own extra "inning N" column (dashed divider, same inning number)
+instead of overwriting the first. See CLAUDE.md's "Batting around" section
+for the mechanism and `tests/integration/known-issues.test.js` for the
+regression test (matchNumber `100165`, previously a confirmed dot-count
+undercount, now exact).

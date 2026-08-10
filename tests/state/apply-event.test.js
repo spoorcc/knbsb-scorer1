@@ -32,7 +32,7 @@ describe("applyEventToState — batter events", () => {
     expect(G.bases).toEqual([null, null, null]);
     expect(G.outs).toBe(1);
     expect(G.battingIdx.away).toBe(1);
-    expect(G.scorecard.away[0][1]).toMatchObject({ out: "K" });
+    expect(G.scorecard.away[0][1][0]).toMatchObject({ out: "K" });
   });
 
   it("a home run scores a run immediately and commits 'scored' to the scorecard", () => {
@@ -43,7 +43,7 @@ describe("applyEventToState — batter events", () => {
     const G = getG(dom);
     expect(G.score.away).toBe(1);
     expect(G.currentHalfRuns).toBe(1);
-    expect(G.scorecard.away[2][1]).toMatchObject({ thuis: "HR", scored: true });
+    expect(G.scorecard.away[2][1][0]).toMatchObject({ thuis: "HR", scored: true });
   });
 
   it("a double-play removes two outs and queues a forced-out follow-up question for the lead runner", () => {
@@ -95,7 +95,9 @@ describe("applyEventToState — batter events", () => {
     const ev = dom.window.buildBatterEvent("DP", { name: "Slagman" }, getG(dom).bases, 0);
     dom.window.applyEventToState(ev);
     const G = getG(dom);
-    expect(G.dpLinks.away).toEqual([{ inning: 1, runnerSlot: 4, runnerQuadrant: "2e", batterSlot: 0 }]);
+    expect(G.dpLinks.away).toEqual([
+      { inning: 1, runnerSlot: 4, runnerQuadrant: "2e", runnerAtBat: 0, batterSlot: 0, batterAtBat: 0 },
+    ]);
   });
 
   it("a double-play that itself ends the half-inning still commits the forced-out follow-up to the inning the play happened in", () => {
@@ -120,13 +122,15 @@ describe("applyEventToState — batter events", () => {
     G = getG(dom);
 
     // The forced-out runner's line belongs to the play that happened in inning 1, not inning 2.
-    expect(G.scorecard.home[4][1]).toMatchObject({ _outQ: "2e" });
+    expect(G.scorecard.home[4][1][0]).toMatchObject({ _outQ: "2e" });
     expect(G.scorecard.home[4][2]).toBeUndefined();
 
     // Same for the dpLinks bookkeeping that drives the printed connecting line: it must stay
     // pinned to inning 1 (the half-inning that had already ended by the time this was pushed),
     // not the inning G.inning had already advanced to.
-    expect(G.dpLinks.home).toEqual([{ inning: 1, runnerSlot: 4, runnerQuadrant: "2e", batterSlot: 0 }]);
+    expect(G.dpLinks.home).toEqual([
+      { inning: 1, runnerSlot: 4, runnerQuadrant: "2e", runnerAtBat: 0, batterSlot: 0, batterAtBat: 0 },
+    ]);
   });
 
   it("DP3 (p.20's unassisted force at 3rd) records a dpLinks entry with runnerQuadrant '3e', not '2e'", () => {
@@ -137,7 +141,9 @@ describe("applyEventToState — batter events", () => {
     dom.window.applyEventToState(ev);
     const G = getG(dom);
     expect(G.outs).toBe(2);
-    expect(G.dpLinks.away).toEqual([{ inning: 1, runnerSlot: 5, runnerQuadrant: "3e", batterSlot: 2 }]);
+    expect(G.dpLinks.away).toEqual([
+      { inning: 1, runnerSlot: 5, runnerQuadrant: "3e", runnerAtBat: 0, batterSlot: 2, batterAtBat: 0 },
+    ]);
 
     // The forced-out runner (from 2nd) gets the bare unassisted code; the batter's own cell
     // gets the full "53" throw. Confirms drawDpLines() will find both marks: the runner's in
@@ -147,8 +153,8 @@ describe("applyEventToState — batter events", () => {
     expect(followUp).toBeTruthy();
     expect(followUp.code).toBe("5");
     dom.window.applyEventToState(followUp);
-    expect(getG(dom).scorecard.away[5][1]).toMatchObject({ "3e": "5", _outQ: "3e" });
-    expect(getG(dom).scorecard.away[2][1]).toMatchObject({ out: "53" });
+    expect(getG(dom).scorecard.away[5][1][0]).toMatchObject({ "3e": "5", _outQ: "3e" });
+    expect(getG(dom).scorecard.away[2][1][0]).toMatchObject({ out: "53" });
   });
 
   it("a sacrifice fly that itself ends the half-inning still commits the scoring runner's advance-credit to the inning the play happened in", () => {
@@ -174,7 +180,7 @@ describe("applyEventToState — batter events", () => {
     G = getG(dom);
 
     // The scoring runner's credit belongs to the play that happened in inning 1, not inning 2.
-    expect(G.scorecard.home[6][1]).toMatchObject({ thuis: followUp.code, scored: true });
+    expect(G.scorecard.home[6][1][0]).toMatchObject({ thuis: followUp.code, scored: true });
     expect(G.scorecard.home[6][2]).toBeUndefined();
   });
 
@@ -225,7 +231,7 @@ describe("applyEventToState — runner events", () => {
     const G = getG(dom);
     expect(G.bases[0]).toBeNull();
     expect(G.outs).toBe(1);
-    expect(G.scorecard.away[3][1]).toMatchObject({ "1e": "1B", "2e": ev.code });
+    expect(G.scorecard.away[3][1][0]).toMatchObject({ "1e": "1B", "2e": ev.code });
     expect(G.pendingEvents).toEqual([]);
   });
 
@@ -237,7 +243,7 @@ describe("applyEventToState — runner events", () => {
     const G = getG(dom);
     expect(G.bases[2]).toBeNull();
     expect(G.score.away).toBe(1);
-    expect(G.scorecard.away[6][1]).toMatchObject({ "1e": "1B", "2e": "SB", thuis: "WP", scored: true });
+    expect(G.scorecard.away[6][1][0]).toMatchObject({ "1e": "1B", "2e": "SB", thuis: "WP", scored: true });
   });
 
   it("a pinch runner substitution marks the streepje on the outgoing runner's own scorecard cell", () => {
@@ -251,7 +257,7 @@ describe("applyEventToState — runner events", () => {
     expect(G.bases[1].name).not.toBe("Loper");
     expect(G.bases[1].battingSlot).toBe(6);
     // the streepje lands in the quadrant the runner was standing on (2e), on their own cell
-    expect(G.scorecard.away[6][1]).toMatchObject({ "1e": "1B", "2e": "SB", _prQ: "2e" });
+    expect(G.scorecard.away[6][1][0]).toMatchObject({ "1e": "1B", "2e": "SB", _prQ: "2e" });
     // the generic "dikke streep" (p.20) is for a batting substitution (PH) marking where the new
     // batter's own turns begin — it doesn't apply to a pinch runner, who only gets the honk-vakje
     // streepje above, not a substitution line across their row's cells.

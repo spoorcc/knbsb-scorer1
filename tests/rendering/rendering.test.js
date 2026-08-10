@@ -70,7 +70,7 @@ describe("renderFullScorecard", () => {
 
   it("marks the end-of-inning slot with the sc-endmark class once a half-inning has ended", () => {
     const dom = startGame(loadApp());
-    evalIn(dom, "G.endMarker.away[1] = 2;"); // slot index 2 was the last batter of inning 1
+    evalIn(dom, "G.endMarker.away[1] = {slot: 2, atBat: 0};"); // slot index 2 was the last batter of inning 1
     dom.window.renderFullScorecard();
     const cell = dom.window.document.querySelectorAll("#scorecard-away td.sc-endmark");
     expect(cell.length).toBeGreaterThan(0);
@@ -79,8 +79,8 @@ describe("renderFullScorecard", () => {
   it("draws the pinch-runner streepje only on the grid segment toward the next base, not the whole divider", () => {
     const dom = startGame(loadApp());
     // replaced on 1st: only the 1e/2e boundary should get a mark, not the unrelated 3e/thuis one
-    evalIn(dom, "G.scorecard.away[0][1] = {'1e':'1B', _prQ:'1e'};");
-    evalIn(dom, "G.scorecard.away[1][1] = {'1e':'1B','2e':'SB'};"); // no swap: no mark at all
+    evalIn(dom, "G.scorecard.away[0][1] = [{'1e':'1B', _prQ:'1e'}];");
+    evalIn(dom, "G.scorecard.away[1][1] = [{'1e':'1B','2e':'SB'}];"); // no swap: no mark at all
     dom.window.renderFullScorecard();
     const html = dom.window.document.getElementById("scorecard-away").innerHTML;
     expect((html.match(/sc-pr-mark/g) || []).length).toBe(1);
@@ -91,9 +91,9 @@ describe("renderFullScorecard", () => {
 
   it("draws a dubbelspel connecting line once both out-circles are committed to the scorecard", () => {
     const dom = startGame(loadApp());
-    evalIn(dom, "G.scorecard.away[4][1] = {'2e':'64', _outQ:'2e'};"); // forced-out runner's own cell
-    evalIn(dom, "G.scorecard.away[0][1] = {out:'43'};"); // batter's own cell
-    evalIn(dom, "G.dpLinks.away = [{inning:1, runnerSlot:4, runnerQuadrant:'2e', batterSlot:0}];");
+    evalIn(dom, "G.scorecard.away[4][1] = [{'2e':'64', _outQ:'2e'}];"); // forced-out runner's own cell
+    evalIn(dom, "G.scorecard.away[0][1] = [{out:'43'}];"); // batter's own cell
+    evalIn(dom, "G.dpLinks.away = [{inning:1, runnerSlot:4, runnerQuadrant:'2e', runnerAtBat:0, batterSlot:0, batterAtBat:0}];");
     dom.window.renderFullScorecard();
     const line = dom.window.document.querySelector("#scorecard-away svg.dp-links line.dp-link-line");
     expect(line).toBeTruthy();
@@ -104,19 +104,19 @@ describe("renderFullScorecard", () => {
 
   it("doesn't draw a dubbelspel connecting line before the forced-out runner's follow-up question is answered", () => {
     const dom = startGame(loadApp());
-    evalIn(dom, "G.scorecard.away[0][1] = {out:'43'};"); // only the batter's half is committed so far
-    evalIn(dom, "G.dpLinks.away = [{inning:1, runnerSlot:4, runnerQuadrant:'2e', batterSlot:0}];");
+    evalIn(dom, "G.scorecard.away[0][1] = [{out:'43'}];"); // only the batter's half is committed so far
+    evalIn(dom, "G.dpLinks.away = [{inning:1, runnerSlot:4, runnerQuadrant:'2e', runnerAtBat:0, batterSlot:0, batterAtBat:0}];");
     dom.window.renderFullScorecard();
     expect(dom.window.document.querySelector("#scorecard-away svg.dp-links")).toBeNull();
   });
 
   it("draws one line per dpLinks entry when several double plays are on the card at once", () => {
     const dom = startGame(loadApp(), { innings: 6 });
-    evalIn(dom, "G.scorecard.away[4][1] = {'2e':'64', _outQ:'2e'}; G.scorecard.away[0][1] = {out:'43'};");
-    evalIn(dom, "G.scorecard.away[7][4] = {'2e':'54', _outQ:'2e'}; G.scorecard.away[2][4] = {out:'43'};");
+    evalIn(dom, "G.scorecard.away[4][1] = [{'2e':'64', _outQ:'2e'}]; G.scorecard.away[0][1] = [{out:'43'}];");
+    evalIn(dom, "G.scorecard.away[7][4] = [{'2e':'54', _outQ:'2e'}]; G.scorecard.away[2][4] = [{out:'43'}];");
     evalIn(dom, `G.dpLinks.away = [
-      {inning:1, runnerSlot:4, runnerQuadrant:'2e', batterSlot:0},
-      {inning:4, runnerSlot:7, runnerQuadrant:'2e', batterSlot:2}
+      {inning:1, runnerSlot:4, runnerQuadrant:'2e', runnerAtBat:0, batterSlot:0, batterAtBat:0},
+      {inning:4, runnerSlot:7, runnerQuadrant:'2e', runnerAtBat:0, batterSlot:2, batterAtBat:0}
     ];`);
     dom.window.renderFullScorecard();
     const lines = dom.window.document.querySelectorAll("#scorecard-away svg.dp-links line.dp-link-line");
@@ -127,8 +127,8 @@ describe("renderFullScorecard", () => {
 
   it("doesn't accumulate stale lines across re-renders", () => {
     const dom = startGame(loadApp());
-    evalIn(dom, "G.scorecard.away[4][1] = {'2e':'64', _outQ:'2e'}; G.scorecard.away[0][1] = {out:'43'};");
-    evalIn(dom, "G.dpLinks.away = [{inning:1, runnerSlot:4, runnerQuadrant:'2e', batterSlot:0}];");
+    evalIn(dom, "G.scorecard.away[4][1] = [{'2e':'64', _outQ:'2e'}]; G.scorecard.away[0][1] = [{out:'43'}];");
+    evalIn(dom, "G.dpLinks.away = [{inning:1, runnerSlot:4, runnerQuadrant:'2e', runnerAtBat:0, batterSlot:0, batterAtBat:0}];");
     dom.window.renderFullScorecard();
     dom.window.renderFullScorecard();
     dom.window.renderFullScorecard();
@@ -145,11 +145,34 @@ describe("renderFullScorecard", () => {
     // doesn't generate yet. If this ever regresses to a hardcoded 'q-2e' lookup, this is the only
     // test that would catch it, since every real DP today only ever produces '2e'.
     const dom = startGame(loadApp());
-    evalIn(dom, "G.scorecard.away[4][1] = {'3e':'5', _outQ:'3e'}; G.scorecard.away[0][1] = {out:'53'};");
-    evalIn(dom, "G.dpLinks.away = [{inning:1, runnerSlot:4, runnerQuadrant:'3e', batterSlot:0}];");
+    evalIn(dom, "G.scorecard.away[4][1] = [{'3e':'5', _outQ:'3e'}]; G.scorecard.away[0][1] = [{out:'53'}];");
+    evalIn(dom, "G.dpLinks.away = [{inning:1, runnerSlot:4, runnerQuadrant:'3e', runnerAtBat:0, batterSlot:0, batterAtBat:0}];");
     dom.window.renderFullScorecard();
     const line = dom.window.document.querySelector("#scorecard-away svg.dp-links line.dp-link-line");
     expect(line).toBeTruthy();
+  });
+
+  it("adds an extra inning column when a lineup slot bats twice in one inning, without disturbing single-at-bat innings", () => {
+    const dom = startGame(loadApp(), { innings: 3 });
+    // slot 3 batted twice in inning 2 (batting around); every other slot/inning has one at-bat.
+    evalIn(dom, "G.scorecard.away[3][2] = [{out:'K'}, {'1e':'1B'}];");
+    dom.window.renderFullScorecard();
+    const { document } = dom.window;
+    const headerCells = document.querySelectorAll("#scorecard-away table tr:first-child th");
+    // Pos + name + volgnr + inning1 + inning2 + inning2(extra) + inning3 = 7
+    expect(headerCells).toHaveLength(7);
+    expect(headerCells[4].textContent).toBe("2");
+    expect(headerCells[5].textContent).toBe("2");
+    expect(headerCells[5].classList.contains("sc-extra-inning")).toBe(true);
+    const slot3Cells = document.querySelectorAll('#scorecard-away td[data-slot="3"][data-inn="2"]');
+    expect(slot3Cells).toHaveLength(2);
+    expect(slot3Cells[0].getAttribute("data-atbat")).toBe("0");
+    expect(slot3Cells[1].getAttribute("data-atbat")).toBe("1");
+    expect(slot3Cells[0].innerHTML).toContain("K");
+    expect(slot3Cells[1].innerHTML).toContain("hs-mark"); // 1B renders as the honkslag tick-mark widget
+    // an untouched row in the same overflowing inning still gets both sub-columns, just empty
+    const slot0Cells = document.querySelectorAll('#scorecard-away td[data-slot="0"][data-inn="2"]');
+    expect(slot0Cells).toHaveLength(2);
   });
 });
 
