@@ -1918,7 +1918,7 @@ function buildRunnerEvent(key){
       break; }
     case 'PASS1': {
       const trailing = bases[0]; const lead = bases[1]; const p2 = pick([4,6]);
-      ev.narrative = `Bij een worp die alle kanten op stuitert, rennen zowel <b>${lead.name}</b> als <b>${trailing.name}</b> door. In de verwarring passeert <b>${trailing.name}</b> zijn eigen voorloper <b>${lead.name}</b> op de honkenpaden: uitgemaakt!`;
+      ev.narrative = `Bij een worp die alle kanten op stuitert, rennen zowel <b>${lead.name}</b> als <b>${trailing.name}</b> door. Vlak bij de ${P(p2)} passeert <b>${trailing.name}</b> in de verwarring zijn eigen voorloper <b>${lead.name}</b> op de honkenpaden: uitgemaakt!`;
       ev.code=String(p2); ev.refs=['De honkloper gaat uit, automatisch uit, p.19']; ev.targetQuadrant='2e';
       ev.priorHistory = Object.assign({}, trailing.history);
       ev.explain=`Een honkloper die een andere loper voor hem passeert, is automatisch uit. Je noteert de nul voor de veldspeler die het dichtst bij die plek stond, zonder aangooiketen: code <code>${p2}</code>. De gepasseerde loper blijft gewoon op zijn honk staan.`;
