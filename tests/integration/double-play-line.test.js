@@ -7,7 +7,9 @@ import { getG, loadApp, startGame } from "../helpers/loadApp.js";
  * G.scorecard/G.dpLinks to test drawDpLines() in isolation, this drives the double play
  * through the actual event pipeline (generateEvent -> applyEventToState, twice: the main DP
  * question and the forced-out runner's follow-up) to catch any real wiring mismatch between
- * what the game engine produces and what drawDpLines() expects to find in the DOM.
+ * what the game engine produces and what drawDpLines() expects to find in the DOM. Covers both
+ * DP shapes: the relay 'DP' (runner forced at 2nd) and the unassisted 'DP3' (runner forced at
+ * 3rd, p.20) — the latter is what dpLinks[].runnerQuadrant exists to keep working.
  */
 function playFullGameCorrectly(dom, { maxTurns = 600 } = {}) {
   const { document } = dom.window;
@@ -56,5 +58,27 @@ describe("dubbelspel connecting line — end-to-end through a real game", () => 
     expect(line).toBeTruthy();
     expect(line.getAttribute("data-dp-runner-slot")).toBe("5");
     expect(line.getAttribute("data-dp-batter-slot")).toBe("6");
+  });
+
+  it("matchNumber 100026 plays a real p.20-style unassisted double play (DP3), connected the same way", () => {
+    // Confirmed deterministic repro: home team's DP3 in inning 3, runner forced out at 3rd
+    // (lineup slot 7, unassisted) and the batter (lineup slot 1) out to complete it. This is
+    // the case the dpLinks[].runnerQuadrant fix specifically exists for — its runner circle
+    // sits in the 3e quadrant, not the 2e every 'DP' case always uses.
+    const dom = startGame(loadApp(), { innings: 3, sport: "Honkbal", matchNumber: "100026" });
+    playFullGameCorrectly(dom);
+    const G = getG(dom);
+
+    expect(G.gameOver).toBe(true);
+    expect(G.dpLinks.home).toEqual([{ inning: 3, runnerSlot: 7, runnerQuadrant: "3e", batterSlot: 1 }]);
+
+    expect(G.scorecard.home[7][3]).toMatchObject({ "3e": "5", _outQ: "3e" });
+    expect(G.scorecard.home[1][3]).toMatchObject({ out: "53" });
+
+    dom.window.renderFullScorecard();
+    const line = dom.window.document.querySelector('#scorecard-home svg.dp-links line.dp-link-line[data-dp-inning="3"]');
+    expect(line).toBeTruthy();
+    expect(line.getAttribute("data-dp-runner-slot")).toBe("7");
+    expect(line.getAttribute("data-dp-batter-slot")).toBe("1");
   });
 });
