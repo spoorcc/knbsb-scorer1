@@ -15,7 +15,9 @@ lastige speelsituatie nogmaals te oefenen of te delen.
 
 Wedstrijdnummer `795231` (5 innings, Honkbal) lijkt van alle mogelijke
 wedstrijden qua plays het meest op de voorbeeldwedstrijd uit de officiële
-cursus (zie [`analysis/`](./analysis) voor de methodiek).
+cursus (zie [`analysis/`](./analysis) voor de methodiek):
+
+[![Screenshot van wedstrijdnummer 795231](./screenshots/wedstrijd-795231.png)](https://spoorcc.github.io/knbsb-scorer1/?innings=5&sport=Honkbal&wedstrijd=795231)
 
 Geen installatie nodig — de app draait volledig in de browser, er wordt
 niets opgeslagen of verzonden.
