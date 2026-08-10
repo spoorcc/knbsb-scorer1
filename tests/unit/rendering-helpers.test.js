@@ -25,10 +25,10 @@ describe("renderCodeDisplay", () => {
     expect(window.renderCodeDisplay("3B")).toContain("hs-mark");
   });
 
-  it("wraps CS/PO codes in the out-circle widget, spaced out for legibility, with the digits kept unbreakable so a line wrap can only fall at that space", () => {
+  it("wraps CS/PO codes in the out-circle widget, on their own line from the throw sequence, same as the log/scorecard rendering", () => {
     const { window } = loadApp();
-    expect(window.renderCodeDisplay("CS24")).toBe('<span class="out-circle-inner">CS <span class="num-tail">24</span></span>');
-    expect(window.renderCodeDisplay("PO13")).toBe('<span class="out-circle-inner">PO <span class="num-tail">13</span></span>');
+    expect(window.renderCodeDisplay("CS24")).toBe('<span class="out-circle-inner">CS<br><span class="num-tail">24</span></span>');
+    expect(window.renderCodeDisplay("PO13")).toBe('<span class="out-circle-inner">PO<br><span class="num-tail">13</span></span>');
   });
 
   it("renders PIJL / the arrow character as the arrow-mark widget", () => {
