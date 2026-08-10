@@ -1467,7 +1467,11 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       break; }
     case 'SH': {
       const fielder = pick([1,2,5,4]);
-      ev.narrative = `<b>${batter.name}</b> legt een stootslag neer. De ${P(fielder)} gooit naar het eerste honk.`;
+      let leadIdx = -1;
+      for(let i=2;i>=0;i--){ if(bases[i]){ leadIdx=i; break; } }
+      const leadRunner = bases[leadIdx];
+      const destLabel = leadIdx===2 ? 'veilig naar huis' : `veilig naar het ${leadIdx===1?'derde':'tweede'} honk`;
+      ev.narrative = `<b>${batter.name}</b> legt een stootslag neer. De ${P(fielder)} gooit naar het eerste honk voor de uit, en <b>${leadRunner.name}</b> komt ondertussen ${destLabel}.`;
       ev.code = 'SH'+fielder+'3'; ev.refs=['Sacrifice hit, p.17, Scoreregel 9.08'];
       ev.explain=`Een opofferingsstootslag noteer je met <code>SH</code> gevolgd door de actie: code <code>SH${fielder}3</code>. Let op: dit is alleen een sacrifice hit als er nog geen twee uit waren, de slagman zelf écht uit gaat én de loper daadwerkelijk een honk verder komt. Blijft de slagman ook veilig (bijv. door een fout of trage worp), dan is het geen offer meer maar een gewone honkslag of een fout. Dat lees je in de paragrafen Honkslagen en Fouten.`;
       ev.applyBases = bases=>{
@@ -1488,7 +1492,11 @@ function buildBatterEvent(key, batter, bases, battingSlot){
     case 'SHE': {
       const fielder = pick([1,2,5,4]);
       const code = 'SH'+fielder+'3'+' E'+fielder;
-      ev.narrative = `<b>${batter.name}</b> legt een stootslag neer. De ${P(fielder)} gooit onzuiver naar het eerste honk, waardoor de slagman óók veilig blijft staan.`;
+      let leadIdx = -1;
+      for(let i=2;i>=0;i--){ if(bases[i]){ leadIdx=i; break; } }
+      const leadRunner = bases[leadIdx];
+      const destLabel = leadIdx===2 ? 'veilig naar huis' : `veilig naar het ${leadIdx===1?'derde':'tweede'} honk`;
+      ev.narrative = `<b>${batter.name}</b> legt een stootslag neer, precies zoals bedoeld om <b>${leadRunner.name}</b> ${destLabel} te laten komen. De ${P(fielder)} gooit onzuiver naar het eerste honk, waardoor de slagman óók veilig blijft staan.`;
       ev.code = code; ev.refs=['Sacrifice hit, p.17, Scoreregel 9.08'];
       ev.explain=`Wanneer de aangooi mislukt en de slagman daardoor zélf ook veilig blijft, blijft het toch een opofferingsstootslag (nog steeds met minder dan twee uit) als die zonder de fout gescoord had moeten worden, met de fout erbij genoteerd: code <code>${code}</code>.`;
       ev.forBatter=true;
