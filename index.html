@@ -1494,7 +1494,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
         const outRunner = b0 ? {
           name:b0.name, battingSlot:b0.battingSlot, quadrant:'2e', code:runnerCode, priorHistory:Object.assign({}, b0.history),
           refs:['Dubbelspel, p.19'],
-          explain:`Bij een dubbelspel krijgt de loper alléén zíjn eigen deel van de aangooiketen, tot en met zíjn eigen out: code <code>${runnerCode}</code>. Samen met de code van de slagman (<code>${batterCode}</code>) en de verbindende streep tussen de twee cirkels vormen ze samen de volledige aangooiketen.`,
+          explain:`Bij een dubbelspel krijgt de loper alléén zíjn eigen deel van de aangooiketen, tot en met zíjn eigen out: code <code>${runnerCode}</code>. Nu allebei de cirkels genoteerd zijn, tekent het scoreformulier hierboven automatisch de verbindende streep tussen jouw cirkel en die van de slagman (code <code>${batterCode}</code>), om te laten zien dat het één ononderbroken actie was.`,
         } : null;
         if(b1){
           if(b2){ runs++; advanced.push({name:b2.name, toIdx:'home'}); }
