@@ -1,0 +1,157 @@
+{
+  "bron": "KNBSB opleiding 'Scorer 1' (januari 2024), hoofdstuk 'Voorbeeldwedstrijd', p. 22-28",
+  "wedstrijd": {
+    "thuisploeg": "Bal op het dak",
+    "uitploeg": "Honkvast",
+    "locatie": "Utrecht",
+    "datum": "2011-09-01",
+    "wedstrijdnummer_in_document": "H15A-123",
+    "sport": "Honkbal",
+    "innings_gespeeld": 5,
+    "aanvangstijd": "14:30",
+    "speelduur": "2 uur"
+  },
+  "slagvolgorde": {
+    "Honkvast": [
+      { "slot": 1, "naam": "Jan Jansen", "positie": "Derde honk" },
+      { "slot": 2, "naam": "Kees van Kreek", "positie": "Korte stop" },
+      { "slot": 3, "naam": "Leo van Leende", "positie": "Linksveld" },
+      { "slot": 4, "naam": "Max van Made", "positie": "Achtervanger" },
+      { "slot": 5, "naam": "Nico van Nijnsel", "positie": "Midveld" },
+      { "slot": 6, "naam": "Oscar van Oirschot", "positie": "Eerste honk" },
+      { "slot": 7, "naam": "Piet van Poeldonk", "positie": "Rechtsveld" },
+      { "slot": 8, "naam": "Quirijn Quik", "positie": "Tweede honk" },
+      { "slot": 9, "naam": "Rutger van Rucphen", "positie": "Werper" }
+    ],
+    "Bal op het dak": [
+      { "slot": 1, "naam": "Albert van Asten", "positie": "Rechtsveld" },
+      { "slot": 2, "naam": "Bas van Boxtel", "positie": "Midveld" },
+      { "slot": 3, "naam": "Corné van Cromvoirt", "positie": "Linksveld" },
+      { "slot": 4, "naam": "Daan van Dommelen", "positie": "Korte stop" },
+      { "slot": 5, "naam": "Erik van Eersel", "positie": "Derde honk" },
+      { "slot": 6, "naam": "Fred van Fijnaart", "positie": "Tweede honk" },
+      { "slot": 7, "naam": "Gerrit van Gemert", "positie": "Eerste honk" },
+      { "slot": 8, "naam": "Hans van Haaren", "positie": "Achtervanger" },
+      { "slot": 9, "naam": "Ian van Iersel", "positie": "Werper" }
+    ]
+  },
+  "wissels": [
+    { "team": "Bal op het dak", "moment": "begin 2e inning", "uit": "Ian van Iersel", "in": "Isaak van Ispen", "reden": "werperwissel" },
+    { "team": "Honkvast", "moment": "5e inning", "uit": "Jan Jansen", "in": "Jos Jacobs", "reden": "pinch hitter" },
+    { "team": "Bal op het dak", "moment": "4e inning", "uit": "Isaak van Ispen (werper)", "in": "Piet van Poeldonk gaat werpen, Van Rucphen naar rechtsveld", "reden": "werperwissel na homerun Van Dommelen" }
+  ],
+  "verloop": {
+    "inning_1": {
+      "boven_Honkvast": [
+        "Jansen slaat een hoge bal in het rechtsveld, niet te vangen, hij haalt één gemakkelijk en wil door naar twee, waar hij echter net voor het honk wordt uitgemaakt door een aangooi van de rechtsvelder naar de korte stop.",
+        "Van Kreek plaatst een gave éénhonkslag in het linksveld. Als de volgende man aan slag is, steelt hij het tweede honk.",
+        "Van Leende wordt uitgevangen door de rechtsvelder. Van Kreek kan na de vang het derde honk halen.",
+        "Van Made krijgt vier wijd.",
+        "Van Nijnsel laat de eerste worp gaan, omdat Van Made gaat stelen. De achtervanger gooit aan op de tweede honkman, Van Made is te laat op het honk en wordt door de tweede honkman uitgetikt. Derde nul, wisselen."
+      ],
+      "onder_BalOpHetDak": [
+        "Van Asten gaat uit door een aangooi van de werper, die de geslagen bal stopt, naar de eerste honkman.",
+        "Van Boxtel geeft een goede slag, hoog in het midveld, niet te vangen en hij haalt het eerste honk.",
+        "Van Cromvoirt plaatst een stootslag, waarop Van Boxtel het tweede honk haalt en de slagman-honkloper 'safe' is op het eerste honk omdat de werper de bal onzuiver aangooit op het eerste honk.",
+        "Van Dommelen krijgt vier wijd en de andere lopers schuiven een honk op.",
+        "Van Eersel slaat de bal in het linksveld, waarop alle lopers één honk kunnen opschuiven en hijzelf in is op het eerste honk.",
+        "Van Fijnaart slaat recht naar de tweede honkman die de bal goed verwerkt, snel zijn honk aanraakt en op tijd aangooit op het eerste honk. Drie nullen, wisselen!"
+      ],
+      "punten": { "Honkvast": 0, "BalOpHetDak": 1 }
+    },
+    "inning_2": {
+      "boven_Honkvast": [
+        "Van Nijnsel had zijn slagbeurt niet afgemaakt en begint. Hij krijgt drie slag.",
+        "Van Oirschot slaat richting eerste honk, de eerste honkman stopt de bal en gooit goed aan naar de werper die het honk heeft overgenomen; de werper mist echter het honk en Van Oirschot is in.",
+        "Van Poeldonk slaat een line drive in het midveld, hij haalt het eerste honk en Van Oirschot komt zelfs op drie.",
+        "Quik aan slag. Van Poeldonk vertrekt op tijd van het eerste honk en haalt zonder problemen het tweede honk; de aangooi van de achtervanger komt te laat. De slagman gaat vervolgens naar het eerste honk omdat de werper vier ballen buiten de slagzone werpt.",
+        "Van Rucphen wordt geraakt door een geworpen bal en mag naar het eerste honk, waardoor de andere honklopers opschuiven.",
+        "Jansen krijgt vier wijd en weer gaan de andere lopers een honk verder.",
+        "Bij de tegenpartij wordt de werper vervangen door Isaak van Ispen.",
+        "Van Kreek wordt uitgevangen door de werper. De scheidsrechter had 'binnenhoog' afgeroepen.",
+        "Van Leende wordt uitgevangen door de linksvelder."
+      ],
+      "onder_BalOpHetDak": [
+        "Van Gemert slaat een honkslag, net over de werper heen.",
+        "Van Haaren aan slag. Van Gemert wil twee stelen, de achtervanger gooit uitstekend aan, maar de tweede honkman laat bij het tikken de bal vallen. De slagman wordt tenslotte uitgevangen door de achtervanger.",
+        "Isaak van Ispen, vervanger voor Van Iersel in begin tweede inning, aan slag. Er volgen twee doorgeschoten ballen, waarop van Gemert op drie en thuis komt. De slagman gaat uit door actie van de eerste honkman.",
+        "Van Asten slaat de bal in het rechtsveld, waar de veldspeler compleet misgrijpt en de slagman-honkloper zelfs veilig op twee belandt.",
+        "Van Boxtel plaatst een honkslag laag in het linksveld; loper op twee blijft op zijn honk.",
+        "Van Cromvoirt krijgt drie slag."
+      ],
+      "punten": { "Honkvast": 2, "BalOpHetDak": 1 }
+    },
+    "inning_3": {
+      "boven_Honkvast": [
+        "Van Made plaatst een éénhonkslag in het midveld,",
+        "Van Nijnsel doet hetzelfde, komt veilig op het eerste honk en slaat Van Made zelfs naar het derde. Daar wordt Van Made echter getikt door de derde honkman nadat die de aangooi van de midvelder goed heeft verwerkt.",
+        "Van Oirschot aan slag. Van Nijnsel wil het tweede honk stelen, de achtervanger gooit zeer onzuiver aan, waardoor Van Nijnsel zelfs door kan gaan naar het derde honk. De slagman slaat even later de bal hoog in het linksveld, waar hij wordt uitgevangen; de loper van drie kan na de vang scoren.",
+        "Van Poeldonk slaat een homerun in het midden.",
+        "Quik gaat als derde man uit doordat de achtervanger de derde slagbal, die niet werd gevangen na zijn slagbeweging, tijdig op het eerste honk kan aangooien."
+      ],
+      "onder_BalOpHetDak": [
+        "Van Dommelen slaat de bal richting korte stop; deze gooit de bal hoog over de eerste honkman, waardoor de slagman-honkloper zelfs naar het tweede honk mag.",
+        "Van Eersel slaat de bal ook richting korte stop; van Dommelen hindert de korte stop bij het verwerken van de bal en de scheidsrechter geeft hem uit wegens 'hinderen'.",
+        "Van Fijnaart slaat de bal naar de derde honkman, deze gooit de bal naar de tweede honkman, waar van Eersel uitgaat op een gedwongen loop, de slagman is 'safe' op het eerste honk.",
+        "Van Gemert slaat de bal hoog in het rechtsveld, onmogelijk te vangen. De rechtsvelder gooit de bal naar drie om van Fijnaart uit te maken; zijn aangooi komt echter te laat en van Fijnaart is 'safe' op drie. Van Gemert profiteert van die aangooi en kan naar het tweede honk.",
+        "Van Haaren wordt uitgevangen door de korte stop; derde nul."
+      ],
+      "punten": { "Honkvast": 2, "BalOpHetDak": 0 }
+    },
+    "inning_4": {
+      "boven_Honkvast": [
+        "Van Rucphen slaat richting derde honk en hoewel zijn 'rollertje' het binnenveld niet uitkomt, haalt hij dankzij zijn snelheid het eerste honk.",
+        "Jansen krijgt vier wijd.",
+        "Van Kreek slaat richting eerste honk; de eerste honkman laat de bal tussen zijn benen door schieten. Van Kreek komt hierdoor op één en de andere lopers schuiven een honk op.",
+        "Van Leende wordt bij het slaan gehinderd door de achtervanger en krijgt een vrije loop, waardoor de andere honklopers een honk opschuiven.",
+        "Van Made gaat uit door een actie van de eerste honkman, de andere lopers schuiven een honk op.",
+        "Van Nijnsel plaatst een opofferingsstootslag die door de werper op één wordt aangegooid, hijzelf is uit, maar de andere lopers komen een honk verder.",
+        "Van Oirschot krijgt drie slag, maar de derde slagbal is een doorschieter, waarop hij het eerste honk haalt en scoort een punt.",
+        "Van Poeldonk krijgt drie slag, derde nul."
+      ],
+      "onder_BalOpHetDak": [
+        "Van Ispen slaat 'onregelmatig' en wordt daarom uitgegeven.",
+        "Van Asten plaatst een éénhonkslag in het linksveld.",
+        "Van Boxtel komt op het eerste honk, omdat de korte stop zijn geslagen bal aangooit op het tweede honk, waar Van Asten uitgaat.",
+        "Van Cromvoirt aan slag. Van Boxtel steelt zeer tijdig het tweede honk, de achtervanger ziet dat hij toch geen kans meer heeft en gooit daarom niet meer aan. De slagman slaat een harde grondbal recht over het tweede honk en komt daardoor gemakkelijk op één. Van Boxtel kan op deze klap scoren, hoewel de midvelder op de thuisplaat aangooit. Van Cromvoirt profiteert van de aangooi en bereikt veilig het tweede honk.",
+        "Van Dommelen slaat een homerun over het linker verreveldhek en neemt Van Cromvoirt mee over de thuisplaat. Bij de tegenpartij gaat nu Van Poeldonk werpen en Van Rucphen gaat rechtsveld spelen.",
+        "Van Eersel gaat als derde uit op een aangooi van de achtervanger op het eerste honk."
+      ],
+      "punten": { "Honkvast": 4, "BalOpHetDak": 3 }
+    },
+    "inning_5": {
+      "boven_Honkvast": [
+        "Quik slaat een bal naar de korte stop die hem uitgooit op het eerste honk",
+        "Rucphen plaatst een éénhonkslag, laag in het midveld.",
+        "In plaats van Jansen komt de nieuwe slagman Jos Jacobs aan slag. Hij slaat de bal laag in het linksveld, éénhonkslag, waardoor Van Rucphen op twee komt.",
+        "Van Kreek aan slag. Er volgt een wilde worp, beide honklopers schuiven een honk op. Van Kreek krijgt vier wijd.",
+        "Van Leende doet of hij zal gaan stoten, de werper maakt een niet geoorloofde beweging en wordt bestraft met 'schijn', de honklopers mogen een honk opschuiven. De slagman slaat even later een line drive, recht in de handschoen van de werper die snel op drie aangooit, waar de loper te laat terug is. Drie nullen."
+      ],
+      "onder_BalOpHetDak": [
+        "Jos Jacobs gaat op het derde honk spelen.",
+        "Van Fijnaart wordt uitgevangen door de derde honkman.",
+        "Van Gemert slaat een harde grondbal in het linksveld, hij passeert het eerste honk en bereikt het tweede veilig, omdat de aangooi van de linksvelder naar de tweede honkman niet zuiver is.",
+        "Van Haaren slaat met een harde grondbal, door het midden, van Gemert binnen en haalt zelf gemakkelijk het eerste honk.",
+        "Van Ispen wordt geraakt door een geworpen bal en mag naar één. Hierdoor schuift Van Haaren een honk op.",
+        "Van Asten krijgt drie slag.",
+        "Van Boxtel is aan slag, de werper probeert Van Ispen die ver van het honk 'trekt' uit te maken; zijn aangooi is echter onzuiver en wordt een 'overthrow', beide lopers mogen één honk opschuiven. De slagman slaat vervolgens naar de korte stop die de bal naar de achtervanger gooit, die de aanstormende Van Haaren uittikt. Dit is de derde nul en ook het einde van deze voorbeeldwedstrijd."
+      ],
+      "punten": { "Honkvast": 1, "BalOpHetDak": 1 }
+    }
+  },
+  "eindstand": {
+    "Honkvast": {
+      "punten_per_inning": [0, 2, 2, 4, 1],
+      "totaal": 9
+    },
+    "BalOpHetDak": {
+      "punten_per_inning": [1, 1, 0, 3, 1],
+      "totaal": 6
+    }
+  },
+  "speelacties": {
+    "_toelichting": "Handmatig geteld uit het verloop hierboven, gegroepeerd naar dezelfde categorieen als de app's eigen scoreteken-vocabulaire (1B/2B/3B/HR/BB/IBB/HP/INT/OB/K/F/L/IF/FC/SH/SF/E/SB/CS/PO/WP/PB/BK, zie REACH_BUTTONS/OUT_BUTTONS/SPECIAL_BUTTONS/RUNNER_BUTTONS in index.html). hit1=enkele honkslag, hit23=twee-/driehonkslag, bb=BB+IBB+HP+INT/OB (alle manieren om een vrije loop naar 1 te krijgen), k=alle K-varianten (K, KWP, KPB, K+aangooi), fly=gevangen hoge ballen (F/L/IF/FF), ground=grondbal-uitslagen op honk/aangooi (cijfercodes) inclusief het slagman-deel van een dubbelspel, fc=velderskeus, sac=SH+SF, e=fouten (E), sb=gestolen honk, cs=uit bij stelen/pick off/gedwongen-uit-op-honk, misplay=WP+PB+BK.",
+    "Honkvast": { "hit1": 8, "hit23": 0, "hr": 1, "bb": 6, "k": 4, "fly": 4, "ground": 2, "fc": 0, "sac": 2, "e": 3, "sb": 3, "cs": 4, "misplay": 3 },
+    "BalOpHetDak": { "hit1": 10, "hit23": 0, "hr": 1, "bb": 2, "k": 2, "fly": 3, "ground": 5, "fc": 4, "sac": 1, "e": 6, "sb": 1, "cs": 3, "misplay": 2 }
+  }
+}
