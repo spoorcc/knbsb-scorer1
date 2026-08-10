@@ -134,13 +134,13 @@ describe("buildBatterEvent — fielded outs with a chosen position", () => {
     expect(ev.outsDelta).toBe(1);
   });
 
-  it("FL: foul line-drive code FLx", () => {
+  it("FL: foul line-drive code FLx, corner infielders only (not the catcher — a hard line drive isn't catchable at that range)", () => {
     const dom = loadApp();
     dom.window.initGame(3, "Honkbal", "1");
-    stubRngConstant(dom, randomForPickIndex(0, 3));
+    stubRngConstant(dom, randomForPickIndex(0, 2));
     const ev = dom.window.buildBatterEvent("FL", batter(), emptyBases(), 0);
     commonShape(ev);
-    expect(ev.code).toMatch(/^FL[235]$/);
+    expect(ev.code).toMatch(/^FL[35]$/);
     expect(ev.outsDelta).toBe(1);
   });
 });

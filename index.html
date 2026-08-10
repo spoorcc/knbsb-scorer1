@@ -1501,7 +1501,10 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       ev.outsDelta=1;
       break; }
     case 'FL': {
-      const p2 = pick([2,3,5]);
+      // Unlike FF's high, soft "hoge bal", this is a hard-hit line drive right next to home
+      // plate — not something a catcher can realistically react to and catch cleanly, so (unlike
+      // FF) the catcher isn't in this pool: only the corner infielders positioned along the lines.
+      const p2 = pick([3,5]);
       ev.narrative = `<b>${batter.name}</b> slaat een harde line drive in het foutgebied, recht in de handschoen van de ${P(p2)}.`;
       ev.code = 'FL'+p2; ev.refs=['Foul fly, p.17'];
       ev.explain=`Een gevangen line drive in fout gebied noteer je met code <code>FL${p2}</code> (de F van foul, plus de L van line drive).`;
