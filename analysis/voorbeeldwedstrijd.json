@@ -148,5 +148,10 @@
       "punten_per_inning": [1, 1, 0, 3, 1],
       "totaal": 6
     }
+  },
+  "speelacties": {
+    "_toelichting": "Handmatig geteld uit het verloop hierboven, gegroepeerd naar dezelfde categorieen als de app's eigen scoreteken-vocabulaire (1B/2B/3B/HR/BB/IBB/HP/INT/OB/K/F/L/IF/FC/SH/SF/E/SB/CS/PO/WP/PB/BK, zie REACH_BUTTONS/OUT_BUTTONS/SPECIAL_BUTTONS/RUNNER_BUTTONS in index.html). hit1=enkele honkslag, hit23=twee-/driehonkslag, bb=BB+IBB+HP+INT/OB (alle manieren om een vrije loop naar 1 te krijgen), k=alle K-varianten (K, KWP, KPB, K+aangooi), fly=gevangen hoge ballen (F/L/IF/FF), ground=grondbal-uitslagen op honk/aangooi (cijfercodes) inclusief het slagman-deel van een dubbelspel, fc=velderskeus, sac=SH+SF, e=fouten (E), sb=gestolen honk, cs=uit bij stelen/pick off/gedwongen-uit-op-honk, misplay=WP+PB+BK.",
+    "Honkvast": { "hit1": 8, "hit23": 0, "hr": 1, "bb": 6, "k": 4, "fly": 4, "ground": 2, "fc": 0, "sac": 2, "e": 3, "sb": 3, "cs": 4, "misplay": 3 },
+    "BalOpHetDak": { "hit1": 10, "hit23": 0, "hr": 1, "bb": 2, "k": 2, "fly": 3, "ground": 5, "fc": 4, "sac": 1, "e": 6, "sb": 1, "cs": 3, "misplay": 2 }
   }
 }
