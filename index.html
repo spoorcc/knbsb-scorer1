@@ -301,6 +301,15 @@
   .q-highlight.slot-3e{top:2px; left:2px; right:50%; bottom:50%;}
   .q-highlight.slot-thuis{top:50%; left:2px; right:50%; bottom:2px;}
   .q-highlight.slot-any{inset:2px;}
+  /* A named-quadrant highlight must paint over the always-visible "vrije ruimte" dot
+     (.qbtn.q-any, z-index 4), which sits centered across all four quadrants — otherwise its
+     circle punches a visible hole out of the fill near the honk-vakje's center, making the
+     highlight look like it doesn't cover the whole quadrant. The .slot-any fill is exempt: it's
+     meant to show the dot on top of it. pointer-events:none keeps the now-higher-stacked
+     highlight from blocking clicks on the quadrant/dot buttons underneath it. */
+  .q-highlight.slot-1e, .q-highlight.slot-2e, .q-highlight.slot-3e, .q-highlight.slot-thuis{
+    z-index:5; pointer-events:none;
+  }
 
   .honk-dot{
     position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
@@ -2864,7 +2873,7 @@ function addLogEntry(ev, userStr, slot, codeOK, slotOK, fullyCorrect){
   const div = document.createElement('div');
   div.className = 'log-entry';
   const cleanNarrative = ev.narrative.replace(/<[^>]+>/g,'');
-  const stateCls = slotOK ? 'state-correct' : 'state-wrong';
+  const stateCls = fullyCorrect ? 'state-correct' : 'state-wrong';
   const slotCls = 'slot-' + (slot || 'any');
   const slotLabel = QUADRANT_SHORT[slot] || slot || '—';
   const hist = ev.priorHistory || {};
@@ -3058,12 +3067,12 @@ function submitAnswer(){
   if(fullyCorrect) G.correctCount++;
   renderHeaderStats();
 
-  // recolor the honk-cell to reflect whether the chosen vakje was correct
+  // recolor the honk-cell to reflect whether the full answer (code + vakje) was correct
   const text = document.getElementById('builderText');
   const hl = document.getElementById('qHighlight');
   text.classList.remove('state-selected','state-correct','state-wrong');
   hl.classList.remove('state-selected','state-correct','state-wrong');
-  const stateCls = slotOK ? 'state-correct' : 'state-wrong';
+  const stateCls = fullyCorrect ? 'state-correct' : 'state-wrong';
   text.classList.add(stateCls); hl.classList.add(stateCls);
 
   const box = document.getElementById('feedbackBox');
