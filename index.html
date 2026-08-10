@@ -109,6 +109,8 @@
       repeating-linear-gradient(115deg, transparent 6px 18px, #fff 18px 19px, transparent 19px 34px);
   }
   .header-id{display:flex; align-items:center; gap:12px; position:relative; z-index:1;}
+  .header-divider{width:1px; align-self:stretch; min-height:24px; background:rgba(255,255,255,.22); position:relative; z-index:1;}
+  .header-actions{position:relative; z-index:1; display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
   .crest{
     flex:0 0 auto; width:44px; height:44px; border-radius:50%;
     background:#fff; border:2px solid rgba(255,255,255,.9); display:flex; align-items:center; justify-content:center;
@@ -117,18 +119,29 @@
   .crest svg{width:38px; height:38px; display:block;}
   header h1{font-size:1.2rem; margin:0; font-weight:600; letter-spacing:.2px;}
   header .sub{font-size:.72rem; letter-spacing:.6px; text-transform:uppercase; opacity:.75; margin-top:1px;}
+  /* Status readout, not an action — a filled pill with a live-dot instead of the outlined
+     rectangular shape used by .export-btn, so it doesn't read as "just another button". */
   header .stats{
-    position:relative; z-index:1; font-family:'IBM Plex Mono',monospace; font-size:.85rem; font-weight:600;
-    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.35); color:#fff;
-    padding:6px 12px; border-radius:3px; letter-spacing:.5px;
+    position:relative; z-index:1; display:flex; align-items:center; gap:7px;
+    font-family:'IBM Plex Mono',monospace; font-size:.82rem; font-weight:700;
+    background:rgba(255,255,255,.15); color:#fff;
+    padding:6px 14px; border-radius:999px; letter-spacing:.3px;
   }
-  .header-right{position:relative; z-index:1; display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;}
+  header .stats::before{
+    content:''; flex:0 0 auto; width:6px; height:6px; border-radius:50%;
+    background:#8fd9b0; box-shadow:0 0 0 3px rgba(143,217,176,.25);
+  }
+  .header-right{position:relative; z-index:1; display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:flex-end;}
   .export-btn{
     font-family:'Inter',sans-serif; font-size:.68rem; font-weight:700; letter-spacing:.3px; text-transform:none;
     background:transparent; color:rgba(255,255,255,.85); border:1px solid rgba(255,255,255,.4);
-    padding:6px 10px; border-radius:3px; display:inline-block; text-decoration:none; cursor:pointer;
+    padding:6px 10px; border-radius:3px; display:inline-flex; align-items:center; gap:6px;
+    text-decoration:none; cursor:pointer;
   }
   .export-btn:hover{background:rgba(255,255,255,.12); color:#fff;}
+  .export-btn.icon-btn{padding:6px; width:30px; height:30px; justify-content:center;}
+  .btn-icon{width:14px; height:14px; flex:0 0 auto; display:block;}
+  #themeToggleBtn{font-size:.95rem; line-height:1;}
 
   main{max-width:720px; margin:0 auto; padding:var(--space-3) 16px 40px;}
 
@@ -687,10 +700,19 @@
     </div>
   </div>
   <div class="header-right">
-    <div id="headerStats" class="stats hidden">0 / 0</div>
-    <a href="https://www.knbsb.nl/kenniscentrum/opleidingen-officials/belangrijke-documenten-opleidingen/" target="_blank" rel="noopener" class="export-btn" title="Officiële cursus en spelregels op knbsb.nl">Cursus &amp; regels</a>
-    <button id="shareBtn" class="export-btn" title="Deel deze wedstrijd via link">Deel</button>
-    <button id="themeToggleBtn" class="export-btn" type="button" title="Donker thema aan" aria-pressed="false">🌙</button>
+    <div id="headerStats" class="stats hidden" aria-live="polite">0 / 0</div>
+    <div class="header-divider" aria-hidden="true"></div>
+    <nav class="header-actions">
+      <a href="https://www.knbsb.nl/kenniscentrum/opleidingen-officials/belangrijke-documenten-opleidingen/" target="_blank" rel="noopener" class="export-btn" title="Officiële cursus en spelregels op knbsb.nl">Cursus &amp; regels</a>
+      <button id="newMatchBtn" class="export-btn" type="button" title="Terug naar het beginscherm voor een nieuwe wedstrijd">
+        <svg class="btn-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10a6 6 0 0 1 10.2-4.3M16 10a6 6 0 0 1-10.2 4.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M14 3v3h-3M6 17v-3h3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Nieuwe wedstrijd
+      </button>
+      <button id="shareBtn" class="export-btn icon-btn" type="button" title="Deel deze wedstrijd via link" aria-label="Deel deze wedstrijd via link">
+        <svg class="btn-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="15" cy="4.5" r="2.1" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="5" cy="10" r="2.1" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="15" cy="15.5" r="2.1" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.8 8.9l6.4-3.4M6.8 11.1l6.4 3.4" stroke="currentColor" stroke-width="1.4"/></svg>
+      </button>
+      <button id="themeToggleBtn" class="export-btn icon-btn" type="button" title="Donker thema aan" aria-pressed="false">🌙</button>
+    </nav>
   </div>
 </header>
 
@@ -3227,14 +3249,14 @@ document.getElementById('shareBtn').addEventListener('click', ()=>{
   url.searchParams.set('wedstrijd', G.matchNumber);
   const shareUrl = url.toString();
   const btn = document.getElementById('shareBtn');
-  const original = btn.textContent;
+  const original = btn.innerHTML;
   const fallback = ()=>{
     const ta = document.createElement('textarea');
     ta.value = shareUrl; document.body.appendChild(ta); ta.select();
     try{ document.execCommand('copy'); }catch(e){}
     document.body.removeChild(ta);
   };
-  const showCopied = ()=>{ btn.textContent = '✓ Link gekopieerd'; setTimeout(()=>{ btn.textContent = original; }, 2000); };
+  const showCopied = ()=>{ btn.classList.remove('icon-btn'); btn.textContent = '✓ Link gekopieerd'; setTimeout(()=>{ btn.classList.add('icon-btn'); btn.innerHTML = original; }, 2000); };
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(shareUrl).then(showCopied).catch(()=>{ fallback(); showCopied(); });
   } else {
@@ -3262,7 +3284,7 @@ document.getElementById('shareBtn').addEventListener('click', ()=>{
 })();
 
 
-document.getElementById('restartBtn').addEventListener('click', ()=>{
+function returnToSetupScreen(){
   document.getElementById('endScreen').classList.add('hidden');
   document.getElementById('gameScreen').classList.add('hidden');
   document.getElementById('situationCard').classList.remove('hidden');
@@ -3270,7 +3292,9 @@ document.getElementById('restartBtn').addEventListener('click', ()=>{
   document.getElementById('setupScreen').classList.remove('hidden');
   document.getElementById('headerStats').classList.add('hidden');
   document.getElementById('matchNumberInput').value = randomMatchNumber();
-});
+}
+document.getElementById('restartBtn').addEventListener('click', returnToSetupScreen);
+document.getElementById('newMatchBtn').addEventListener('click', returnToSetupScreen);
 
 document.getElementById('clearBtn').addEventListener('click', ()=>{
   builderStr = '';
