@@ -277,8 +277,15 @@
        "PO"/"CS" prefix and its throw sequence stack as two ordinary, centered text lines instead —
        matching how this same code stacks in the log entries and the printed scorecard. */
     display:inline-block;
-    border:1.3px solid currentColor; border-radius:50%; padding:.15em .38em; line-height:1.15;
+    border:1.3px solid currentColor; border-radius:50%; padding:.15em; line-height:1.15;
     white-space:normal; overflow-wrap:anywhere; text-align:center; max-width:100%; min-width:0;
+    /* Two stacked lines ("PO" / "13") naturally come out taller than wide, which with a 50%
+       border-radius draws an egg rather than a circle. aspect-ratio doesn't reliably fix this here
+       — this box is a flex *item* of its positioned parent (.hist-text/.builder-text), and a flex
+       item's own content-based sizing wins out over the ratio once the two text lines force a
+       height. Pinning width/height in font-relative units instead keeps it a true circle at every
+       size this renders at (live builder, log entries, printed scorecard). */
+    width:2.6em; height:2.6em; box-sizing:border-box;
   }
   /* Keeps a multi-digit throw sequence (e.g. the "15" in "PO<br>15") from splitting mid-number —
      word-break:break-all above will otherwise happily break between the digits themselves if they
@@ -2492,12 +2499,20 @@ function honkslagMarkHTML(n){
   return `<span class="hs-mark">${svg}</span>`;
 }
 
+// Shared by renderCodeDisplay (CS/PO codes) and renderScorecardCellHTML (every _outQ cell, which
+// also includes plain DP/FC/automatic-out codes like "643" or "6" that don't match this pattern
+// and so pass through unchanged) — keeps the "prefix on its own line from the throw sequence"
+// treatment identical everywhere an out-circle-inner gets built, instead of two codepaths drifting.
+function outCircleContent(code){
+  return /^(CS|PO)\d+$/.test(code) ? code.replace(/^(CS|PO)(\d+)$/, '$1<br><span class="num-tail">$2</span>') : code;
+}
+
 function renderCodeDisplay(code){
   if(code === '1B') return honkslagMarkHTML(1);
   if(code === '2B') return honkslagMarkHTML(2);
   if(code === '3B') return honkslagMarkHTML(3);
   if(code === 'PIJL' || code === '↑') return '<span class="arrow-mark"></span>';
-  if(/^(CS|PO)\d+$/.test(code)) return `<span class="out-circle-inner">${code.replace(/^(CS|PO)(\d+)$/, '$1<br><span class="num-tail">$2</span>')}</span>`;
+  if(/^(CS|PO)\d+$/.test(code)) return `<span class="out-circle-inner">${outCircleContent(code)}</span>`;
   return code;
 }
 
@@ -2511,7 +2526,7 @@ function renderScorecardCellHTML(cell){
   let html = `<div class="honk-cell sc-cell">`;
   ['1e','2e','3e','thuis'].forEach(q=>{
     if(cell[q]){
-      const content = (cell._outQ === q) ? `<span class="out-circle-inner">${cell[q]}</span>` : renderCodeDisplay(cell[q]);
+      const content = (cell._outQ === q) ? `<span class="out-circle-inner">${outCircleContent(cell[q])}</span>` : renderCodeDisplay(cell[q]);
       const qCls = stints[q] ? ' sc-stint-b' : '';
       html += `<span class="hist-text q-${q}${qCls}">${content}</span>`;
     }
