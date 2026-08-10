@@ -2678,10 +2678,16 @@ function drawDpLines(teamKey, container){
     // Matches the official scoreformulier: the streep runs left-edge-to-left-edge, not
     // center-to-center — on paper the throw-sequence text sits inside the circle to the right
     // of where the line touches it.
-    line.setAttribute('x1', r1.left - containerRect.left);
-    line.setAttribute('y1', r1.top + r1.height/2 - containerRect.top);
-    line.setAttribute('x2', r2.left - containerRect.left);
-    line.setAttribute('y2', r2.top + r2.height/2 - containerRect.top);
+    // getBoundingClientRect() is viewport-relative, but the svg itself is positioned (top:0;
+    // left:0) relative to the *content* box of this scrollable container, which doesn't shift
+    // when the user scrolls it — so a coordinate derived only from the container/mark rects
+    // would silently drift by exactly -scrollLeft/-scrollTop once the table's been scrolled
+    // (confirmed: innerHTML replacement does NOT reset an element's own scroll position).
+    // Adding it back converts to true content-relative coordinates, independent of scroll.
+    line.setAttribute('x1', r1.left - containerRect.left + container.scrollLeft);
+    line.setAttribute('y1', r1.top + r1.height/2 - containerRect.top + container.scrollTop);
+    line.setAttribute('x2', r2.left - containerRect.left + container.scrollLeft);
+    line.setAttribute('y2', r2.top + r2.height/2 - containerRect.top + container.scrollTop);
     svg.appendChild(line);
     drawn++;
   });
