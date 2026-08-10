@@ -551,7 +551,7 @@
 
   /* Full scorecard table — deliberately black/white/gray to resemble the real paper form */
   .sc-card{background:#fff;}
-  .table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom:6px;}
+  .table-scroll{position:relative; overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom:6px;}
 
   table.sc-matchinfo-table{border-collapse:collapse; width:100%; max-width:480px; font-size:.8rem; margin-bottom:16px;}
   table.sc-matchinfo-table td{border:1px solid #000; padding:5px 8px; color:#000;}
@@ -629,6 +629,11 @@
   }
   table.scorecard-table td.sc-lid{padding:6px 8px; color:#777; font-size:.62rem;}
   table.scorecard-table td:not(.sc-pos):not(.sc-name):not(.sc-volg){min-width:64px;}
+  /* Dubbelspel connecting line (p.19): drawn by drawDpLines() once both out-circles are on the
+     page, on top of everything else in the scorecard (including the opaque .sc-cell backgrounds
+     of the rows in between, which would otherwise paint over a CSS-only line crossing them). */
+  svg.dp-links{position:absolute; top:0; left:0; pointer-events:none; z-index:6;}
+  .dp-link-line{stroke:#000; stroke-width:1.4px;}
 </style>
 </head>
 <body>
@@ -954,6 +959,7 @@ function initGame(maxInnings, sport, matchNumber){
     slotEvents:{away:Array.from({length:9},()=>[]), home:Array.from({length:9},()=>[])},
     boatMarkers:{away:{}, home:{}},
     subMarkers:{away:{}, home:{}},
+    dpLinks:{away:[], home:[]},
     fieldSubMarkers:{away:{}, home:{}},
     stintColor:{away:0, home:0},
     lastPitcherChangeInning:{away:null, home:null},
@@ -2236,6 +2242,12 @@ function applyEventToState(ev){
     const orig = result.outRunner;
     const alsoOut = (ev.outsDelta || 0) >= 2;
     G.pendingEvents.push(buildForcedOutFollowUpEvent(orig.name, orig.quadrant, orig.code, orig.priorHistory, orig.battingSlot, teamKey, null, alsoOut, orig.refs, orig.explain));
+    // A dubbelspel's two out-circles (runner's forced out, batter's own out) get connected on the
+    // printed scorecard with a line, exactly like p.19's "de twee cirkels worden met een streep
+    // verbonden" — remember which two cells that is; drawDpLines() draws it once both exist.
+    if(alsoOut && orig.battingSlot!==undefined){
+      G.dpLinks[teamKey].push({inning: G.inning, runnerSlot: orig.battingSlot, batterSlot: battingSlotNow});
+    }
   }
 
   if(ev.forBatter && result.advanced && result.advanced.length){
@@ -2577,7 +2589,7 @@ function renderFullScorecard(){
         const isSubLine = G.subMarkers[teamKey][slot] && G.subMarkers[teamKey][slot].includes(inn);
         const isFieldSubLine = G.fieldSubMarkers[teamKey][slot] && G.fieldSubMarkers[teamKey][slot].includes(inn);
         const cls = [isEnd?'sc-endmark':'', boatCls, isSubLine?'sc-subline':'', isFieldSubLine?'sc-subline':''].filter(Boolean).join(' ');
-        cells += `<td class="${cls}">${renderScorecardCellHTML(data)}</td>`;
+        cells += `<td class="${cls}" data-slot="${slot}" data-inn="${inn}">${renderScorecardCellHTML(data)}</td>`;
       }
       const events = G.slotEvents[teamKey][slot] || [];
       const subEvents = events.filter(e=>e.type==='pos' || e.type==='sub');
@@ -2617,7 +2629,51 @@ function renderFullScorecard(){
     totalPerInning += '</tr>';
     totalCum += '</tr>';
     container.innerHTML = `<table class="scorecard-table">${header}${rows}${totalPerInning}${totalCum}</table>`;
+    drawDpLines(teamKey, container);
   });
+}
+
+// Connects a dubbelspel's two out-circles (queued in G.dpLinks by applyEventToState) with a
+// line, the way p.19 draws it on paper. The two circles live in different table rows (and
+// possibly several rows apart, e.g. a runner who reached base innings ago), so unlike the other
+// scorecard markers (sc-endmark/sc-boatmark/sc-subline) this can't be positioned with plain CSS
+// off the cell's own box — it needs each circle's actual on-screen position, measured after the
+// table has been laid out. (In the jsdom test environment there is no real layout, so
+// getBoundingClientRect() returns zeroed rects there — tests can only check that the right
+// <line> gets drawn, not its real coordinates; that part only means something in a real browser.)
+function drawDpLines(teamKey, container){
+  const oldSvg = container.querySelector('svg.dp-links');
+  if(oldSvg) oldSvg.remove();
+  const links = G.dpLinks[teamKey] || [];
+  if(!links.length) return;
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('class', 'dp-links');
+  svg.setAttribute('width', container.scrollWidth);
+  svg.setAttribute('height', container.scrollHeight);
+  let drawn = 0;
+  links.forEach(link=>{
+    const runnerTd = container.querySelector(`td[data-slot="${link.runnerSlot}"][data-inn="${link.inning}"]`);
+    const batterTd = container.querySelector(`td[data-slot="${link.batterSlot}"][data-inn="${link.inning}"]`);
+    const runnerMark = runnerTd && runnerTd.querySelector('.hist-text.q-2e .out-circle-inner');
+    const batterMark = batterTd && batterTd.querySelector('.builder-text.slot-any.out-mark');
+    if(!runnerMark || !batterMark) return; // the follow-up out hasn't been answered/committed yet
+    const containerRect = container.getBoundingClientRect();
+    const r1 = runnerMark.getBoundingClientRect();
+    const r2 = batterMark.getBoundingClientRect();
+    const line = document.createElementNS(svgNS, 'line');
+    line.setAttribute('class', 'dp-link-line');
+    line.setAttribute('data-dp-inning', link.inning);
+    line.setAttribute('data-dp-runner-slot', link.runnerSlot);
+    line.setAttribute('data-dp-batter-slot', link.batterSlot);
+    line.setAttribute('x1', r1.left + r1.width/2 - containerRect.left);
+    line.setAttribute('y1', r1.top + r1.height/2 - containerRect.top);
+    line.setAttribute('x2', r2.left + r2.width/2 - containerRect.left);
+    line.setAttribute('y2', r2.top + r2.height/2 - containerRect.top);
+    svg.appendChild(line);
+    drawn++;
+  });
+  if(drawn) container.appendChild(svg);
 }
 
 function renderField(){

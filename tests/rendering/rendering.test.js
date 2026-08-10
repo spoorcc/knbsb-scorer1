@@ -88,6 +88,27 @@ describe("renderFullScorecard", () => {
     expect(html).not.toContain("sc-pr-2e");
     expect(html).not.toContain("sc-pr-3e");
   });
+
+  it("draws a dubbelspel connecting line once both out-circles are committed to the scorecard", () => {
+    const dom = startGame(loadApp());
+    evalIn(dom, "G.scorecard.away[4][1] = {'2e':'64', _outQ:'2e'};"); // forced-out runner's own cell
+    evalIn(dom, "G.scorecard.away[0][1] = {out:'43'};"); // batter's own cell
+    evalIn(dom, "G.dpLinks.away = [{inning:1, runnerSlot:4, batterSlot:0}];");
+    dom.window.renderFullScorecard();
+    const line = dom.window.document.querySelector("#scorecard-away svg.dp-links line.dp-link-line");
+    expect(line).toBeTruthy();
+    expect(line.getAttribute("data-dp-inning")).toBe("1");
+    expect(line.getAttribute("data-dp-runner-slot")).toBe("4");
+    expect(line.getAttribute("data-dp-batter-slot")).toBe("0");
+  });
+
+  it("doesn't draw a dubbelspel connecting line before the forced-out runner's follow-up question is answered", () => {
+    const dom = startGame(loadApp());
+    evalIn(dom, "G.scorecard.away[0][1] = {out:'43'};"); // only the batter's half is committed so far
+    evalIn(dom, "G.dpLinks.away = [{inning:1, runnerSlot:4, batterSlot:0}];");
+    dom.window.renderFullScorecard();
+    expect(dom.window.document.querySelector("#scorecard-away svg.dp-links")).toBeNull();
+  });
 });
 
 describe("renderHeaderStats", () => {
