@@ -511,3 +511,50 @@ third-strike wild-pitch/passed-ball gating on 1st base being open or 2
 outs, the double-play notation convention) matched Scorer 1's own
 wording closely enough that rewording risked adding precision Scorer 1
 itself doesn't offer, so left as-is.
+
+## Follow-up: DP connecting line now drawn, cross-checked against p.19/p.20
+
+Closes the "Still open" item above ("No visual line connects the two DP
+out-circles across rows"). `applyEventToState` now records a `dpLinks`
+entry (`{inning, runnerSlot, runnerQuadrant, batterSlot}`) whenever a DP's
+forced-out follow-up is queued; `renderFullScorecard` calls a new
+`drawDpLines()` that measures both out-circles' actual on-screen positions
+(`getBoundingClientRect`, post-layout — the two rows can be arbitrarily far
+apart, so this can't be a static CSS rule) and draws an SVG `<line>`
+between them once both halves of the play are committed.
+
+Re-read against the user-supplied full PDF (rendered via PyMuPDF, same
+approach as the earlier symbol/glyph audit) rather than relying on the
+prior pass's paraphrase:
+
+- **p.19's worked example** ("64" runner / "43" batter, SS-to-2B-to-1B):
+  confirms the source text verbatim — *"Daarom worden de twee nullen met
+  een streep aan elkaar verbonden"* — and shows the line running from the
+  bottom of the runner's circle, down through the intervening row, to the
+  batter's circle below, in the *same* inning column but a *different*
+  lineup row. Matches the implementation's topology exactly.
+- **Endpoint position**: in both p.19's example and p.20's (see below), the
+  line hugs the **left side** of each circle, not the center and not the
+  right side — confirming the left-edge-to-left-edge anchoring already
+  implemented (per direct user correction against this same source). It's
+  not perfectly pixel-identical between the two hand-drawn examples (p.19's
+  line touches roughly a third of the way into the "64" ellipse from its
+  left; p.20's drops from dead center of the "5" circle, which just happens
+  to sit at the left quadrant's own center) — expected for hand-drawn
+  illustrations, not something to chase further with a more elaborate
+  anchoring rule.
+- **p.20's second worked example** (1st+2nd occupied, ball to third,
+  unassisted force at 3rd + throw to first: bare "5" for the runner / "53"
+  for the batter) is a *structurally different* DP the app doesn't
+  generate at all — `case 'DP'`'s combo pool (`[6,4,3]`/`[4,6,3]`/`[5,4,3]`)
+  only ever models a force at 2nd with a two-throw relay, never an
+  unassisted force at 3rd with no shared throw. This is a pre-existing gap
+  unrelated to the line itself (flagged here because cross-checking the
+  line surfaced it), and it means `drawDpLines`' assumption that the
+  runner's circle always sits in the `2e` quadrant was previously
+  hardcoded rather than derived — now carried explicitly as
+  `dpLinks[].runnerQuadrant` so a future `case 'DP'` variant forcing the
+  runner at 3rd (`3e`) wouldn't silently fail to draw its line. The
+  unassisted-5/53 combo itself is still not implemented — left for a
+  future PR alongside the p.20 example's variant narrative ("goed onder
+  controle... hoeft alleen zijn honk aan te raken").

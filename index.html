@@ -2247,8 +2247,11 @@ function applyEventToState(ev){
     // A dubbelspel's two out-circles (runner's forced out, batter's own out) get connected on the
     // printed scorecard with a line, exactly like p.19's "de twee cirkels worden met een streep
     // verbonden" — remember which two cells that is; drawDpLines() draws it once both exist.
+    // Carries orig.quadrant rather than assuming '2e': today's DP combos only ever force the
+    // runner at 2nd, but p.20's worked example is a force at 3rd (bare unassisted "5"/"53") —
+    // not modeled by case 'DP' yet, but if it ever is, this stays correct without a matching fix here.
     if(alsoOut && orig.battingSlot!==undefined){
-      G.dpLinks[teamKey].push({inning: G.inning, runnerSlot: orig.battingSlot, batterSlot: battingSlotNow});
+      G.dpLinks[teamKey].push({inning: G.inning, runnerSlot: orig.battingSlot, runnerQuadrant: orig.quadrant, batterSlot: battingSlotNow});
     }
   }
 
@@ -2661,7 +2664,7 @@ function drawDpLines(teamKey, container){
   links.forEach(link=>{
     const runnerTd = container.querySelector(`td[data-slot="${link.runnerSlot}"][data-inn="${link.inning}"]`);
     const batterTd = container.querySelector(`td[data-slot="${link.batterSlot}"][data-inn="${link.inning}"]`);
-    const runnerMark = runnerTd && runnerTd.querySelector('.hist-text.q-2e .out-circle-inner');
+    const runnerMark = runnerTd && runnerTd.querySelector(`.hist-text.q-${link.runnerQuadrant} .out-circle-inner`);
     const batterMark = batterTd && batterTd.querySelector('.builder-text.slot-any.out-mark');
     if(!runnerMark || !batterMark) return; // the follow-up out hasn't been answered/committed yet
     const containerRect = container.getBoundingClientRect();
