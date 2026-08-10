@@ -1366,7 +1366,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
         // 'A': the throw itself is good, but the receiving fielder at first drops it (p.12: "Error na een goed aangegooide bal")
         p2 = pick([1,4,5,6]);
         const p3 = 3;
-        text=`<b>${batter.name}</b> slaat een grondbal naar de ${P(p2)}, die goed aangooit naar de ${P(p3)} op het eerste honk — maar deze laat de bal vallen. Fout!`;
+        text=`<b>${batter.name}</b> slaat een grondbal naar de ${P(p2)}, die goed aangooit naar de ${P(p3)} op het eerste honk, maar deze laat de bal vallen. Fout!`;
         refs=['Error na een goed aangegooide bal, p.12'];
         code = p2+'E'+p3;
       }
@@ -1576,7 +1576,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       const batterCode = '53';
       ev.narrative = `<b>${batter.name}</b> slaat een grondbal recht naar de derde honkman. Die heeft de bal al goed onder controle en hoeft alleen zijn honk aan te raken om de loper van het tweede honk (die gedwongen naar het derde honk moet) uit te maken. Daarna gooit hij naar het eerste honk: dubbelspel!`;
       ev.code = batterCode; ev.refs=['Dubbelspel, p.20'];
-      ev.explain=`Dit dubbelspel gaat zonder aangooi voor de eerste uit: de derde honkman heeft de bal al zelf in bezit en hoeft alleen zijn honk aan te raken om de gedwongen loper uit te maken — een ongeassisteerde honkloop-uit, code <code>${runnerCode}</code> (geen aangooiketen), in zíjn eigen honk-vakje. Voor jou als slagman noteer je wél de aangooiketen tot en met jóuw out: code <code>${batterCode}</code>. Ook bij dit dubbelspel verbindt een streep de twee cirkels.`;
+      ev.explain=`Dit dubbelspel gaat zonder aangooi voor de eerste uit: de derde honkman heeft de bal al zelf in bezit en hoeft alleen zijn honk aan te raken om de gedwongen loper uit te maken, een ongeassisteerde honkloop-uit, code <code>${runnerCode}</code> (geen aangooiketen), in zíjn eigen honk-vakje. Voor jou als slagman noteer je wél de aangooiketen tot en met jóuw out: code <code>${batterCode}</code>. Ook bij dit dubbelspel verbindt een streep de twee cirkels.`;
       ev.applyBases = b=>{
         const b0=b[0], b1=b[1], b2=b[2];
         const nb=[null,null,null];
@@ -1999,7 +1999,7 @@ function buildEndOfInningQuizEvent(){
       narrative: `Wanneer geldt "binnenhoog" (infield fly) precies?`,
       options: [
         'Bij een goed geslagen hoge bal die een binnenvelder redelijkerwijs kan vangen, met minstens 1e en 2e honk bezet en minder dan twee uit.',
-        'Bij een goed geslagen hoge bal die een binnenvelder redelijkerwijs kan vangen, met minstens 1e en 2e honk bezet — ongeacht het aantal uit.',
+        'Bij een goed geslagen hoge bal die een binnenvelder redelijkerwijs kan vangen, met minstens 1e en 2e honk bezet, ongeacht het aantal uit.',
         'Bij een goed geslagen hoge bal die een binnenvelder kan vangen, zodra er minstens één honkloper op de honken staat en minder dan twee uit zijn.',
         'Bij elke hoge bal die in de buurt van het binnenveld valt, ook line drives en stootslagen, zolang er een loper op het eerste honk staat.'
       ], correctIndex: 0,
@@ -2015,7 +2015,7 @@ function buildEndOfInningQuizEvent(){
         'Als de loper die opschuift een invaller (pinch runner) is in plaats van de oorspronkelijke honkloper.'
       ], correctIndex: 0,
       refs:['Sacrifice hit, p.17, Scoreregel 9.08'],
-      explain: 'Een sacrifice hit vereist dat de slagman zelf daadwerkelijk uit gaat én de loper een honk verder brengt. Blijft de slagman ook veilig, dan is het geen SH meer maar een gewone honkslag of fout — ongeacht welke veldspeler erbij betrokken was, waar de stootslag precies neerkwam, of wie er als loper meeging.',
+      explain: 'Een sacrifice hit vereist dat de slagman zelf daadwerkelijk uit gaat én de loper een honk verder brengt. Blijft de slagman ook veilig, dan is het geen SH meer maar een gewone honkslag of fout, ongeacht welke veldspeler erbij betrokken was, waar de stootslag precies neerkwam, of wie er als loper meeging.',
     },
     {
       narrative: `Welk verschil zit er tussen het scoreteken voor honkbal en voor softbal wanneer de slagman gehinderd wordt door de achtervanger bij het slaan?`,
@@ -2091,7 +2091,7 @@ function buildPinchRunnerQuizEvent(runner, teamKey, quadrant){
     options: shuffled.options,
     correctIndex: shuffled.correctIndex,
     refs:['Verandering van werper, slagman en veldspeler, p.21'],
-    explain: `Een vervangende honkloper (pinch runner) noteer je met de afkorting <code>PR</code> in de positiekolom. Tussen de honken zet je een streepje op het punt waar de wissel plaatsvond — in het ${QUADRANT_SHORT[quadrant]}-vakje op de scorekaart hierboven, ter hoogte van het honk waar <b>${runner.name}</b> nu staat — en <b>${subName}</b> rent vanaf nu verder als loper.`,
+    explain: `Een vervangende honkloper (pinch runner) noteer je met de afkorting <code>PR</code> in de positiekolom. Tussen de honken zet je een streepje op het punt waar de wissel plaatsvond, in het ${QUADRANT_SHORT[quadrant]}-vakje op de scorekaart hierboven, ter hoogte van het honk waar <b>${runner.name}</b> nu staat, en <b>${subName}</b> rent vanaf nu verder als loper.`,
     applyBases: b=>{
       const idx = b.findIndex(x=>x && x.name===runner.name);
       if(idx>=0) b[idx] = Object.assign({}, b[idx], {name:subName});
@@ -2696,7 +2696,7 @@ function renderFullScorecard(){
     `<table class="sc-matchinfo-table">
       <tr><td class="mi-label">Sport:</td><td class="mi-value" colspan="3">${G.sport}</td></tr>
       <tr><td class="mi-label">Wedstrijd:</td><td class="mi-value" colspan="3">${G.away.name} – ${G.home.name}</td></tr>
-      <tr><td class="mi-label">Gespeeld te:</td><td class="mi-value" colspan="3">—</td></tr>
+      <tr><td class="mi-label">Gespeeld te:</td><td class="mi-value" colspan="3"></td></tr>
       <tr><td class="mi-label">Datum:</td><td class="mi-value">${G.matchDate}</td><td class="mi-label">Wedstrijdnummer:</td><td class="mi-value">${G.matchNumber}</td></tr>
     </table>`;
 
@@ -2886,7 +2886,7 @@ function addLogEntry(ev, userStr, slot, codeOK, slotOK, fullyCorrect){
   const cleanNarrative = ev.narrative.replace(/<[^>]+>/g,'');
   const stateCls = fullyCorrect ? 'state-correct' : 'state-wrong';
   const slotCls = 'slot-' + (slot || 'any');
-  const slotLabel = QUADRANT_SHORT[slot] || slot || '—';
+  const slotLabel = QUADRANT_SHORT[slot] || slot || '-';
   const hist = ev.priorHistory || {};
   const histSpans = ['1e','2e','3e','thuis'].map(q=>{
     if(q === slot || !hist[q]) return '';
@@ -3106,7 +3106,7 @@ function submitAnswer(){
   document.getElementById('explainText').innerHTML = ev.explain;
   let quadrantMsg = 'Plek op de kaart: <b>' + (QUADRANT_LABEL[wantedSlot]) + '</b>';
   if(ev.scoresRun){
-    quadrantMsg += ' — de stip voor het gescoorde punt heeft de trainer voor je gezet.';
+    quadrantMsg += ', de stip voor het gescoorde punt heeft de trainer voor je gezet.';
   }
   document.getElementById('quadrantFeedback').innerHTML = quadrantMsg;
   document.getElementById('refText').textContent = 'Zie: ' + ev.refs.join(' · ');
