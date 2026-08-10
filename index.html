@@ -1266,13 +1266,13 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       ev.outsDelta=1;
       break;
     case 'KWP':
-      ev.narrative = `<b>${batter.name}</b> gaat met drie slag, maar de bal schiet er bij de achtervanger volledig langs. ${batter.name} sprint naar het eerste honk.`;
+      ev.narrative = `<b>${batter.name}</b> gaat met drie slag, maar de werper gooit de bal wild over de achtervanger heen. ${batter.name} sprint naar het eerste honk.`;
       ev.code='KWP'; ev.refs=['Third strike Wild Pitch, p.11']; ev.targetQuadrant='1e';
       ev.explain='Drie slag waarbij de slagman toch het eerste honk bereikt door een wilde worp: noteer zowel <code>K</code> als <code>WP</code>.';
       ev.applyBases = bases=>forcedWalk(bases, batter.name, ev.code, battingSlot);
       break;
     case 'KPB':
-      ev.narrative = `<b>${batter.name}</b> gaat met drie slag, maar de achtervanger kan de bal niet onder controle krijgen. ${batter.name} bereikt het eerste honk.`;
+      ev.narrative = `<b>${batter.name}</b> gaat met drie slag, maar de achtervanger kan een goed gegooide bal niet vasthouden en laat hem doorschieten. ${batter.name} bereikt het eerste honk.`;
       ev.code='KPB'; ev.refs=['Third strike Passed Ball, p.11']; ev.targetQuadrant='1e';
       ev.explain='Drie slag waarbij de slagman het eerste honk bereikt door een doorgeschoten bal: noteer zowel <code>K</code> als <code>PB</code>.';
       ev.applyBases = bases=>forcedWalk(bases, batter.name, ev.code, battingSlot);
