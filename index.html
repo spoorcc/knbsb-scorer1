@@ -275,6 +275,11 @@
     border:1.3px solid currentColor; border-radius:50%; padding:.15em .38em; line-height:1.15;
     white-space:normal; overflow-wrap:anywhere; text-align:center; max-width:100%; min-width:0;
   }
+  /* Keeps a multi-digit throw sequence (e.g. the "15" in "PO 15") from splitting mid-number when
+     the circle wraps to a second line — word-break:break-all above will otherwise happily break
+     between the digits themselves instead of at the space before them, once the digits alone no
+     longer fit next to the "PO"/"CS" prefix on the first line. */
+  .out-circle-inner .num-tail{white-space:nowrap;}
   .hist-text.q-thuis{top:50%; left:2px; right:50%; bottom:2px;}
 
   .q-highlight{position:absolute; background:transparent; transition:all .18s ease; z-index:0;}
@@ -1153,7 +1158,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       break;
     case 'HR':
       ev.narrative = `<b>${batter.name}</b> slaat de bal over de afrastering: homerun!`;
-      ev.code='HR'; ev.refs=['Honkslagen, p.9']; ev.targetQuadrant='thuis';
+      ev.code='HR'; ev.refs=['Honkslagen, p.9']; ev.targetQuadrant='thuis'; ev.scoresRun=true;
       ev.explain='Een homerun noteer je met code <code>HR</code> (plus een punt voor het gescoorde punt).';
       ev.applyBases = bases=>hitAdvance(bases, batter.name, 4, ev.code, battingSlot);
       break;
@@ -1669,6 +1674,7 @@ function buildRunnerEvent(key){
       ev.narrative = `De werper gooit een wilde worp, hoog over de achtervanger. ${moveNar}`;
       ev.code='WP'; ev.refs=['Wild Pitch, p.14, Scoreregel 9.13'];
       ev.targetQuadrant = bases[2] ? 'thuis' : (bases[1] ? '3e' : '2e');
+      if(bases[2]) ev.scoresRun=true;
       ev.priorHistory = Object.assign({}, lead.history);
       ev.explain='Een wilde worp noteer je bij elke opschuivende loper met code <code>WP</code> (ieder in zijn eigen honk-vakje).';
       ev.applyBases = b=>advanceAllByOne(b,'WP');
@@ -1681,6 +1687,7 @@ function buildRunnerEvent(key){
       ev.narrative = `De achtervanger kan de bal niet vasthouden: doorgeschoten bal. ${moveNar}`;
       ev.code='PB'; ev.refs=['Passed Ball, p.15, Scoreregel 9.13'];
       ev.targetQuadrant = bases[2] ? 'thuis' : (bases[1] ? '3e' : '2e');
+      if(bases[2]) ev.scoresRun=true;
       ev.priorHistory = Object.assign({}, lead.history);
       ev.explain='Een doorgeschoten bal noteer je bij elke opschuivende loper met code <code>PB</code> (ieder in zijn eigen honk-vakje).';
       ev.applyBases = b=>advanceAllByOne(b,'PB');
@@ -1697,6 +1704,7 @@ function buildRunnerEvent(key){
         : `De werper maakt een onreglementaire beweging: schijn! ${moveNar}`;
       ev.code=code; ev.refs=[isSoftbal ? 'Illegal pitch, p.15' : 'BalK, p.15'];
       ev.targetQuadrant = bases[2] ? 'thuis' : (bases[1] ? '3e' : '2e');
+      if(bases[2]) ev.scoresRun=true;
       ev.priorHistory = Object.assign({}, lead.history);
       ev.explain = isSoftbal
         ? 'Bij softbal heet dit een illegal pitch, genoteerd met code <code>IP</code> (ieder bij zijn eigen honk-vakje). Bij honkbal is dit <code>BK</code> (schijn).'
@@ -1715,7 +1723,7 @@ function buildRunnerEvent(key){
     case 'SB3': {
       const r = bases[2];
       ev.narrative = `<b>${r.name}</b> steelt het thuishonk!`;
-      ev.code='SB'; ev.refs=['Stolen base, p.13, Scoreregel 9.07']; ev.targetQuadrant='thuis';
+      ev.code='SB'; ev.refs=['Stolen base, p.13, Scoreregel 9.07']; ev.targetQuadrant='thuis'; ev.scoresRun=true;
       ev.priorHistory = Object.assign({}, r.history);
       ev.explain='Ook het stelen van het thuishonk noteer je met code <code>SB</code>, nu in het thuis-vakje: de loper scoort een punt.';
       ev.applyBases = b=>{ const nb=cloneBases(b); nb[2]=null; return {bases:nb, runs:1}; };
@@ -2122,7 +2130,7 @@ function buildAdvanceCreditEvent(adv, battingOrderNum, batterName, priorHistory,
   // Capture now (see buildForcedOutFollowUpEvent) in case this credit question is answered after G.inning moves on.
   const playInning = G.inning;
   return {
-    forBatter:false, outsDelta:0, targetQuadrant:quadrant,
+    forBatter:false, outsDelta:0, targetQuadrant:quadrant, scoresRun: quadrant==='thuis',
     code:String(battingOrderNum),
     priorHistory: priorHistory || {},
     narrative:`<b>${adv.name}</b> schuift door naar ${DEST_LABEL[quadrant]} dankzij ${triggerLabel} <b>${batterName}</b> (nr. ${battingOrderNum} in de slagvolgorde).`,
@@ -2165,7 +2173,7 @@ function buildRunnerFollowUpEvent(adv, label, priorHistory, battingSlot, teamKey
   // Capture now (see buildForcedOutFollowUpEvent) in case this follow-up is answered after G.inning moves on.
   const playInning = G.inning;
   return {
-    forBatter:false, outsDelta:0, targetQuadrant:quadrant,
+    forBatter:false, outsDelta:0, targetQuadrant:quadrant, scoresRun: quadrant==='thuis',
     code:label,
     priorHistory: priorHistory || {},
     narrative:`Ook <b>${adv.name}</b> schuift door dankzij ${RUNNER_LABEL_DESC[label]}.`,
@@ -2485,7 +2493,7 @@ function renderCodeDisplay(code){
   if(code === '2B') return honkslagMarkHTML(2);
   if(code === '3B') return honkslagMarkHTML(3);
   if(code === 'PIJL' || code === '↑') return '<span class="arrow-mark"></span>';
-  if(/^(CS|PO)\d+$/.test(code)) return `<span class="out-circle-inner">${code.replace(/^(CS|PO)(\d+)$/, '$1 $2')}</span>`;
+  if(/^(CS|PO)\d+$/.test(code)) return `<span class="out-circle-inner">${code.replace(/^(CS|PO)(\d+)$/, '$1 <span class="num-tail">$2</span>')}</span>`;
   return code;
 }
 
@@ -2824,7 +2832,7 @@ function submitAnswer(){
   const slotOK = selectedSlot === wantedSlot;
   const fullyCorrect = codeOK && slotOK;
 
-  document.getElementById('liveDot').classList.toggle('hidden', wantedSlot !== 'thuis');
+  document.getElementById('liveDot').classList.toggle('hidden', !ev.scoresRun);
 
   G.totalCount++;
   if(fullyCorrect) G.correctCount++;
@@ -2856,7 +2864,11 @@ function submitAnswer(){
   }
 
   document.getElementById('explainText').innerHTML = ev.explain;
-  document.getElementById('quadrantFeedback').innerHTML = 'Plek op de kaart: <b>' + (QUADRANT_LABEL[wantedSlot]) + '</b>';
+  let quadrantMsg = 'Plek op de kaart: <b>' + (QUADRANT_LABEL[wantedSlot]) + '</b>';
+  if(ev.scoresRun){
+    quadrantMsg += ' — de stip voor het gescoorde punt heeft de trainer voor je gezet.';
+  }
+  document.getElementById('quadrantFeedback').innerHTML = quadrantMsg;
   document.getElementById('refText').textContent = 'Zie: ' + ev.refs.join(' · ');
 
   document.getElementById('keyboard').classList.add('disabled');
