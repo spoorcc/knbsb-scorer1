@@ -469,7 +469,7 @@ describe("buildBatterEvent — sanity across every key with fuzzed base states",
   // occupied; buildBatterEvent itself trusts that precondition and doesn't re-check it.
   const GENERAL_KEYS = [
     "1B", "2B", "3B", "HR", "BB", "IBB", "HP", "INT", "K", "KWP", "KPB", "KTHROW",
-    "GO", "GOU", "F", "L", "FF", "FL", "IF", "E", "EEXTRA", "SH", "SHE", "DP", "DP3",
+    "GO", "GOU", "F", "L", "FF", "FL", "IF", "E", "EEXTRA", "DP", "DP3",
     "AUTOOUT", "OBBATTER",
   ];
   const BASE_STATES = [
@@ -485,6 +485,7 @@ describe("buildBatterEvent — sanity across every key with fuzzed base states",
   ];
   const BASE_STATES_WITH_FIRST = BASE_STATES.filter((b) => b[0]);
   const BASE_STATES_WITH_THIRD = BASE_STATES.filter((b) => b[2]);
+  const BASE_STATES_WITH_ANY_RUNNER = BASE_STATES.filter((b) => b[0] || b[1] || b[2]);
 
   it("never throws and always returns a well-formed event, for every general key x base-state x rng draw", () => {
     const dom = loadApp();
@@ -522,6 +523,25 @@ describe("buildBatterEvent — sanity across every key with fuzzed base states",
     dom.window.initGame(3, "Honkbal", "1");
     for (const key of ["SF", "SFE"]) {
       for (const bases of BASE_STATES_WITH_THIRD) {
+        for (let i = 0; i < 8; i++) {
+          stubRngConstant(dom, i / 8);
+          const ev = dom.window.buildBatterEvent(key, batter(), bases, 0);
+          commonShape(ev);
+          expect(() => ev.applyBases(dom.window.cloneBases(bases))).not.toThrow();
+        }
+      }
+    }
+  });
+
+  it("SH / SHE never throw, for every base state where at least one runner is on base", () => {
+    // Both narratives now name the lead runner they credit with the safe advance (see p.17
+    // Scoreregel 9.08), so — like FC/FCFAIL/FCINT trusting 1st is occupied, and SF/SFE trusting
+    // 3rd is occupied — they now also trust the same precondition the real pool gates them on
+    // (generateBatterEvent only offers SH/SHE when b0||b1||b2), and can't be fuzzed with empty bases.
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    for (const key of ["SH", "SHE"]) {
+      for (const bases of BASE_STATES_WITH_ANY_RUNNER) {
         for (let i = 0; i < 8; i++) {
           stubRngConstant(dom, i / 8);
           const ev = dom.window.buildBatterEvent(key, batter(), bases, 0);
