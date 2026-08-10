@@ -95,7 +95,7 @@ describe("applyEventToState — batter events", () => {
     const ev = dom.window.buildBatterEvent("DP", { name: "Slagman" }, getG(dom).bases, 0);
     dom.window.applyEventToState(ev);
     const G = getG(dom);
-    expect(G.dpLinks.away).toEqual([{ inning: 1, runnerSlot: 4, batterSlot: 0 }]);
+    expect(G.dpLinks.away).toEqual([{ inning: 1, runnerSlot: 4, runnerQuadrant: "2e", batterSlot: 0 }]);
   });
 
   it("a double-play that itself ends the half-inning still commits the forced-out follow-up to the inning the play happened in", () => {
