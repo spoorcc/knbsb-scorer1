@@ -2666,9 +2666,12 @@ function drawDpLines(teamKey, container){
     line.setAttribute('data-dp-inning', link.inning);
     line.setAttribute('data-dp-runner-slot', link.runnerSlot);
     line.setAttribute('data-dp-batter-slot', link.batterSlot);
-    line.setAttribute('x1', r1.left + r1.width/2 - containerRect.left);
+    // Matches the official scoreformulier: the streep runs left-edge-to-left-edge, not
+    // center-to-center — on paper the throw-sequence text sits inside the circle to the right
+    // of where the line touches it.
+    line.setAttribute('x1', r1.left - containerRect.left);
     line.setAttribute('y1', r1.top + r1.height/2 - containerRect.top);
-    line.setAttribute('x2', r2.left + r2.width/2 - containerRect.left);
+    line.setAttribute('x2', r2.left - containerRect.left);
     line.setAttribute('y2', r2.top + r2.height/2 - containerRect.top);
     svg.appendChild(line);
     drawn++;
