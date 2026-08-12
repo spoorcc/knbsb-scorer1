@@ -88,4 +88,34 @@ describe("nextTurn()", () => {
     expect(evalIn(dom, "builderStr")).toBe("");
     expect(evalIn(dom, "selectedSlot")).toBeNull();
   });
+
+  it("keeps the vrije-ruimte (q-any) button selectable on a runner turn, matching the always-visible live preview circle", () => {
+    // Regression: the button used to be hidden for any !ev.forBatter turn, even though the live
+    // #builderText preview is always styled/rendered as the "any" circle by default — the button
+    // being unusable while the circle looked clickable was exactly the reported bug.
+    const dom = startGame(loadApp());
+    dom.window.eval(
+      "G.pendingEvents.push({forBatter:false, type:'open', targetQuadrant:'2e', code:'SB', narrative:'test', explain:'test', refs:[], applyBases:b=>({bases:b, runs:0})});"
+    );
+    dom.window.nextTurn();
+    const { document } = dom.window;
+    expect(document.querySelector(".qbtn.q-any").classList.contains("hidden")).toBe(false);
+    dom.window.selectSlot("any");
+    expect(evalIn(dom, "selectedSlot")).toBe("any");
+  });
+
+  it("still marks a runner turn wrong when the user submits with vrije-ruimte selected, since no runner event ever targets it", () => {
+    const dom = startGame(loadApp());
+    dom.window.eval(
+      "G.pendingEvents.push({forBatter:false, type:'open', targetQuadrant:'2e', code:'SB', narrative:'test', explain:'test', refs:[], applyBases:b=>({bases:b, runs:0})});"
+    );
+    dom.window.nextTurn();
+    const { document } = dom.window;
+    const input = document.getElementById("systemInput");
+    input.value = "SB";
+    input.dispatchEvent(new dom.window.Event("input"));
+    dom.window.selectSlot("any");
+    document.getElementById("submitBtn").click();
+    expect(document.getElementById("feedbackBox").classList.contains("wrong")).toBe(true);
+  });
 });
