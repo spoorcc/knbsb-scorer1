@@ -1380,19 +1380,19 @@ function buildBatterEvent(key, batter, bases, battingSlot){
     case '1B':
       ev.narrative = `<b>${batter.name}</b> slaat een gave honkslag.`;
       ev.code='1B'; ev.refs=['Honkslagen, p.9']; ev.targetQuadrant='1e';
-      ev.explain='Een honkslag waarbij de slagman veilig het eerste honk bereikt, noteer je met code <code>1B</code>.';
+      ev.explain='Een honkslag waarbij de slagman veilig het eerste honk bereikt, teken je op de kaart als een schuine streep met één dwarsstreepje, niet als tekst. In deze trainer typ je daarvoor de code <code>1B</code>, die de tool omzet in dat teken.';
       ev.applyBases = bases=>hitAdvance(bases, batter.name, 1, ev.code, battingSlot);
       break;
     case '2B':
       ev.narrative = `<b>${batter.name}</b> slaat de bal diep de hoek in: een tweehonkslag.`;
       ev.code='2B'; ev.refs=['Honkslagen, p.9']; ev.targetQuadrant='2e';
-      ev.explain='Een tweehonkslag noteer je met code <code>2B</code>.';
+      ev.explain='Een tweehonkslag teken je op de kaart als een schuine streep met twee dwarsstreepjes, niet als tekst. In deze trainer typ je daarvoor de code <code>2B</code>.';
       ev.applyBases = bases=>hitAdvance(bases, batter.name, 2, ev.code, battingSlot);
       break;
     case '3B':
       ev.narrative = `<b>${batter.name}</b> raakt de bal vol en sprint naar het derde honk: driehonkslag!`;
       ev.code='3B'; ev.refs=['Honkslagen, p.9']; ev.targetQuadrant='3e';
-      ev.explain='Een driehonkslag noteer je met code <code>3B</code>.';
+      ev.explain='Een driehonkslag teken je op de kaart als een schuine streep met drie dwarsstreepjes, niet als tekst. In deze trainer typ je daarvoor de code <code>3B</code>.';
       ev.applyBases = bases=>hitAdvance(bases, batter.name, 3, ev.code, battingSlot);
       break;
     case 'HR':
