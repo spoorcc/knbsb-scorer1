@@ -3214,7 +3214,10 @@ function addLogEntry(ev, userStr, slot, codeOK, slotOK, fullyCorrect){
   const hist = ev.priorHistory || {};
   const histSpans = ['1e','2e','3e','thuis'].map(q=>{
     if(q === slot || !hist[q]) return '';
-    return `<span class="hist-text q-${q}">${renderCodeDisplay(hist[q])}</span>`;
+    // Same widen-into-the-next-quadrant ellipse as renderScorecardCellHTML/renderPriorHistory.
+    const nextQ = NEXT_QUADRANT[q];
+    const wideCls = (nextQ && nextQ!==slot && !hist[nextQ] && /^\(.+\)$/.test(hist[q])) ? ' q-wide' : '';
+    return `<span class="hist-text q-${q}${wideCls}">${renderCodeDisplay(hist[q])}</span>`;
   }).join('');
   const userUpper = (userStr||'').toUpperCase();
   const userDisplay = userUpper ? renderCodeDisplay(userUpper) : '·';
@@ -3268,6 +3271,12 @@ function renderPriorHistory(ev){
     const el = document.getElementById('hist'+q);
     if(!el) return;
     el.innerHTML = (q===current) ? '' : (hist[q] ? renderCodeDisplay(hist[q]) : '');
+    // Same widen-into-the-next-quadrant ellipse as renderScorecardCellHTML (see the .q-wide CSS
+    // comment): an out at 2e/3e ends that runner's path, so the circle can borrow the next
+    // quadrant's now-permanently-empty space here too, not just on the printed scorecard.
+    const nextQ = NEXT_QUADRANT[q];
+    const wide = q!==current && nextQ && nextQ!==current && !hist[nextQ] && /^\(.+\)$/.test(hist[q]||'');
+    el.classList.toggle('q-wide', !!wide);
   });
 }
 
