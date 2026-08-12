@@ -13,6 +13,19 @@ describe("renderScoreboard", () => {
     expect(document.getElementById("awayName").textContent).toBe(getG(dom).away.name);
   });
 
+  it("shows 'Einde wedstrijd' instead of an out-of-range inning number once the game is over", () => {
+    // Reported: after the last half-inning of a 1-inning game ends, endHalfInning() bumps
+    // G.inning past G.maxInnings and sets G.gameOver — but the feedback screen for that final
+    // answer still called renderScoreboard() before the end screen took over, so it briefly showed
+    // "Inning 2 (boven) · max 1 innings" for a game that had already finished.
+    const dom = startGame(loadApp(), { innings: 1 });
+    evalIn(dom, "G.gameOver = true; G.inning = 2; G.half = 'top';");
+    dom.window.renderScoreboard();
+    const { document } = dom.window;
+    expect(document.getElementById("inningMeta").textContent).toContain("Einde wedstrijd");
+    expect(document.getElementById("inningMeta").textContent).not.toContain("Inning 2");
+  });
+
   it("builds an innings table with one column per max inning plus a totals column", () => {
     const dom = startGame(loadApp(), { innings: 4 });
     dom.window.renderScoreboard();

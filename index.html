@@ -2895,8 +2895,9 @@ function renderScoreboard(){
   document.getElementById('homeName').textContent = G.home.name;
   document.getElementById('awayScore').textContent = G.score.away;
   document.getElementById('homeScore').textContent = G.score.home;
-  document.getElementById('inningMeta').textContent =
-    `Inning ${G.inning} (${G.half==='top'?'boven':'onder'}) · max ${G.maxInnings} innings`;
+  document.getElementById('inningMeta').textContent = G.gameOver
+    ? `Einde wedstrijd · ${G.maxInnings} innings`
+    : `Inning ${G.inning} (${G.half==='top'?'boven':'onder'}) · max ${G.maxInnings} innings`;
 
   const table = document.getElementById('inningsTable');
   let headerCells = '<th>Team</th>';
