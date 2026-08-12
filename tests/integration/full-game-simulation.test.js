@@ -93,6 +93,11 @@ describe("full game simulation — Softbal, 1 inning (fast smoke run)", () => {
 });
 
 describe("full game simulation — longer game (9 innings) stays consistent under more turns", () => {
+  // Up to 1200 real DOM-driven turns (clicks, input events, full re-renders) is legitimately slow
+  // and was already sitting right at the edge of the global 20s testTimeout under normal load —
+  // any extra load (a slower CI runner, other tests running in parallel) can tip it over even
+  // though nothing is actually wrong. Give this one test explicit headroom instead of raising the
+  // global default for every test.
   it("completes cleanly with a much longer sequence of turns", () => {
     const dom = startGame(loadApp(), { innings: 9, sport: "Honkbal", matchNumber: "777001" });
     const turns = playFullGameCorrectly(dom, { maxTurns: 1200 });
@@ -102,7 +107,7 @@ describe("full game simulation — longer game (9 innings) stays consistent unde
     expect(countScoredDots(G)).toBe(G.score.away + G.score.home);
     expect(G.inningRuns.away).toHaveLength(9);
     expect(G.inningRuns.home).toHaveLength(9);
-  });
+  }, 60000);
 });
 
 describe("full game simulation — deterministic replay", () => {
