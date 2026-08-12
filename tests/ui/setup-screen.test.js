@@ -99,6 +99,66 @@ describe("help screen", () => {
   });
 });
 
+describe("renderHelpExamples — the help screen's worked example is built from the real UI, not a static screenshot", () => {
+  it("populates the honk-vakje/invoerveld/keyboard placeholders before any game has started (setupKeyboard() fallback)", () => {
+    const dom = loadApp();
+    const { document } = dom.window;
+    // #grpSpecial is only populated by setupKeyboard(), normally called from startGame() — no
+    // game has started here, so renderHelpExamples() must call it itself.
+    expect(document.getElementById("grpSpecial").children.length).toBe(0);
+    document.getElementById("helpBtn").click();
+    expect(document.getElementById("helpShotHonkvakje1").querySelector(".honk-cell")).toBeTruthy();
+    expect(document.getElementById("helpShotControlrow1").querySelector("input").value).toBe("1B");
+    const kbButtons = document.getElementById("helpShotKeyboard").querySelectorAll(".kb-btn");
+    expect(kbButtons.length).toBe(evalIn(dom, "SPECIAL_BUTTONS.length + EXTRA_BUTTONS.length"));
+  });
+
+  it("the cloned example controls are inert (disabled), not live buttons the user could click", () => {
+    const dom = loadApp();
+    const { document } = dom.window;
+    document.getElementById("helpBtn").click();
+    document.getElementById("helpShotHonkvakje1").querySelectorAll("button").forEach((b) => {
+      expect(b.disabled).toBe(true);
+    });
+    document.getElementById("helpShotKeyboard").querySelectorAll("button").forEach((b) => {
+      expect(b.disabled).toBe(true);
+    });
+  });
+
+  it("the approved/rejected feedback examples use the exact same wording buildVerdictText/checkAnswer produce, so they can't drift out of sync", () => {
+    const dom = loadApp();
+    const { document, window } = dom.window;
+    document.getElementById("helpBtn").click();
+
+    const ev = window.buildBatterEvent("1B", { name: "Jan Jansen" }, [null, null, null], 0);
+    const approvedText = document.getElementById("helpShotGoedgekeurd").querySelector(".verdict").textContent;
+    expect(approvedText).toBe(window.buildVerdictText(true, true, ev, ev.targetQuadrant));
+
+    const rejectedText = document.getElementById("helpShotAfgekeurd").querySelector(".verdict").textContent;
+    const rejectedCodeOK = window.checkAnswer("2B", ev);
+    expect(rejectedText).toBe(window.buildVerdictText(rejectedCodeOK, true, ev, ev.targetQuadrant));
+    expect(document.getElementById("helpShotGoedgekeurd").querySelector(".feedback").classList.contains("correct")).toBe(true);
+    expect(document.getElementById("helpShotAfgekeurd").querySelector(".feedback").classList.contains("wrong")).toBe(true);
+  });
+
+  it("only builds the examples once, even if help is opened multiple times", () => {
+    const dom = loadApp();
+    const { document } = dom.window;
+    document.getElementById("helpBtn").click();
+    document.getElementById("helpBackBtn").click();
+    document.getElementById("helpBtn").click();
+    // a second build would insert a second .honk-cell into the same figure instead of reusing it
+    expect(document.getElementById("helpShotHonkvakje1").querySelectorAll(".honk-cell").length).toBe(1);
+  });
+
+  it("still works the same when help is opened mid-game (doesn't re-run setupKeyboard() disruptively)", () => {
+    const dom = startGame(loadApp(), { innings: 3, sport: "Honkbal", matchNumber: "333333" });
+    const { document } = dom.window;
+    expect(() => document.getElementById("helpBtn").click()).not.toThrow();
+    expect(document.getElementById("helpShotHonkvakje1").querySelector(".honk-cell")).toBeTruthy();
+  });
+});
+
 describe("shareBtn", () => {
   it("does nothing before a game has started (no G / no matchNumber)", () => {
     const dom = loadApp();

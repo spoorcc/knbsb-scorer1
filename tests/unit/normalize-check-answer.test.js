@@ -85,3 +85,38 @@ describe("checkAnswer", () => {
     expect(window.checkAnswer("((CS24))", ev)).toBe(false);
   });
 });
+
+describe("buildVerdictText / buildQuadrantMsg", () => {
+  // Shared by submitAnswer() (the real check) and the help screen's live worked example
+  // (renderHelpExamples()) — a single source of truth, so the feedback wording the scorer
+  // actually sees can never drift out of sync with what the help page shows as a sample.
+  const ev = { code: "1B", refs: ["Honkslagen, p.9"] };
+
+  it("fully correct", () => {
+    const { window } = loadApp();
+    expect(window.buildVerdictText(true, true, ev, "1e")).toBe("✓ Correct, teken én vakje kloppen!");
+  });
+
+  it("right code, wrong slot", () => {
+    const { window } = loadApp();
+    expect(window.buildVerdictText(true, false, ev, "2e")).toContain("Juiste vakje: 2e honk");
+  });
+
+  it("wrong code, right slot", () => {
+    const { window } = loadApp();
+    expect(window.buildVerdictText(false, true, ev, "1e")).toContain("Juiste code: 1B");
+  });
+
+  it("both wrong", () => {
+    const { window } = loadApp();
+    const text = window.buildVerdictText(false, false, ev, "1e");
+    expect(text).toContain("Juiste code: 1B");
+    expect(text).toContain("juiste vakje: 1e honk");
+  });
+
+  it("quadrant message notes a scored run when the event scores", () => {
+    const { window } = loadApp();
+    expect(window.buildQuadrantMsg({ scoresRun: true }, "thuis")).toContain("gescoorde punt");
+    expect(window.buildQuadrantMsg({ scoresRun: false }, "1e")).not.toContain("gescoorde punt");
+  });
+});
