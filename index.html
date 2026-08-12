@@ -338,10 +338,6 @@
      thuis has no further quadrant to borrow, so it stays a normal quarter-box. */
   .hist-text.q-2e.q-wide{left:2px;}
   .hist-text.q-3e.q-wide{bottom:2px;}
-  /* The wider box doesn't need a perfect circle — an ellipse gives the code more room to breathe
-     instead of wrapping as tightly as a single quarter-box forces it to. border-radius:50% on a
-     non-square box already draws a proper ellipse, so just widening it is enough. */
-  .hist-text.q-wide .out-circle-inner{width:4em; height:2.2em;}
 
   .q-highlight{position:absolute; background:transparent; transition:all .18s ease; z-index:0;}
   .q-highlight.slot-1e{top:50%; left:50%; right:2px; bottom:2px;}
@@ -675,6 +671,13 @@
   .honk-cell.sc-cell .hist-text{font-size:.68rem; padding-top:3px; color:#000;}
   .honk-cell.sc-cell .hist-text.sc-stint-b{color:#d21f1f;}
   .honk-cell.sc-cell .out-circle-inner{border-width:1px;}
+  /* The merged box doesn't need a perfect circle — an ellipse gives the code more room to breathe
+     instead of wrapping as tightly as a single quarter-box forces it to. border-radius:50% on a
+     non-square box already draws a proper ellipse, so just stretching it along its merge direction
+     is enough: q-2e.q-wide merges sideways (3e+2e, top row), q-3e.q-wide merges downward (3e+thuis,
+     left column), so the ellipse stretches wide for the first and tall for the second. */
+  .hist-text.q-2e.q-wide .out-circle-inner{width:4em; height:2.5em;}
+  .hist-text.q-3e.q-wide .out-circle-inner{width:2.2em; height:4em;}
   /* Pinch runner: "een streepje tussen de honken op het moment van wisselen" (p.21) — a thick
      line over just the segment of the honk-vakje's own grid that borders the quadrant the runner
      was standing on and the *next* quadrant in the base-running order (1e->2e->3e->thuis), not
