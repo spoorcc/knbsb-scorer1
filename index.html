@@ -707,21 +707,22 @@
     -webkit-mask-size:100% 100%; mask-size:100% 100%;
   }
   table.scorecard-table td.sc-boatmark-b::before{ background-color:#d21f1f; }
+  /* p.20: "Op de scorekaart wordt een dikke streep gezet waar de wissel plaatsvindt, zodat we
+     kunnen zien dat wat gescoord is vóór de streep voor de eerste slagman geldig is en na de
+     streep voor de tweede slagman" — a batting substitution (PH) on a team's *own* card gets a
+     single vertical divider at that boundary, splitting the outgoing and incoming batter's stats
+     within the same at-bat column. Just the border, no shared .sc-subline top-bar here — the
+     document describes one line, not a corner. */
+  table.scorecard-table td.sc-subline-own{border-left:3px solid #000;}
+  /* p.21: "De wissel van de veldspeler wordt aan de andere kant van de scorekaart aangegeven met
+     een dikke HORIZONTALE streep. De streep komt altijd te staan boven de eerste slagman die aan
+     slag komt na de wissel." — a position swap between two of the *opponent's own* fielders gets a
+     single horizontal line above the next batter's cell, no vertical component. This is the only
+     marker that uses the shared .sc-subline base class below. */
   table.scorecard-table td.sc-subline{position:relative;}
   table.scorecard-table td.sc-subline::before{
     content:''; position:absolute; left:0; right:0; top:0; height:3px; z-index:5; background:#000;
   }
-  /* p.20: "Op de scorekaart wordt een dikke streep gezet waar de wissel plaatsvindt, zodat we
-     kunnen zien dat wat gescoord is vóór de streep voor de eerste slagman geldig is en na de
-     streep voor de tweede slagman" — a batting substitution (PH) on a team's *own* card gets a
-     vertical divider at that boundary, splitting the outgoing and incoming batter's stats within
-     the same at-bat column. */
-  table.scorecard-table td.sc-subline-own{border-left:3px solid #000;}
-  /* p.21: "De wissel van de veldspeler wordt aan de andere kant van de scorekaart aangegeven met
-     een dikke HORIZONTALE streep. De streep komt altijd te staan boven de eerste slagman die aan
-     slag komt na de wissel." — a position swap between two of the *opponent's own* fielders is
-     marked only by the horizontal top-bar every .sc-subline cell already draws (::before above);
-     no vertical component, and no dashing is described for either marker. */
   table.scorecard-table tr.sc-total-row td{
     font-weight:700; color:#000; background:#f0f0f0; font-family:'IBM Plex Mono',monospace; padding:6px 8px;
   }
@@ -3036,7 +3037,7 @@ function renderFullScorecard(){
           const isSubLine = G.subMarkers[teamKey][slot] && G.subMarkers[teamKey][slot].some(m=>m.inning===inn && m.atBat===atBat);
           const isFieldSubLine = G.fieldSubMarkers[teamKey][slot] && G.fieldSubMarkers[teamKey][slot].some(m=>m.inning===inn && m.atBat===atBat);
           const isExtra = atBat > 0 ? ' sc-extra-inning' : '';
-          const cls = [isEnd?'sc-endmark':'', boatCls, isSubLine?'sc-subline sc-subline-own':'', isFieldSubLine?'sc-subline sc-subline-opp':''].filter(Boolean).join(' ') + isExtra;
+          const cls = [isEnd?'sc-endmark':'', boatCls, isSubLine?'sc-subline-own':'', isFieldSubLine?'sc-subline sc-subline-opp':''].filter(Boolean).join(' ') + isExtra;
           cells += `<td class="${cls}" data-slot="${slot}" data-inn="${inn}" data-atbat="${atBat}">${renderScorecardCellHTML(data)}</td>`;
         }
       }
