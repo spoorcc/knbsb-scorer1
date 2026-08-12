@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { evalIn, getG, loadApp, stubRngConstant } from "../helpers/loadApp.js";
+import { evalIn, getG, loadApp, randomForPickIndex, stubRngConstant, stubRngSequence } from "../helpers/loadApp.js";
 
 function setup(innings = 3, sport = "Honkbal") {
   const dom = loadApp();
@@ -71,6 +71,18 @@ describe("buildSchuinStreepQuiz / buildEndOfInningQuizEvent", () => {
       const ev = dom.window.buildEndOfInningQuizEvent();
       commonMcShape(ev);
     }
+  });
+
+  it("includes a 2-outs distractor for the SH (sacrifice hit) question, alongside the 'batter also safe' one", () => {
+    // Regression: none of the original distractors referenced the 2-outs rule — a bunt with 2 outs
+    // already reached can never be SH, no matter how cleanly it's executed, but that rule wasn't
+    // covered anywhere in the quiz.
+    const dom = setup();
+    stubRngSequence(dom, [0.9, randomForPickIndex(4, 8)]);
+    const ev = dom.window.buildEndOfInningQuizEvent();
+    commonMcShape(ev);
+    expect(ev.narrative).toContain("twee uit");
+    expect(ev.options[ev.correctIndex]).toContain("nog geen twee uit");
   });
 });
 
@@ -245,5 +257,51 @@ describe("buildPitcherChangeQuizEvent", () => {
     const G = getG(dom);
     expect(G.boatMarkers.home[8]).toEqual([{ inning: 1, color: expect.any(Number), atBat: 0 }]);
     expect(G.lastPitcherChangeInning.away).toBe(2);
+  });
+
+  it("claims the inning's guard slot as soon as it decides to build, so a second call in the same inning can't sneak in before the first is answered", () => {
+    // Regression for a reported "raar artefact" bootje: endHalfInning() and the stray mid-turn
+    // roll in generateEvent() both call this function. If the first call's quiz is still sitting
+    // unanswered (in G.pendingEvents, or as the current turn) when the second call happens in the
+    // same inning, both used to pass the G.lastPitcherChangeInning guard (only set on answer/apply)
+    // and each built its own conflicting boatMarkers entry for the same team/inning.
+    const dom = setup();
+    const first = dom.window.buildPitcherChangeQuizEvent("away");
+    expect(first).not.toBeNull();
+    // Still G.inning further along, still unanswered — a second build attempt must now be blocked.
+    const second = dom.window.buildPitcherChangeQuizEvent("away");
+    expect(second).toBeNull();
+  });
+});
+
+describe("buildExtraBaseArrowEvent", () => {
+  it("describes the situation without naming the required PIJL code in the pre-answer narrative", () => {
+    // Regression: the narrative (shown before the scorer answers) used to literally say
+    // "typ hier PIJL", giving the answer away instead of letting the scorer work it out — the
+    // instructional wording belongs in the post-answer explain text instead.
+    const dom = setup();
+    const ev = dom.window.buildExtraBaseArrowEvent("Loper", "E6", "1e", "2e");
+    expect(ev.narrative).not.toContain("PIJL");
+    expect(ev.narrative).not.toContain("typ hier");
+    expect(ev.narrative).toContain("Loper");
+    expect(ev.explain).toContain("PIJL");
+  });
+
+  it("scores a run when the arrow reaches thuis", () => {
+    const dom = setup();
+    const ev = dom.window.buildExtraBaseArrowEvent("Loper", "E2T", "3e", "thuis");
+    expect(ev.scoresRun).toBe(true);
+    expect(ev.targetQuadrant).toBe("thuis");
+    const result = ev.applyBases([null, null, { name: "Loper", battingSlot: 4, history: { "3e": "SB E2T" } }]);
+    expect(result.runs).toBe(1);
+    expect(result.bases[2]).toBeNull();
+  });
+
+  it("does not score a run when the arrow reaches a base short of thuis", () => {
+    const dom = setup();
+    const ev = dom.window.buildExtraBaseArrowEvent("Loper", "E2T", "2e", "3e");
+    expect(ev.scoresRun).toBe(false);
+    const result = ev.applyBases([null, null, { name: "Loper", battingSlot: 4, history: { "2e": "SB E2T" } }]);
+    expect(result.runs).toBe(0);
   });
 });

@@ -225,6 +225,28 @@ describe("buildBatterEvent(E) — error variants", () => {
     expect(ev.targetQuadrant).toBe("1e");
     expect(ev.refs).toEqual(["Error na een goed aangegooide bal, p.12"]);
   });
+
+  it("fielding error by the achtervanger (p2=2) describes a soft tap, not an implausible ground ball", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    stubRngSequence(dom, [randomForPickIndex(0, 6), randomForPickIndex(1, 6)]);
+    const ev = dom.window.buildBatterEvent("E", batter(), emptyBases(), 0);
+    commonShape(ev);
+    expect(ev.code).toBe("E2");
+    expect(ev.narrative).not.toContain("grondbal");
+    expect(ev.narrative).toContain("zachte tik");
+  });
+
+  it("throwing error by the achtervanger (p2=2, T variant) describes a soft tap, not an implausible ground ball", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    stubRngSequence(dom, [randomForPickIndex(2, 6), randomForPickIndex(1, 5)]);
+    const ev = dom.window.buildBatterEvent("E", batter(), emptyBases(), 0);
+    commonShape(ev);
+    expect(ev.code).toBe("E2T");
+    expect(ev.narrative).not.toContain("grondbal");
+    expect(ev.narrative).toContain("zachte tik");
+  });
 });
 
 describe("buildBatterEvent(EEXTRA)", () => {
@@ -239,6 +261,17 @@ describe("buildBatterEvent(EEXTRA)", () => {
     expect(ev.targetQuadrant).toBe("1e");
     const result = ev.applyBases(emptyBases());
     expect(result.bases[1]).toMatchObject({ name: "Slagman", history: { "1e": ev.code } });
+  });
+
+  it("fielding error by the achtervanger (p2=2) describes a soft tap, not an implausible ground ball", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    stubRngConstant(dom, randomForPickIndex(1, 5));
+    const ev = dom.window.buildBatterEvent("EEXTRA", batter(), emptyBases(), 0);
+    commonShape(ev);
+    expect(ev.code).toBe("E2");
+    expect(ev.narrative).not.toContain("grondbal");
+    expect(ev.narrative).toContain("zachte tik");
   });
 });
 
@@ -291,6 +324,26 @@ describe("buildBatterEvent(FC) — force-out branch selection by base state", ()
     expect(result.outRunner).toMatchObject({ name: "Loper3", battingSlot: 2, quadrant: "thuis", code: `(${ev.code})` });
     expect(result.bases[1]).toMatchObject({ name: "Loper1" });
     expect(result.bases[2]).toMatchObject({ name: "Loper2" });
+  });
+});
+
+describe("buildBatterEvent(SHFC) — a bunt where the lead runner is thrown out, so it's FC not SH", () => {
+  it("codes it as a fielder's choice (not SH), forces the lead runner out at second, keeps the batter safe at first", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    const bases = [{ name: "Loper1", battingSlot: 0, history: {} }, null, null];
+    stubRngSequence(dom, [randomForPickIndex(0, 4), randomForPickIndex(0, 2)]);
+    const ev = dom.window.buildBatterEvent("SHFC", batter(), bases, 1);
+    commonShape(ev);
+    expect(ev.code).toMatch(/^FC\d\d$/);
+    expect(ev.code).not.toContain("SH");
+    expect(ev.outsDelta).toBe(1);
+    expect(ev.targetQuadrant).toBe("1e");
+    expect(ev.narrative).toContain("stootslag");
+    expect(ev.explain).toContain("géén sacrifice hit");
+    const result = ev.applyBases(bases);
+    expect(result.outRunner).toMatchObject({ name: "Loper1", battingSlot: 0, quadrant: "2e", code: `(${ev.code})` });
+    expect(result.bases[0]).toMatchObject({ name: "Slagman" });
   });
 });
 

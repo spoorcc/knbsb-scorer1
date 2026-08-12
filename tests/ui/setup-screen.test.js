@@ -34,9 +34,12 @@ describe("setup screen", () => {
 
     expect(document.getElementById("grpReach").children.length).toBe(evalIn(dom, "REACH_BUTTONS.length"));
     expect(document.getElementById("grpOut").children.length).toBe(evalIn(dom, "OUT_BUTTONS.length"));
-    expect(document.getElementById("grpSpecial").children.length).toBe(evalIn(dom, "SPECIAL_BUTTONS.length"));
+    // "Extra" was merged into "Speciale situaties" — one shared group, one shared button count.
+    expect(document.getElementById("grpSpecial").children.length).toBe(
+      evalIn(dom, "SPECIAL_BUTTONS.length + EXTRA_BUTTONS.length")
+    );
     expect(document.getElementById("grpRunner").children.length).toBe(evalIn(dom, "RUNNER_BUTTONS.length"));
-    expect(document.getElementById("grpExtra").children.length).toBe(evalIn(dom, "EXTRA_BUTTONS.length"));
+    expect(document.getElementById("grpExtra")).toBeNull();
     expect(document.getElementById("grpPos").children.length).toBe(9);
   });
 
@@ -59,6 +62,40 @@ describe("setup screen", () => {
     expect(document.getElementById("setupScreen").classList.contains("hidden")).toBe(false);
     expect(document.getElementById("headerStats").classList.contains("hidden")).toBe(true);
     expect(document.getElementById("matchNumberInput").value).not.toBe(before);
+  });
+});
+
+describe("help screen", () => {
+  it("the header ? button opens the help screen and hides setup, and Terug restores setup", () => {
+    const dom = loadApp();
+    const { document } = dom.window;
+    expect(document.getElementById("helpScreen").classList.contains("hidden")).toBe(true);
+    document.getElementById("helpBtn").click();
+    expect(document.getElementById("helpScreen").classList.contains("hidden")).toBe(false);
+    expect(document.getElementById("setupScreen").classList.contains("hidden")).toBe(true);
+    document.getElementById("helpBackBtn").click();
+    expect(document.getElementById("helpScreen").classList.contains("hidden")).toBe(true);
+    expect(document.getElementById("setupScreen").classList.contains("hidden")).toBe(false);
+  });
+
+  it("the setup screen's own help link opens the same help screen", () => {
+    const dom = loadApp();
+    const { document } = dom.window;
+    document.getElementById("helpLinkSetup").click();
+    expect(document.getElementById("helpScreen").classList.contains("hidden")).toBe(false);
+  });
+
+  it("opening help mid-game and going back restores the game screen, not setup, without touching game state", () => {
+    const dom = startGame(loadApp(), { innings: 3, sport: "Honkbal", matchNumber: "222222" });
+    const { document } = dom.window;
+    const scoreBefore = getG(dom).score.away;
+    document.getElementById("helpBtn").click();
+    expect(document.getElementById("gameScreen").classList.contains("hidden")).toBe(true);
+    expect(document.getElementById("helpScreen").classList.contains("hidden")).toBe(false);
+    document.getElementById("helpBackBtn").click();
+    expect(document.getElementById("gameScreen").classList.contains("hidden")).toBe(false);
+    expect(document.getElementById("setupScreen").classList.contains("hidden")).toBe(true);
+    expect(getG(dom).score.away).toBe(scoreBefore);
   });
 });
 

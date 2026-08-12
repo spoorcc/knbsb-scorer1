@@ -246,6 +246,28 @@ describe("applyEventToState — runner events", () => {
     expect(G.scorecard.away[6][1][0]).toMatchObject({ "1e": "1B", "2e": "SB", thuis: "WP", scored: true });
   });
 
+  it("SB2E queues a PIJL follow-up into thuis, which then scores the run when answered", () => {
+    const dom = setup();
+    evalIn(dom, "G.bases = [null, {name:'Loper', battingSlot:6, history:{'1e':'1B','2e':'SB'}}, null]");
+    const ev = dom.window.buildRunnerEvent("SB2E");
+    dom.window.applyEventToState(ev);
+    let G = getG(dom);
+    // the runner is on third, not yet scored — the overthrow's extra base is a separate follow-up
+    expect(G.bases[2]).toMatchObject({ name: "Loper" });
+    expect(G.score.away).toBe(0);
+    expect(G.pendingEvents).toHaveLength(1);
+    const followUp = G.pendingEvents[0];
+    expect(followUp.code).toBe("PIJL");
+    expect(followUp.targetQuadrant).toBe("thuis");
+    expect(followUp.scoresRun).toBe(true);
+
+    dom.window.applyEventToState(followUp);
+    G = getG(dom);
+    expect(G.bases[2]).toBeNull();
+    expect(G.score.away).toBe(1);
+    expect(G.scorecard.away[6][1][0]).toMatchObject({ "1e": "1B", "2e": "SB", "3e": "SB E2T", thuis: "↑", scored: true });
+  });
+
   it("a pinch runner substitution marks the streepje on the outgoing runner's own scorecard cell", () => {
     const dom = setup();
     evalIn(dom, "G.bases = [null, {name:'Loper', battingSlot:6, history:{'1e':'1B','2e':'SB'}}, null]");
@@ -262,5 +284,16 @@ describe("applyEventToState — runner events", () => {
     // batter's own turns begin — it doesn't apply to a pinch runner, who only gets the honk-vakje
     // streepje above, not a substitution line across their row's cells.
     expect(G.subMarkers.away[6]).toBeUndefined();
+  });
+
+  it("records the current stint color on a pinch-runner streepje, so it can render in red-ink after a pitcher change", () => {
+    const dom = setup();
+    evalIn(dom, "G.stintColor.away = 1;"); // simulates having already had a pitcher change
+    evalIn(dom, "G.bases = [null, {name:'Loper', battingSlot:6, history:{'1e':'1B','2e':'SB'}}, null]");
+    const runner = getG(dom).bases[1];
+    const ev = dom.window.buildPinchRunnerQuizEvent(runner, "away", "2e");
+    dom.window.applyEventToState(ev);
+    const G = getG(dom);
+    expect(G.scorecard.away[6][1][0]._stintQ).toMatchObject({ pr: 1 });
   });
 });

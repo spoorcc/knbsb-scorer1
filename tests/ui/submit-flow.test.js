@@ -93,6 +93,19 @@ describe("submitAnswer — open-ended (honk-vakje) flow", () => {
     expect(log.children.length).toBe(1);
     expect(log.textContent).toContain(ev.code);
   });
+
+  it("marks an empty answer's '(leeg)' placeholder with a distinct, italic class instead of the out-circle styling", () => {
+    // Regression: "(leeg)" reused the app's own circled-out-code parens convention, which read as
+    // if the scorer had actually circled something.
+    const dom = startGame(loadApp());
+    const ev = getG(dom).currentEvent;
+    fillAndSubmit(dom, "", ev.targetQuadrant);
+    const log = dom.window.document.getElementById("log");
+    const emptySpan = log.querySelector(".codes-empty");
+    expect(emptySpan).toBeTruthy();
+    expect(emptySpan.textContent).toBe("(leeg)");
+    expect(emptySpan.classList.contains("out-circle-inner")).toBe(false);
+  });
 });
 
 describe("submitAnswer — multiple-choice flow", () => {
@@ -127,6 +140,20 @@ describe("submitAnswer — multiple-choice flow", () => {
     expect(document.getElementById("mcWrap").classList.contains("locked")).toBe(true);
   });
 
+  it("logs a wrappable (not nowrap) codes span for a multiple-choice answer, since options are full sentences", () => {
+    // Regression: the log entry's .codes span was always white-space:nowrap, fine for short scorer
+    // codes but forcing long MC option sentences onto one overflowing line instead of wrapping.
+    const dom = startGame(loadApp());
+    const ev = forceMcTurn(dom);
+    const { document } = dom.window;
+    const buttons = document.getElementById("mcOptions").querySelectorAll(".mc-btn");
+    buttons[ev.correctIndex].click();
+    document.getElementById("submitBtn").click();
+    const codesSpan = document.querySelector("#log .codes-mc");
+    expect(codesSpan).toBeTruthy();
+    expect(codesSpan.classList.contains("codes")).toBe(true);
+  });
+
   it("selecting a wrong option reveals the correct one and only increments totalCount", () => {
     const dom = startGame(loadApp());
     const ev = forceMcTurn(dom);
@@ -140,6 +167,43 @@ describe("submitAnswer — multiple-choice flow", () => {
     expect(getG(dom).correctCount).toBe(0);
     expect(buttons[wrongIdx].classList.contains("wrong-choice")).toBe(true);
     expect(buttons[ev.correctIndex].classList.contains("reveal-correct")).toBe(true);
+  });
+});
+
+describe("logboek filter (only wrong answers)", () => {
+  it("hides correct entries (without removing them) when toggled on, and restores them when toggled off", () => {
+    const dom = startGame(loadApp());
+    let ev = getG(dom).currentEvent;
+    fillAndSubmit(dom, ev.code, ev.targetQuadrant); // correct
+    dom.window.nextTurn();
+    ev = getG(dom).currentEvent;
+    fillAndSubmit(dom, "ZZZ-NOPE", ev.targetQuadrant); // wrong
+    const { document } = dom.window;
+    const log = document.getElementById("log");
+    expect(log.children.length).toBe(2);
+
+    const filterBtn = document.getElementById("logFilterBtn");
+    filterBtn.click();
+    expect(log.classList.contains("filter-wrong")).toBe(true);
+    expect(filterBtn.getAttribute("aria-pressed")).toBe("true");
+    // still in the DOM, just hidden by CSS — not removed
+    expect(log.children.length).toBe(2);
+    expect(log.querySelector('.log-entry[data-correct="true"]')).toBeTruthy();
+    expect(log.querySelector('.log-entry[data-correct="false"]')).toBeTruthy();
+
+    filterBtn.click();
+    expect(log.classList.contains("filter-wrong")).toBe(false);
+    expect(filterBtn.getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("a new entry added while the filter is already on still gets the data-correct attribute so it filters correctly", () => {
+    const dom = startGame(loadApp());
+    const { document } = dom.window;
+    document.getElementById("logFilterBtn").click();
+    const ev = getG(dom).currentEvent;
+    fillAndSubmit(dom, ev.code, ev.targetQuadrant); // correct
+    const entry = document.querySelector("#log .log-entry");
+    expect(entry.dataset.correct).toBe("true");
   });
 });
 

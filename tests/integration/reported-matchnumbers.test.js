@@ -1,0 +1,89 @@
+import { describe, expect, it } from "vitest";
+import { getG, loadApp, startGame } from "../helpers/loadApp.js";
+
+/**
+ * Regression tests pinned to specific matchNumbers cited in user bug reports. Each one was played
+ * through with startGame({innings:3, sport:'Honkbal', matchNumber}) — the app's own defaults — and
+ * every turn answered with the objectively correct code, exactly like the other integration tests.
+ */
+function playFullGameCorrectly(dom, { maxTurns = 600 } = {}) {
+  const { document } = dom.window;
+  let turns = 0;
+  while (document.getElementById("endScreen").classList.contains("hidden")) {
+    turns++;
+    if (turns > maxTurns) throw new Error(`exceeded ${maxTurns} turns`);
+    const ev = getG(dom).currentEvent;
+    if (ev.type === "mc") {
+      document.getElementById("mcOptions").querySelectorAll(".mc-btn")[ev.correctIndex].click();
+    } else {
+      const input = document.getElementById("systemInput");
+      input.value = ev.code;
+      input.dispatchEvent(new dom.window.Event("input"));
+      dom.window.selectSlot(ev.targetQuadrant);
+    }
+    document.getElementById("submitBtn").click();
+    document.getElementById("submitBtn").click();
+  }
+  return turns;
+}
+
+describe("matchNumber 211304 — reported 'raar artefact' bootje at bal op het dak, inning 2, slagvolgorde 6", () => {
+  it("places the pitcher-change bootje at home (bal op het dak) slot 5 (slagvolgorde 6), inning 2, in red", () => {
+    // Phase-0 investigation: this exact reproduction already lands the bootje exactly where the
+    // report says it's *expected* (home=Bal op het dak, slot index 5 = slagvolgorde 6, inning 2,
+    // colored). No misplaced/duplicate marker was found for this specific matchNumber+combo. This
+    // test locks in the correct placement so it can't silently regress, and also covers the fix in
+    // buildPitcherChangeQuizEvent that closes a real (separately confirmed) race: endHalfInning()
+    // and the stray mid-turn roll in generateEvent() could otherwise both build a pitcher-change
+    // quiz for the same team/inning before the first was answered, producing a second, wrongly
+    // placed boatMarkers entry (see the "claims the inning's guard slot" test in
+    // tests/events/quiz-events.test.js).
+    const dom = startGame(loadApp(), { innings: 3, sport: "Honkbal", matchNumber: "211304" });
+    playFullGameCorrectly(dom);
+    const G = getG(dom);
+    expect(G.boatMarkers.home["5"]).toEqual(
+      expect.arrayContaining([expect.objectContaining({ inning: 2 })])
+    );
+  });
+});
+
+describe("matchNumber 988566 — reported 'onverwachte dikke streep' bij honkvast/bal op het dak, inning 2", () => {
+  it("both thick-line markers trace back to real, documented substitution events, not a bug", () => {
+    // Phase-0 investigation: honkvast (away) slot 3 (slagvolgorde 4) gets a subMarkers line from a
+    // genuine pinch-hitter substitution in the top of inning 2 (not a pinch-runner, which is
+    // deliberately excluded from this marker per index.html's own comment). Confirms the feature
+    // is working as designed for this matchNumber; no code change made for this report.
+    const dom = startGame(loadApp(), { innings: 3, sport: "Honkbal", matchNumber: "988566" });
+    playFullGameCorrectly(dom);
+    const G = getG(dom);
+    expect(G.subMarkers.away["3"]).toEqual(expect.arrayContaining([expect.objectContaining({ inning: 2 })]));
+    const phSub = G.slotEvents.away["3"].find((e) => e.type === "sub" && e.posDisplay === "PH" && e.inning === 2);
+    expect(phSub).toBeTruthy();
+  });
+});
+
+describe("matchNumber 253121 — 'is deze voor positiewissel of pinch-hitter?' bij honkvast, inning 2", () => {
+  it("honkvast's inning-2 line is the opponent's position-swap marker (fieldSubMarkers), landing on the correct slot", () => {
+    // Phase-0 investigation: Bal op het dak (home) swaps two existing fielders' positions in the
+    // top of inning 2 (buildPositionChangeQuizEvent) — per the cited rule (p.20-21) that marker is
+    // drawn on the *opponent's* card (honkvast/away), at their current batting slot, not on the
+    // swapping team's own card. Honkvast also separately has its own real PH substitution at slot 0
+    // the same inning. Both are legitimate, independently documented features; the two marker
+    // *reasons* used to render identically (both just `.sc-subline`), which is exactly why the user
+    // couldn't tell them apart — now distinguished by `.sc-subline-own` (solid vertical divider, a
+    // real lineup sub) vs `.sc-subline-opp` (dashed, the opponent's position-swap marker). No logic
+    // bug found for this report; the marker placement itself was already correct.
+    const dom = startGame(loadApp(), { innings: 3, sport: "Honkbal", matchNumber: "253121" });
+    playFullGameCorrectly(dom);
+    const G = getG(dom);
+    expect(G.fieldSubMarkers.away["4"]).toEqual(expect.arrayContaining([expect.objectContaining({ inning: 2 })]));
+    const posSwap = G.slotEvents.home["4"].find((e) => e.type === "pos" && e.inning === 2);
+    expect(posSwap).toBeTruthy();
+    expect(G.subMarkers.away["0"]).toEqual(expect.arrayContaining([expect.objectContaining({ inning: 2 })]));
+    const { document } = dom.window;
+    const ownLineCell = document.querySelector('#scorecard-away td[data-slot="0"][data-inn="2"].sc-subline-own');
+    const oppLineCell = document.querySelector('#scorecard-away td[data-slot="4"][data-inn="2"].sc-subline-opp');
+    expect(ownLineCell).toBeTruthy();
+    expect(oppLineCell).toBeTruthy();
+  });
+});

@@ -174,6 +174,25 @@ describe("renderFullScorecard", () => {
     const slot0Cells = document.querySelectorAll('#scorecard-away td[data-slot="0"][data-inn="2"]');
     expect(slot0Cells).toHaveLength(2);
   });
+
+  it("still shows every name after a lineup slot has been substituted 3 times (4 name groups total)", () => {
+    // Regression: the position/name grid used to be hard-capped to 3 rows (rowGroups.slice(0,3)),
+    // so a slot's *last* substitution (the 4th name group: original + 3 subs) silently vanished
+    // from both the position grid and the name column.
+    const dom = startGame(loadApp());
+    evalIn(dom, `G.slotEvents.away[8] = [
+      {type:'sub', name:'Eerste Vervanger', posDisplay:'PH', halfLabel:'1/2', inning:2, half:'top'},
+      {type:'sub', name:'Tweede Vervanger', posDisplay:'PH', halfLabel:'1/3', inning:3, half:'top'},
+      {type:'sub', name:'Derde Vervanger', posDisplay:'PH', halfLabel:'2/3', inning:3, half:'bottom'}
+    ];`);
+    dom.window.renderFullScorecard();
+    const html = dom.window.document.getElementById("scorecard-away").innerHTML;
+    const originalName = dom.window.eval("G.away.lineup[8].name");
+    expect(html).toContain(originalName);
+    expect(html).toContain("Eerste Vervanger");
+    expect(html).toContain("Tweede Vervanger");
+    expect(html).toContain("Derde Vervanger");
+  });
 });
 
 describe("renderHeaderStats", () => {
