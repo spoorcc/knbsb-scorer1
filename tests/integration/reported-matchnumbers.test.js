@@ -113,4 +113,18 @@ describe("matchNumber 505308 — reported 'maar 1 bootje' bij een werper/midveld
       }
     });
   });
+
+  it("also draws the dikke streep divider on Bal op het dak's own card for the real pitcher substitution at slot 8", () => {
+    // Follow-up report on the same matchNumber: the real werperwissel (IJsbrand van IJzendoorn
+    // taking over pitching at slot 8, top of inning 2) got the bootje on honkvast's card and a new
+    // name row on its own card, but no sc-subline-own divider — even though a relief pitcher is,
+    // like a pinch hitter, a brand new player occupying that slagvolgordevakje from now on.
+    const dom = startGame(loadApp(), { innings: 3, sport: "Honkbal", matchNumber: "505308" });
+    playFullGameCorrectly(dom);
+    const G = getG(dom);
+    expect(G.subMarkers.home["8"]).toEqual(expect.arrayContaining([expect.objectContaining({ inning: 2 })]));
+    const { document } = dom.window;
+    const ownLineCell = document.querySelector('#scorecard-home td[data-slot="8"][data-inn="2"].sc-subline-own');
+    expect(ownLineCell).toBeTruthy();
+  });
 });
