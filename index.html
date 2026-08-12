@@ -187,6 +187,10 @@
     padding:10px 14px; border-radius:4px; margin:10px 0 var(--space-2);
   }
   .disclaimer-note a{color:var(--navy); font-weight:600;}
+  /* Without this, the two intro-screen text links fall back to the browser's default blue/purple
+     link colors, which barely register against the dark paper surface in dark mode. */
+  #setupScreen p a{color:var(--navy); font-weight:600;}
+  #setupScreen p a:hover{color:var(--red);}
   .setup-row{display:flex; align-items:center; gap:12px; margin:var(--space-2) 0; flex-wrap:wrap;}
   .setup-fields{display:flex; flex-direction:column; gap:20px; margin:22px 0;}
   .field-group{display:flex; flex-direction:column; gap:8px; align-items:flex-start;}
