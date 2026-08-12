@@ -2684,6 +2684,12 @@ function applyEventToState(ev){
     // The new pitcher's own row is a fresh appearance, genuinely dated "now" (the new half) —
     // unlike the bootje below, this doesn't need the captured inning.
     G.slotEvents[pTeam][pSlot].push({type:'sub', name:newName, posDisplay:'1', halfLabel:pcHalf, inning:G.inning, half:G.half});
+    // Same "dikke streep" (p.20) as any other lineup substitution (see the ev.lineupChange block
+    // above): a relief pitcher taking the mound is a brand new player occupying this batting slot
+    // from now on, not a pinch runner, so it gets the full own-card divider, not just the honk-
+    // vakje streepje.
+    if(!G.subMarkers[pTeam][pSlot]) G.subMarkers[pTeam][pSlot] = [];
+    G.subMarkers[pTeam][pSlot].push({inning: G.inning, atBat: nextAtBatIdx(pTeam, pSlot, G.inning)});
     // Deliberately G.inning (now), matching buildPitcherChangeQuizEvent's own guard check (also
     // G.inning at its own, later build-time) — unlike boatInning below, this bookkeeping doesn't
     // describe *where a mark is drawn*, only *whether this same decision already fired*, so it

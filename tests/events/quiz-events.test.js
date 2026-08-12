@@ -270,6 +270,19 @@ describe("buildPitcherChangeQuizEvent", () => {
     expect(G.lastPitcherChangeInning.away).toBe(2);
   });
 
+  it("also puts the dikke streep divider on the pitching team's own card, same as any other lineup substitution (p.20)", () => {
+    // Reported: a real werperwissel got the bootje on the opponent's card and the new name row on
+    // the pitching team's own card, but never the vertical sc-subline-own divider that a PH/relief
+    // substitution normally gets in the same slagvolgordevakje — even though a relief pitcher taking
+    // over is exactly that: a brand new player occupying this batting slot from now on.
+    const dom = setup();
+    const ev = dom.window.buildPitcherChangeQuizEvent("away");
+    dom.window.applyEventToState(ev);
+    const G = getG(dom);
+    const { teamKey, slot } = ev.pitcherChange;
+    expect(G.subMarkers[teamKey][slot]).toEqual([{ inning: expect.any(Number), atBat: expect.any(Number) }]);
+  });
+
   it("claims the inning's guard slot as soon as it decides to build, so a second call in the same inning can't sneak in before the first is answered", () => {
     // Regression for a reported "raar artefact" bootje: endHalfInning() and the stray mid-turn
     // roll in generateEvent() both call this function. If the first call's quiz is still sitting
