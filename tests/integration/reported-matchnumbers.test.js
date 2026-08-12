@@ -90,3 +90,27 @@ describe("matchNumber 253121 — 'is deze voor positiewissel of pinch-hitter?' b
     expect(oppLineCell).toBeTruthy();
   });
 });
+
+describe("matchNumber 505308 — reported 'maar 1 bootje' bij een werper/midvelder-positiewissel plus een echte werperwissel", () => {
+  it("buildPositionChangeQuizEvent never hands the pitcher's own slot to a plain position swap", () => {
+    // Phase-0 investigation: before the fix, this matchNumber's random pool at Bal op het dak
+    // (home) picked the pitcher's slot (Ian van Iersel, pos 1) and the center fielder's slot (Bas
+    // van Boxtel, pos 8) for buildPositionChangeQuizEvent's ordinary position swap. That silently
+    // made Bas van Boxtel the new pitcher with no bootje/stint-color bookkeeping at all (only
+    // buildPitcherChangeQuizEvent does that) — a real change of who's pitching that the scorecard
+    // never marked. A later, genuine substitution (IJsbrand van IJzendoorn subbing in for the
+    // pitcher slot) then produced the game's only bootje, even though the pitcher had actually
+    // changed identity twice. The fix excludes the pitcher's slot from buildPositionChangeQuizEvent's
+    // candidate pool entirely, so any change of who pitches can only ever happen through
+    // buildPitcherChangeQuizEvent, which always records the bootje.
+    const dom = startGame(loadApp(), { innings: 3, sport: "Honkbal", matchNumber: "505308" });
+    playFullGameCorrectly(dom);
+    const G = getG(dom);
+    ["away", "home"].forEach((teamKey) => {
+      for (let slot = 0; slot < 9; slot++) {
+        const posEvents = G.slotEvents[teamKey][slot].filter((e) => e.type === "pos");
+        expect(posEvents.every((e) => e.pos !== 1)).toBe(true);
+      }
+    });
+  });
+});

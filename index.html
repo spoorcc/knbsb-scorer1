@@ -2342,10 +2342,14 @@ function halfInningLabel(){ return (G.half==='top'?'1':'2') + '/' + G.inning; }
 
 function buildPositionChangeQuizEvent(fieldingTeamKey){
   const team = G[fieldingTeamKey];
-  const slotA = Math.floor(rng()*9);
+  // Excludes the pitcher's own slot: swapping them into another position (and someone else into
+  // pitcher) is a real pitcher change and must go through buildPitcherChangeQuizEvent instead, so
+  // it gets the opponent's bootje/stint-color bookkeeping — this quiz has none of that.
+  const nonPitcherSlots = [0,1,2,3,4,5,6,7,8].filter(s=>currentPos(fieldingTeamKey,s)!==1);
+  const slotA = pick(nonPitcherSlots);
   const playerA = team.lineup[slotA];
   const curPosA = currentPos(fieldingTeamKey, slotA);
-  const otherSlots = [0,1,2,3,4,5,6,7,8].filter(s=>s!==slotA && currentPos(fieldingTeamKey,s)!==curPosA);
+  const otherSlots = nonPitcherSlots.filter(s=>s!==slotA && currentPos(fieldingTeamKey,s)!==curPosA);
   const slotB = pick(otherSlots);
   const playerB = team.lineup[slotB];
   const curPosB = currentPos(fieldingTeamKey, slotB);

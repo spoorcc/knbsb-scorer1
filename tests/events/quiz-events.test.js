@@ -174,6 +174,17 @@ describe("buildPositionChangeQuizEvent", () => {
     expect(ev.explain).toContain("dikke streep");
     expect(ev.explain).toContain(oppBatterName);
   });
+
+  it("never puts the pitcher's own slot into the swap, even at the rng roll that used to pick it", () => {
+    const dom = setup();
+    // away's default pitcher is lineup slot 8 (Rutger van Rucphen, pos 1). This is the rng value
+    // the old, unfiltered `Math.floor(rng()*9)` pick would have resolved to slot 8 with — a change
+    // of who's pitching that this quiz never gives a bootje for (only buildPitcherChangeQuizEvent
+    // does), which is exactly the matchNumber 505308 bug in reported-matchnumbers.test.js.
+    stubRngConstant(dom, randomForPickIndex(8, 9));
+    const ev = dom.window.buildPositionChangeQuizEvent("away");
+    expect(ev.posChange.swaps.some((s) => s.slot === 8)).toBe(false);
+  });
 });
 
 describe("buildPinchHitterQuizEvent", () => {
