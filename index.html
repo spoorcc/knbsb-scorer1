@@ -823,7 +823,7 @@
     <h2>Hoe werkt deze trainer?</h2>
     <ol class="help-steps">
       <li><b>De Trainer stelt een situatie.</b> Bij elke slagbeurt of honkloper-actie beschrijft het kaartje "Speelsituatie" in gewoon Nederlands wat er gebeurt, alsof je een echte wedstrijd zit te scoren.</li>
-      <li><b>Jij scoort die situatie.</b> Bouw het scoreteken op met het honk-vakje en het toetsenbord onderaan, óf typ de code direct in het invoerveld &mdash; ze blijven automatisch met elkaar in sync, je mag zelf kiezen wat prettiger werkt.
+      <li><b>Jij scoort die situatie.</b> Bouw het scoreteken op met het honk-vakje en het toetsenbord onderaan, óf typ de code direct in het invoerveld. Beide blijven automatisch met elkaar in sync, je mag zelf kiezen wat prettiger werkt.
         <div class="help-shots">
           <figure class="help-shot" id="helpShotHonkvakje1"><figcaption>Klik het honk aan waar het teken hoort (of de stip in het midden bij een uit)</figcaption></figure>
           <figure class="help-shot" id="helpShotControlrow1"><figcaption>...of typ de code direct in het invoerveld en klik op Check</figcaption></figure>
@@ -834,7 +834,7 @@
           <figure class="help-shot help-shot-wide" id="helpShotKeyboard"><figcaption>Groep "Speciale situaties" in het toetsenbord</figcaption></figure>
         </div>
       </li>
-      <li><b>Controleer je antwoord.</b> Klik op "Check" om te zien of zowel je code als de plek in het honk-vakje kloppen. Zo bouw je, beurt voor beurt, een echt scoreformulier op &mdash; helemaal onderaan de pagina kun je dat op elk moment terugzien.</li>
+      <li><b>Controleer je antwoord.</b> Klik op "Check" om te zien of zowel je code als de plek in het honk-vakje kloppen. Zo bouw je, beurt voor beurt, een echt scoreformulier op. Helemaal onderaan de pagina kun je dat op elk moment terugzien.</li>
       <li><b>Logboek en huidige situatie.</b> In het logboek zie je alle eerdere vragen en jouw antwoorden terug (met een filter om alleen de foute te tonen); de kaartjes "Stand" en "Veld" laten steeds de actuele wedstrijdsituatie zien.</li>
     </ol>
 
@@ -845,7 +845,7 @@
           <figure class="help-shot help-shot-full" id="helpShotSituatie"></figure>
         </div>
       </li>
-      <li><b>Jij voert de code in.</b> Jan Jansen bereikte veilig het eerste honk, dus klik je op "1e honk" in het honk-vakje en typ je de code <code>1B</code> (in het invoerveld of met de knop uit het toetsenbord) &mdash; nog vóórdat je op "Check" klikt:
+      <li><b>Jij voert de code in.</b> Jan Jansen bereikte veilig het eerste honk, dus klik je op "1e honk" in het honk-vakje en typ je de code <code>1B</code> (in het invoerveld of met de knop uit het toetsenbord), nog vóórdat je op "Check" klikt:
         <div class="help-shots">
           <figure class="help-shot" id="helpShotHonkvakje2"><figcaption>1e honk gekozen, code getekend</figcaption></figure>
           <figure class="help-shot" id="helpShotControlrow2"><figcaption>...of gewoon getypt in het invoerveld</figcaption></figure>
@@ -860,7 +860,7 @@
         <div class="help-shots">
           <figure class="help-shot help-shot-full" id="helpShotAfgekeurd"></figure>
         </div>
-        Klik daarna op "Volgende" om verder te gaan &mdash; goed of fout, de wedstrijd loopt gewoon door met wat er écht gebeurde.
+        Klik daarna op "Volgende" om verder te gaan: goed of fout, de wedstrijd loopt gewoon door met wat er écht gebeurde.
       </li>
     </ol>
 
@@ -1678,7 +1678,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       const code = 'FC'+fielder+receiver;
       ev.narrative = `<b>${batter.name}</b> legt een stootslag neer. De ${P(fielder)} raapt de bal snel op en gooit naar de ${P(receiver)} op het tweede honk, die <b>${leadRunner.name}</b> daar uit maakt in plaats van de slagman op het eerste honk.`;
       ev.code = code; ev.refs=['Velderskeus, p.10', 'Sacrifice hit, p.17, Scoreregel 9.08']; ev.targetQuadrant='1e';
-      ev.explain = `De loper die gedwongen naar het tweede honk moest, wordt hier alsnog uitgemaakt — hij komt dus niet daadwerkelijk een honk verder. Dat betekent dat dit ondanks de stootslag géén sacrifice hit (SH) is, maar een gewone velderskeus: noteer <code>FC</code> gevolgd door de aangooi, code <code>${code}</code>.`;
+      ev.explain = `De loper die gedwongen naar het tweede honk moest, wordt hier alsnog uitgemaakt: hij komt dus niet daadwerkelijk een honk verder. Dat betekent dat dit ondanks de stootslag géén sacrifice hit (SH) is, maar een gewone velderskeus: noteer <code>FC</code> gevolgd door de aangooi, code <code>${code}</code>.`;
       ev.applyBases = b=>{
         const nb=cloneBases(b);
         const outRunner = {name: nb[0].name, battingSlot: nb[0].battingSlot, quadrant:'2e', code:wrapOut(code), priorHistory:Object.assign({}, nb[0].history)};
@@ -2234,7 +2234,7 @@ function buildEndOfInningQuizEvent(){
       explain: 'Een sacrifice hit vereist dat de slagman zelf daadwerkelijk uit gaat én de loper een honk verder brengt. Blijft de slagman ook veilig, dan is het geen SH meer maar een gewone honkslag of fout, ongeacht welke veldspeler erbij betrokken was, waar de stootslag precies neerkwam, of wie er als loper meeging.',
     },
     {
-      narrative: `Met twee uit legt de slagman een keurige stootslag neer waardoor een honkloper een honk verder komt en de slagman zelf uit gaat — precies zoals bij een sacrifice hit. Telt dit tóch als SH?`,
+      narrative: `Met twee uit legt de slagman een keurige stootslag neer waardoor een honkloper een honk verder komt en de slagman zelf uit gaat, precies zoals bij een sacrifice hit. Telt dit tóch als SH?`,
       options: [
         'Nee, een sacrifice hit kan alleen genoteerd worden als er bij het leggen van de stootslag nog geen twee uit waren.',
         'Ja, want de slagman gaat zelf daadwerkelijk uit en de loper komt daadwerkelijk een honk verder, dus aan alle voorwaarden is voldaan.',
@@ -2242,7 +2242,7 @@ function buildEndOfInningQuizEvent(){
         'Alleen als het de laatste slagbeurt van de inning is; dan telt het aantal uit niet meer mee voor SH.'
       ], correctIndex: 0,
       refs:['Sacrifice hit, p.17, Scoreregel 9.08'],
-      explain: 'Een sacrifice hit vereist minder dan twee uit op het moment dat de stootslag wordt gelegd. Met twee uit al bereikt, is een verder correct uitgevoerde offerstootslag toch geen SH — die zou de inning immers meteen beëindigen zonder dat er nog iets te "offeren" valt.',
+      explain: 'Een sacrifice hit vereist minder dan twee uit op het moment dat de stootslag wordt gelegd. Met twee uit al bereikt, is een verder correct uitgevoerde offerstootslag toch geen SH: die zou de inning immers meteen beëindigen zonder dat er nog iets te "offeren" valt.',
     },
     {
       narrative: `Welk verschil zit er tussen het scoreteken voor honkbal en voor softbal wanneer de slagman gehinderd wordt door de achtervanger bij het slaan?`,

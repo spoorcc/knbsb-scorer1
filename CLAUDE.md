@@ -13,6 +13,30 @@ correct scorecard notation (e.g. `1B`, `BB`, `6-3`, `FC1`) using an on-screen
 the expected code. All UI text, narrative, and terminology are in Dutch,
 matching the official KNBSB course material.
 
+## Writing Dutch UI text
+
+All narrative, `explain`/`refs` text, verdict/feedback strings, button
+labels, and help copy are in Dutch and must read as natural, idiomatic
+Dutch, the way a KNBSB scorer/trainer would actually write it, not
+translated-sounding or AI-generated-sounding prose. Concretely:
+
+- **Never use em dashes (—) in user-facing Dutch text.** Use a period to
+  start a new sentence, a comma, or a colon instead, whichever reads most
+  naturally for that sentence. (A prior cleanup already removed em dashes
+  from the app's questions/feedback text once; don't reintroduce them when
+  adding or editing narratives, `explain` strings, help copy, or labels.)
+  This restriction is about *user-facing* Dutch specifically — the
+  codebase's own English code comments freely use em dashes and that's
+  fine, don't touch those.
+- Avoid other AI-writing tells in Dutch copy: don't pad sentences with
+  hedging ("het is belangrijk om te weten dat…"), don't summarize what you
+  just said ("kortom, samengevat…"), and don't reach for stock transition
+  words ("bovendien", "daarnaast") where a Dutch speaker would just start
+  the next sentence.
+- Match the register already used throughout the app: short, direct,
+  instructional sentences, occasional contractions where natural (e.g.
+  "'m", "'t"), addressing the scorer as "je"/"jij".
+
 ## Repository structure
 
 - `index.html` — the entire application: CSS in a `<style>` block, markup in
