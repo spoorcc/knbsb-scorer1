@@ -70,9 +70,12 @@ describe("matchNumber 253121 — 'is deze voor positiewissel of pinch-hitter?' b
     // swapping team's own card. Honkvast also separately has its own real PH substitution at slot 0
     // the same inning. Both are legitimate, independently documented features; the two marker
     // *reasons* used to render identically (both just `.sc-subline`), which is exactly why the user
-    // couldn't tell them apart — now distinguished by `.sc-subline-own` (solid vertical divider, a
-    // real lineup sub) vs `.sc-subline-opp` (dashed, the opponent's position-swap marker). No logic
-    // bug found for this report; the marker placement itself was already correct.
+    // couldn't tell them apart. The scorer course document (p.20-21) already distinguishes them: a
+    // lineup substitution (own card) gets a vertical divider (`.sc-subline-own`) splitting the two
+    // batters' stats within the row, while a fielder position swap (opponent's card) is marked only
+    // by the shared horizontal top-bar (`.sc-subline-opp`, no extra styling of its own) drawn above
+    // the next batter's cell. No logic bug found for this report; the marker placement itself was
+    // already correct.
     const dom = startGame(loadApp(), { innings: 3, sport: "Honkbal", matchNumber: "253121" });
     playFullGameCorrectly(dom);
     const G = getG(dom);
