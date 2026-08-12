@@ -333,7 +333,12 @@
   /* Same two-line stacking as .out-circle-inner (see outCircleContent), without the circle border —
      for a compound code like "CS25 E5" that isn't itself an out. */
   .compound-code{display:inline-flex; flex-direction:column; align-items:center; line-height:1.15;}
-  .compound-code .num-tail{white-space:nowrap;}
+  /* Unlike outCircleContent's own two spans (a pure-letter first line, a pure-digit .num-tail
+     second line), a compound code's *first* line is itself alphanumeric ("CS25") — without this,
+     the mini honk-cell in the logboek (narrow enough that "CS25" doesn't fit its own line) fell
+     back to word-break:break-all and split it mid-token ("CS2"/"5") instead of wrapping the whole
+     line the way the roomier printed scoreformulier already does. */
+  .compound-code .oc-line{white-space:nowrap;}
   .hist-text.q-thuis{top:50%; left:2px; right:50%; bottom:2px;}
   /* An out ends that runner's path — no honk-vakje quadrant further along the base path will ever
      get written for them — so the out-code can borrow the next quadrant's now-permanently-empty
@@ -674,7 +679,10 @@
   }
   .honk-cell.sc-cell .hist-text{font-size:.68rem; padding-top:3px; color:#000;}
   .honk-cell.sc-cell .hist-text.sc-stint-b{color:#d21f1f;}
-  .honk-cell.sc-cell .out-circle-inner{border-width:1px;}
+  /* Same translucent veil as the "vrije ruimte" out-mark just below (.builder-text.slot-any in
+     sc-cell) — the circle sits over the honk-vakje's own grid lines, so let them show through
+     faintly greyed instead of cutting a hard white gap through the code, same as that mark. */
+  .honk-cell.sc-cell .out-circle-inner{border-width:1px; background:rgba(255,255,255,.55);}
   /* The merged box doesn't need a perfect circle — an ellipse gives the code more room to breathe
      instead of wrapping as tightly as a single quarter-box forces it to. border-radius:50% on a
      non-square box already draws a proper ellipse, so just stretching it along its merge direction
