@@ -101,6 +101,70 @@ describe("renderScorecardCellHTML — wider box for an out that ends the runner'
   });
 });
 
+describe("renderPriorHistory — same wider ellipse in the live builder", () => {
+  // Regression: the printed scoreformulier widens an out at 2e/3e into the next, permanently-empty
+  // quadrant (see the q-wide tests above), but the live builder's own honk-vakje never got the same
+  // treatment for a prior at-bat's own history, so the exact same code looked squeezed there.
+  function setup() {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    return dom;
+  }
+
+  it("widens a prior 2e out into the 3e box", () => {
+    const dom = setup();
+    dom.window.renderPriorHistory({ priorHistory: { "2e": "(CS24)" }, targetQuadrant: "thuis" });
+    const el = dom.window.document.getElementById("hist2e");
+    expect(el.classList.contains("q-wide")).toBe(true);
+  });
+
+  it("widens a prior 3e out into the thuis box", () => {
+    const dom = setup();
+    dom.window.renderPriorHistory({ priorHistory: { "3e": "(CS25)" }, targetQuadrant: "any" });
+    const el = dom.window.document.getElementById("hist3e");
+    expect(el.classList.contains("q-wide")).toBe(true);
+  });
+
+  it("does not widen a non-out code", () => {
+    const dom = setup();
+    dom.window.renderPriorHistory({ priorHistory: { "2e": "SB" }, targetQuadrant: "thuis" });
+    const el = dom.window.document.getElementById("hist2e");
+    expect(el.classList.contains("q-wide")).toBe(false);
+  });
+
+  it("clears a stale q-wide class from a previous turn's render", () => {
+    const dom = setup();
+    dom.window.renderPriorHistory({ priorHistory: { "2e": "(CS24)" }, targetQuadrant: "thuis" });
+    dom.window.renderPriorHistory({ priorHistory: { "2e": "SB" }, targetQuadrant: "thuis" });
+    const el = dom.window.document.getElementById("hist2e");
+    expect(el.classList.contains("q-wide")).toBe(false);
+  });
+});
+
+describe("addLogEntry — same wider ellipse in the logboek's history spans", () => {
+  function setup() {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    return dom;
+  }
+
+  it("widens a prior 2e out into the 3e box in the logged entry", () => {
+    const dom = setup();
+    const ev = { narrative: "Test", priorHistory: { "2e": "(CS24)" }, refs: ["p.1"], code: "1B" };
+    dom.window.addLogEntry(ev, "1B", "thuis", true, true, true);
+    const entry = dom.window.document.querySelector("#log .log-entry");
+    expect(entry.querySelector(".hist-text.q-2e").classList.contains("q-wide")).toBe(true);
+  });
+
+  it("does not widen a non-out prior code in the logged entry", () => {
+    const dom = setup();
+    const ev = { narrative: "Test", priorHistory: { "2e": "SB" }, refs: ["p.1"], code: "1B" };
+    dom.window.addLogEntry(ev, "1B", "thuis", true, true, true);
+    const entry = dom.window.document.querySelector("#log .log-entry");
+    expect(entry.querySelector(".hist-text.q-2e").classList.contains("q-wide")).toBe(false);
+  });
+});
+
 describe("renderScorecardCellHTML — post-pitcher-change red ink", () => {
   // Regression: the scored-run dot and the pinch-runner streepje used to always render black, even
   // when the cell's other notation (hist-text) correctly turned red after a pitcher change, because
