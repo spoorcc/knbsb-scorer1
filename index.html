@@ -338,6 +338,10 @@
      thuis has no further quadrant to borrow, so it stays a normal quarter-box. */
   .hist-text.q-2e.q-wide{left:2px;}
   .hist-text.q-3e.q-wide{bottom:2px;}
+  /* The wider box doesn't need a perfect circle — an ellipse gives the code more room to breathe
+     instead of wrapping as tightly as a single quarter-box forces it to. border-radius:50% on a
+     non-square box already draws a proper ellipse, so just widening it is enough. */
+  .hist-text.q-wide .out-circle-inner{width:4em; height:2.2em;}
 
   .q-highlight{position:absolute; background:transparent; transition:all .18s ease; z-index:0;}
   .q-highlight.slot-1e{top:50%; left:50%; right:2px; bottom:2px;}
@@ -707,16 +711,17 @@
   table.scorecard-table td.sc-subline::before{
     content:''; position:absolute; left:0; right:0; top:0; height:3px; z-index:5; background:#000;
   }
-  /* p.20: "Op de scorekaart wordt een dikke streep gezet waar de wissel plaatsvindt" — a batting
-     substitution (PH) on a team's *own* card also gets a vertical divider at that same boundary, so
-     what's scored to its left still belongs to the outgoing batter and what's to its right belongs
-     to the incoming one, not just the horizontal top-bar shared with the opponent's-card marker
-     below. */
+  /* p.20: "Op de scorekaart wordt een dikke streep gezet waar de wissel plaatsvindt, zodat we
+     kunnen zien dat wat gescoord is vóór de streep voor de eerste slagman geldig is en na de
+     streep voor de tweede slagman" — a batting substitution (PH) on a team's *own* card gets a
+     vertical divider at that boundary, splitting the outgoing and incoming batter's stats within
+     the same at-bat column. */
   table.scorecard-table td.sc-subline-own{border-left:3px solid #000;}
-  /* A position swap between two of the *opponent's own* fielders (p.20-21) draws only on this
-     team's card, marking their next batter — dashed so it doesn't read as this team's own lineup
-     substitution (sc-subline-own, solid) at a glance. */
-  table.scorecard-table td.sc-subline-opp{border-left:3px dashed #000;}
+  /* p.21: "De wissel van de veldspeler wordt aan de andere kant van de scorekaart aangegeven met
+     een dikke HORIZONTALE streep. De streep komt altijd te staan boven de eerste slagman die aan
+     slag komt na de wissel." — a position swap between two of the *opponent's own* fielders is
+     marked only by the horizontal top-bar every .sc-subline cell already draws (::before above);
+     no vertical component, and no dashing is described for either marker. */
   table.scorecard-table tr.sc-total-row td{
     font-weight:700; color:#000; background:#f0f0f0; font-family:'IBM Plex Mono',monospace; padding:6px 8px;
   }
