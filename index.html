@@ -1514,7 +1514,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
         // achtervanger, who's crouched right at the plate — a ball he fields is realistically a
         // soft tap in front of home, not a grounder hit past the infield.
         text = p2===2
-          ? `<b>${batter.name}</b> slaat een zachte tik voor de thuisplaat, die de achtervanger laat gaan. Fout!`
+          ? `<b>${batter.name}</b> slaat een zachte tik voor de thuisplaat, die de achtervanger bij het oprapen laat gaan. Fout!`
           : `<b>${batter.name}</b> slaat een grondbal naar de ${P(p2)}, die de bal laat gaan. Fout!`;
         refs=["Error bij het 'fielden' van de bal, p.11"];
         code = 'E'+p2+variant;
@@ -1550,7 +1550,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
     case 'EEXTRA': {
       const p2 = pick([1,2,4,5,6]);
       ev.narrative = p2===2
-        ? `<b>${batter.name}</b> slaat een zachte tik voor de thuisplaat, die de achtervanger laat gaan. Door de fout loopt hij meteen door naar het tweede honk.`
+        ? `<b>${batter.name}</b> slaat een zachte tik voor de thuisplaat, die de achtervanger bij het oprapen laat gaan. Door de fout loopt hij meteen door naar het tweede honk.`
         : `<b>${batter.name}</b> slaat een grondbal naar de ${P(p2)}, die de bal laat gaan. Door de fout loopt hij meteen door naar het tweede honk.`;
       ev.code = 'E'+p2; ev.refs=['Extra base error, p.12']; ev.targetQuadrant='1e';
       ev.explain=`Wanneer een fout de slagman twee honken oplevert in plaats van één, schrijf je de foutcode toch in het eerste honk-vakje (code <code>E${p2}</code>). Los daarvan krijg je zo als aparte, volgende vraag het tweede honk-vakje, waar je een pijltje zet om aan te geven dat het om dezelfde, doorlopende actie gaat. Dat hoeft dus niet in déze beurt.`;
