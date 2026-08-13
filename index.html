@@ -1744,7 +1744,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       const batterCode = c[1]+''+c[2];
       const b1occ = !!bases[1];
       ev.narrative = `<b>${batter.name}</b> slaat een grondbal. ${P(c[0])} naar ${P(c[1])} naar ${P(c[2])}: dubbelspel!`
-        + (b1occ ? ' De loper van het tweede honk wordt daardoor ook gedwongen door te lopen.' : '');
+        + (b1occ ? ' Omdat de loper van het eerste honk het tweede honk in moet, wordt de loper die daar al stond op zijn beurt gedwongen naar het derde honk.' : '');
       const runnerOutCode = wrapOut(runnerCode);
       ev.code = batterCode; ev.refs=['Dubbelspel, p.19'];
       ev.explain=`Bij een dubbelspel krijgt elke uitgemaakte speler alléén zíjn eigen deel van de aangooiketen (de twee cirkels worden in de praktijk met een streep verbonden om te laten zien dat het één ononderbroken actie is): de loper krijgt code <code>${runnerOutCode}</code> (tot en met zíjn out), en jij als slagman code <code>${batterCode}</code> (het vervolg tot en met jóuw out).`;
