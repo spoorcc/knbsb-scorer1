@@ -1,6 +1,6 @@
 ---
 name: wedstrijd-screenshot
-description: Plays one full KNBSB Scorer 1 match (this repo's index.html trainer app) end-to-end through a real browser, answering every question correctly, and captures a full-page screenshot of the finished game and its printed scoreformulier. Use this whenever the user gives a sport + innings + wedstrijdnummer (matchNumber) and asks to "play", "score", "run through", or screenshot that match — e.g. for the README's own scoreformulier screenshots, to visually check what a specific matchNumber produces, or to document a bug repro. Also trigger on requests like "maak een screenshot van wedstrijd X" or "speel wedstrijdnummer X af en laat het scoreformulier zien", even without the word "skill".
+description: Plays one full KNBSB Scorer 1 match (this repo's index.html trainer app) end-to-end through a real browser, answering every question correctly, and captures a full-page screenshot of the finished game and its printed scoreformulier. Use this whenever the user gives a wedstrijdnummer (matchNumber) and asks to "play", "score", "run through", or screenshot that match — e.g. for the README's own scoreformulier screenshots, to visually check what a specific matchNumber produces, or to document a bug repro. Sport and innings are optional (default Honkbal / 3 innings, same as the app's own setup screen) — don't ask for them if the user only gives a matchNumber. Also trigger on requests like "maak een screenshot van wedstrijd X" or "speel wedstrijdnummer X af en laat het scoreformulier zien", even without the word "skill".
 ---
 
 # Wedstrijd screenshot
@@ -20,11 +20,16 @@ the real UI guarantees that's what ends up on screen.
 
 ## Running it
 
-Requires the three parameters the user provides: **sport** (`Honkbal` or
-`Softbal`), **innings** (1–9), and **matchNumber** (the wedstrijdnummer —
-any string the app accepts in its own `?wedstrijd=` share link). If any of
-these is missing or ambiguous, ask the user rather than guessing — a
-different matchNumber produces a genuinely different game.
+**matchNumber** (the wedstrijdnummer — any string the app accepts in its
+own `?wedstrijd=` share link) is the one parameter with no sensible
+default — a different matchNumber produces a genuinely different game, so
+ask the user rather than guessing if it's missing.
+
+**sport** (`Honkbal`/`Softbal`) and **innings** (1–9) are optional: pass
+them through when the user gives them, but if either is omitted just leave
+the corresponding flag off the command below — the script itself defaults
+to `Honkbal`/3 innings (the app's own setup-screen defaults), same as
+omitting them from the `?innings=&sport=` share link.
 
 ```sh
 node .claude/skills/wedstrijd-screenshot/scripts/play-and-screenshot.mjs \
