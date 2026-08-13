@@ -601,8 +601,15 @@
   .log-entry .mark{font-weight:700; width:14px; font-family:'IBM Plex Mono',monospace; padding-top:6px; flex:0 0 auto;}
   .log-entry .mark.ok{color:var(--green);}
   .log-entry .mark.no{color:var(--red);}
-  .log-grid-wrap{flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:2px;}
-  .log-grid-caption{font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.2px; color:var(--ink-muted);}
+  /* Fixed width (matching .honk-cell.mini's own 44px + 1px border on each side) instead of
+     shrink-to-fit: the caption below varies a lot in length ("1e honk" vs "vrije ruimte"), and
+     without a fixed width the column sized itself to whichever was wider, re-centering the
+     honk-cell above it a few px left/right per entry instead of keeping it in one place. */
+  .log-grid-wrap{flex:0 0 auto; width:46px; display:flex; flex-direction:column; align-items:center; gap:2px;}
+  .log-grid-caption{
+    width:100%; font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.2px;
+    color:var(--ink-muted); text-align:center; line-height:1.15;
+  }
   .log-grid-caption.state-correct{color:var(--green);}
   .log-grid-caption.state-wrong{color:var(--red);}
   .log-details{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; padding-top:2px;}
