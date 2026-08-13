@@ -1346,9 +1346,10 @@ function generateBatterEvent(){
 }
 
 function buildForcedOutFollowUpEvent(runnerName, quadrant, code, priorHistory, battingSlot, teamKey, contextLabel, alsoOut, customRefs, customExplain){
+  const baseLabel = {'1e':'het eerste honk', '2e':'het tweede honk', '3e':'het derde honk', 'thuis':'het thuishonk'}[quadrant] || 'zijn honk';
   const narrative = alsoOut
-    ? `Ook <b>${runnerName}</b> is uit door dezelfde actie${contextLabel||''}. Noteer dit in zíjn eigen honk-vakje.`
-    : `<b>${runnerName}</b> is uit door deze actie${contextLabel||''} (de slagman is intussen veilig). Noteer dit in zíjn eigen honk-vakje.`;
+    ? `Ook <b>${runnerName}</b> gaat uit bij dit dubbelspel: gedwongen op ${baseLabel}${contextLabel||''}. Noteer dit in zíjn eigen honk-vakje.`
+    : `<b>${runnerName}</b> gaat hierbij uit: gedwongen op ${baseLabel}${contextLabel||''} (de slagman is intussen veilig). Noteer dit in zíjn eigen honk-vakje.`;
   const explain = customExplain || (alsoOut
     ? `Bij een dubbelspel noteer je bij allebei de spelers dezelfde aangooiketen: ook <b>${runnerName}</b> krijgt code <code>${code}</code>, in zijn eigen honk-vakje, met een cirkel omdat hij ook uit is.`
     : `Bij een velderskeus is het niet de slagman maar de voorgaande loper die uit gaat. <b>${runnerName}</b> krijgt in zijn eigen honk-vakje dezelfde aangooiketen als de slagman: code <code>${code}</code>, met een cirkel omdat hij hier de enige is die uit is.`);
