@@ -36,4 +36,24 @@ export default [
       },
     },
   },
+  {
+    // Playwright automation scripts under .claude/skills/: Node code at the top level, plus
+    // page.evaluate() callbacks that run inside the browser and reference both standard browser
+    // globals (document, Event, ...) and the app's own page-global identifiers (G, selectSlot,
+    // ... — see index.html's top-level `let`/`function` declarations, not window.-prefixed on
+    // purpose, per CLAUDE.md's Testing section) — so all three sets apply here, unlike the
+    // Node-only block above.
+    files: [".claude/skills/**/*.mjs"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: {
+        ...globals.node,
+        ...globals.browser,
+        ...globals.es2021,
+        G: "readonly",
+        selectSlot: "readonly",
+      },
+    },
+  },
 ];
