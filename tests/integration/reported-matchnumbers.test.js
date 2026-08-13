@@ -45,6 +45,30 @@ describe("matchNumber 211304 — reported 'raar artefact' bootje at bal op het d
       expect.arrayContaining([expect.objectContaining({ inning: 2 })])
     );
   });
+
+  it("draws the bootje as its own element so it doesn't collide with fieldSubMarkers' top-bar on the same cell", () => {
+    // Follow-up report: the *data* was already right (previous test above), but this exact cell
+    // also happens to be where an unrelated fielder position swap (fieldSubMarkers) draws its own
+    // "streep boven de eerstvolgende slagman" (p.21) — a pitcher change and a position swap are
+    // independent events that can legitimately both target the same opponent's next-at-bat cell.
+    // Both used to render via the cell's own ::before, so whichever CSS rule came later in the
+    // stylesheet silently won the whole pseudo-element (top/height/background), which is what
+    // squashed the bootje against the cell's top edge instead of its own bottom edge. The bootje
+    // now renders as a real child element (.sc-boat-icon) instead, so both markers coexist.
+    const dom = startGame(loadApp(), { innings: 3, sport: "Honkbal", matchNumber: "211304" });
+    playFullGameCorrectly(dom);
+    const G = getG(dom);
+    expect(G.fieldSubMarkers.home["5"]).toEqual(
+      expect.arrayContaining([expect.objectContaining({ inning: 2 })])
+    );
+    const { document } = dom.window;
+    const cell = document.querySelector('#scorecard-home td[data-slot="5"][data-inn="2"][data-atbat="0"]');
+    expect(cell.classList.contains("sc-subline")).toBe(true);
+    expect(cell.classList.contains("sc-subline-opp")).toBe(true);
+    const boatIcon = cell.querySelector(".sc-boat-icon");
+    expect(boatIcon).toBeTruthy();
+    expect(boatIcon.classList.contains("sc-boat-icon-b")).toBe(true);
+  });
 });
 
 describe("matchNumber 988566 — reported 'onverwachte dikke streep' bij honkvast/bal op het dak, inning 2", () => {

@@ -720,15 +720,22 @@
     background:#000; transform:rotate(-45deg);
   }
   table.scorecard-table td.sc-boatmark{position:relative;}
-  table.scorecard-table td.sc-boatmark::before{
-    content:''; position:absolute; left:0; right:0; bottom:0; height:7px; z-index:5;
+  /* A real child element, not ::before: a pitcher change (this marker) and an unrelated fielder
+     position swap (.sc-subline below) can both legitimately target the very same "next batter"
+     cell (two independent events that happen to point at the same opponent's upcoming at-bat) —
+     two rules both animating the *same* ::before would silently clobber each other's top/bottom/
+     height instead of stacking, which is exactly what made the bootje for matchNumber 211304
+     render squashed against the cell's top edge instead of sitting on its own bottom edge. Giving
+     this its own element sidesteps that collision entirely, for this pair and any future one. */
+  .sc-boat-icon{
+    position:absolute; left:0; right:0; bottom:0; height:7px; z-index:5; pointer-events:none;
     background-color:#000;
     -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' preserveAspectRatio='none'%3E%3Cpolyline points='1,10 20,26 80,26 99,10' fill='none' stroke='%23000' stroke-width='6' stroke-linecap='square' stroke-linejoin='miter'/%3E%3C/svg%3E");
     mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' preserveAspectRatio='none'%3E%3Cpolyline points='1,10 20,26 80,26 99,10' fill='none' stroke='%23000' stroke-width='6' stroke-linecap='square' stroke-linejoin='miter'/%3E%3C/svg%3E");
     -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
     -webkit-mask-size:100% 100%; mask-size:100% 100%;
   }
-  table.scorecard-table td.sc-boatmark-b::before{ background-color:#d21f1f; }
+  .sc-boat-icon.sc-boat-icon-b{ background-color:#d21f1f; }
   /* p.20: "Op de scorekaart wordt een dikke streep gezet waar de wissel plaatsvindt, zodat we
      kunnen zien dat wat gescoord is vóór de streep voor de eerste slagman geldig is en na de
      streep voor de tweede slagman" — a batting substitution (PH) on a team's *own* card gets a
@@ -3067,12 +3074,14 @@ function renderFullScorecard(){
           const em = G.endMarker[teamKey] && G.endMarker[teamKey][inn];
           const isEnd = !!em && em.slot === slot && em.atBat === atBat;
           const boatEntry = G.boatMarkers[teamKey][slot] && G.boatMarkers[teamKey][slot].find(b=>b.inning===inn && b.atBat===atBat);
-          const boatCls = boatEntry ? ('sc-boatmark' + (boatEntry.color ? ' sc-boatmark-b' : '')) : '';
           const isSubLine = G.subMarkers[teamKey][slot] && G.subMarkers[teamKey][slot].some(m=>m.inning===inn && m.atBat===atBat);
           const isFieldSubLine = G.fieldSubMarkers[teamKey][slot] && G.fieldSubMarkers[teamKey][slot].some(m=>m.inning===inn && m.atBat===atBat);
           const isExtra = atBat > 0 ? ' sc-extra-inning' : '';
-          const cls = [isEnd?'sc-endmark':'', boatCls, isSubLine?'sc-subline-own':'', isFieldSubLine?'sc-subline sc-subline-opp':''].filter(Boolean).join(' ') + isExtra;
-          cells += `<td class="${cls}" data-slot="${slot}" data-inn="${inn}" data-atbat="${atBat}">${renderScorecardCellHTML(data)}</td>`;
+          // boatEntry renders as its own child element (see .sc-boat-icon), not a td class, so it
+          // can never collide with .sc-subline's own ::before top-bar when both land on one cell.
+          const cls = [isEnd?'sc-endmark':'', boatEntry?'sc-boatmark':'', isSubLine?'sc-subline-own':'', isFieldSubLine?'sc-subline sc-subline-opp':''].filter(Boolean).join(' ') + isExtra;
+          const boatIcon = boatEntry ? `<span class="sc-boat-icon${boatEntry.color ? ' sc-boat-icon-b' : ''}"></span>` : '';
+          cells += `<td class="${cls}" data-slot="${slot}" data-inn="${inn}" data-atbat="${atBat}">${renderScorecardCellHTML(data)}${boatIcon}</td>`;
         }
       }
       const events = G.slotEvents[teamKey][slot] || [];
