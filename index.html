@@ -2777,11 +2777,21 @@ function endHalfInning(){
   G.currentHalfRuns=0;
   G.bases.forEach(occ=>{ if(occ) commitToScorecard(key, occ.battingSlot, G.inning, occ.history); });
   const lastSlot = (G.battingIdx[key] - 1 + 9) % 9;
-  if(!G.endMarker[key]) G.endMarker[key] = {};
-  G.endMarker[key][G.inning] = {slot: lastSlot, atBat: currentAtBatIdx(key, lastSlot, G.inning)};
+  const endInning = G.inning;
+  const endAtBat = currentAtBatIdx(key, lastSlot, G.inning);
   G.outs=0;
   G.bases=[null,null,null];
-  G.pendingEvents.push(buildEndOfInningQuizEvent());
+  const endOfInningEv = buildEndOfInningQuizEvent();
+  const applyQuizBases = endOfInningEv.applyBases;
+  // Don't draw the schuine streep the instant the third out happens: that would show the answer
+  // to the end-of-inning quiz on the scoreformulier before the scorer has answered it. Set the
+  // marker as part of resolving that queued quiz event instead, same as any other applyBases.
+  endOfInningEv.applyBases = b=>{
+    if(!G.endMarker[key]) G.endMarker[key] = {};
+    G.endMarker[key][endInning] = {slot: lastSlot, atBat: endAtBat};
+    return applyQuizBases(b);
+  };
+  G.pendingEvents.push(endOfInningEv);
   const isVeryFirstHalfInning = (G.inning===1 && G.half==='top');
   if(!isVeryFirstHalfInning){
     if(rng()<0.22){ const pc = buildPitcherChangeQuizEvent(key); if(pc) G.pendingEvents.push(pc); }
