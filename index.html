@@ -3275,6 +3275,8 @@ function selectSlot(slot){
   text.classList.remove('state-correct','state-wrong');
   document.getElementById('quadrantHint').textContent = 'Gekozen vakje: ' + (QUADRANT_SHORT[slot] || slot);
   document.getElementById('slotWarning').classList.remove('show');
+  const si = document.getElementById('systemInput');
+  if(!si.disabled) si.focus();
 }
 
 function resetSlotSelector(){
