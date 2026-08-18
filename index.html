@@ -1137,7 +1137,15 @@ const TEAM_BALOPHETDAK = {
 let G = null;
 
 function initGame(maxInnings, sport, matchNumber){
-  const seed = matchNumber && !isNaN(matchNumber) ? parseInt(matchNumber,10) : Math.floor(Math.random()*900000)+100000;
+  let seed = matchNumber && !isNaN(matchNumber) ? parseInt(matchNumber,10) : Math.floor(Math.random()*900000)+100000;
+  // isNaN("Infinity") is false (Number("Infinity") is a valid, non-NaN value), but
+  // parseInt("Infinity",10) can't parse it and returns NaN anyway. And an absurdly long digit
+  // string (someone pasting 24 digits) parses to a real but unsafe-magnitude number that
+  // ${G.matchNumber} then prints in scientific notation ("1e+24") instead of a match number.
+  // Both are the same "typed something technically numeric-ish but not usable as a seed" gap —
+  // isSafeInteger catches NaN, ±Infinity, and unsafe magnitude in one check. A bad seed here
+  // isn't just a bad die roll: it's stored as G.matchNumber and printed on the scoreformulier.
+  if(!Number.isSafeInteger(seed)) seed = Math.floor(Math.random()*900000)+100000;
   seedRng(seed);
   const now = new Date();
   G = {
@@ -3596,7 +3604,17 @@ document.getElementById('shareBtn').addEventListener('click', ()=>{
   const urlSport = params.get('sport');
   const urlMatch = params.get('wedstrijd');
   if(urlMatch){
-    const innings = urlInnings ? parseInt(urlInnings,10) : 3;
+    // A malformed ?innings= (non-numeric, negative, zero) must not reach initGame as NaN: every
+    // "how many innings left" check downstream (endHalfInning's G.inning>G.maxInnings,
+    // renderFullScorecard's per-inning column loop) silently does nothing against NaN, so the
+    // "game" would never end and the printed scoreformulier would render with zero columns —
+    // same fallback-to-a-sane-default approach the matchNumber seed already uses just below.
+    // Also clamp to the setup screen's own 1-9 range (see #inningsSelect's options): an
+    // unbounded value (e.g. a mistyped extra digit) reaches renderScoreboard's
+    // `for(i=1;i<=G.maxInnings;i++)` header-cell loop, which throws "Invalid string length"
+    // trying to build a multi-billion-cell row instead of just rendering an odd-looking game.
+    const parsedInnings = urlInnings ? parseInt(urlInnings,10) : NaN;
+    const innings = Number.isFinite(parsedInnings) ? Math.min(Math.max(parsedInnings, 1), 9) : 3;
     const sport = (urlSport === 'Softbal') ? 'Softbal' : 'Honkbal';
     if(document.getElementById('inningsSelect')) document.getElementById('inningsSelect').value = String(innings);
     if(document.getElementById('matchNumberInput')) document.getElementById('matchNumberInput').value = urlMatch;
