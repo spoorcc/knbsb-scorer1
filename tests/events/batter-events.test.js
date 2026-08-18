@@ -327,6 +327,41 @@ describe("buildBatterEvent(FC) — force-out branch selection by base state", ()
   });
 });
 
+describe("buildBatterEvent — FC / FCFAIL / SHFC never throw to the fielder who already has the ball", () => {
+  // All three share `const options=[4,6].filter(x=>x!==fielder); const receiver = options.length ?
+  // pick(options) : 4;` to pick who receives the throw. Each existing test above only exercises one
+  // fixed fielder (3, via a single stubbed rng draw), so none of them would notice this exclusion
+  // breaking (e.g. `!==` flipped to `===`, which turns "exclude the fielder" into "keep only the
+  // fielder", producing a self-throw code like FC44/FC66 whenever the random fielder happens to be
+  // 4 or 6). Sweep every fielder the pool can produce and check the code's two position digits
+  // (chars 2 and 3, after the "FC" prefix) always differ.
+  it("classic FC (1st only) and FCFAIL: receiver never equals the fielder, across every fielder in the pool", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    const bases = [{ name: "Loper1", battingSlot: 0, history: {} }, null, null];
+    for (const key of ["FC", "FCFAIL"]) {
+      for (let i = 0; i < 8; i++) {
+        stubRngConstant(dom, i / 8);
+        const ev = dom.window.buildBatterEvent(key, batter(), bases, 1);
+        expect(ev.code).toMatch(/^FC\d\d$/);
+        expect(ev.code[2]).not.toBe(ev.code[3]);
+      }
+    }
+  });
+
+  it("SHFC: receiver never equals the fielder, across every fielder in the pool", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    const bases = [{ name: "Loper1", battingSlot: 0, history: {} }, null, null];
+    for (let i = 0; i < 8; i++) {
+      stubRngConstant(dom, i / 8);
+      const ev = dom.window.buildBatterEvent("SHFC", batter(), bases, 1);
+      expect(ev.code).toMatch(/^FC\d\d$/);
+      expect(ev.code[2]).not.toBe(ev.code[3]);
+    }
+  });
+});
+
 describe("buildBatterEvent(SHFC) — a bunt where the lead runner is thrown out, so it's FC not SH", () => {
   it("codes it as a fielder's choice (not SH), forces the lead runner out at second, keeps the batter safe at first", () => {
     const dom = loadApp();

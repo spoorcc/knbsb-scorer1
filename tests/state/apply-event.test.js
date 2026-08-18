@@ -286,6 +286,23 @@ describe("applyEventToState — runner events", () => {
     expect(G.subMarkers.away[6]).toBeUndefined();
   });
 
+  it("a pinch runner substitution also works for the runner on 1st (base index 0, not just 2nd)", () => {
+    // buildPinchRunnerQuizEvent's applyBases finds the outgoing runner with bases.findIndex(...),
+    // which returns 0 for 1st base, and swaps them in via `if(idx>=0)`. Every other test here uses
+    // a runner on 2nd (index 1), which wouldn't notice `idx>=0` regressing to `idx>0` — an
+    // off-by-one that would silently skip the substitution specifically for a runner on 1st. This
+    // pins the 1st-base case directly.
+    const dom = setup();
+    evalIn(dom, "G.bases = [{name:'Loper', battingSlot:6, history:{'1e':'1B'}}, null, null]");
+    const runner = getG(dom).bases[0];
+    const ev = dom.window.buildPinchRunnerQuizEvent(runner, "away", "1e");
+    dom.window.applyEventToState(ev);
+    const G = getG(dom);
+    expect(G.bases[0].name).not.toBe("Loper");
+    expect(G.bases[0].battingSlot).toBe(6);
+    expect(G.scorecard.away[6][1][0]).toMatchObject({ "1e": "1B", _prQ: "1e" });
+  });
+
   it("records the current stint color on a pinch-runner streepje, so it can render in red-ink after a pitcher change", () => {
     const dom = setup();
     evalIn(dom, "G.stintColor.away = 1;"); // simulates having already had a pitcher change
