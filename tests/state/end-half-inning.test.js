@@ -85,11 +85,24 @@ describe("endHalfInning", () => {
     expect(getG(dom).gameOver).toBe(true);
   });
 
-  it("records the correct last-batter slot as the end-of-inning marker", () => {
+  it("does not set the end-of-inning marker until the queued end-of-inning quiz is answered", () => {
     const dom = setup();
     stubRngConstant(dom, 0.99);
     evalIn(dom, "G.battingIdx.away = 4; G.outs = 3;");
     dom.window.endHalfInning();
+    const G = getG(dom);
+    // the schuine streep must not appear on the scoreformulier before the scorer has answered
+    // the end-of-inning quiz that asks how to mark it
+    expect(G.endMarker.away[1]).toBeUndefined();
+  });
+
+  it("records the correct last-batter slot as the end-of-inning marker once that quiz is applied", () => {
+    const dom = setup();
+    stubRngConstant(dom, 0.99);
+    evalIn(dom, "G.battingIdx.away = 4; G.outs = 3;");
+    dom.window.endHalfInning();
+    const quizEv = evalIn(dom, "G.pendingEvents[0]");
+    quizEv.applyBases(getG(dom).bases);
     const G = getG(dom);
     expect(G.endMarker.away[1]).toMatchObject({ slot: 3 });
   });
