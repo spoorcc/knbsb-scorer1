@@ -791,7 +791,7 @@
     </div>
     <div>
       <h1>Scorer 1 – Oefentrainer</h1>
-      <div class="sub">KNBSB cursusmateriaal · januari 2024</div>
+      <div class="sub">KNBSB cursusmateriaal · maart 2026</div>
     </div>
   </div>
   <div class="header-right">
@@ -819,7 +819,7 @@
     <p class="eyebrow">Voorbereiding</p>
     <h2>Nieuwe oefenwedstrijd</h2>
     <h3 class="intro-subhead">Over deze trainer</h3>
-    <p>Deze trainer is gebaseerd op het officiële KNBSB-cursusmateriaal <a href="https://www.knbsb.nl/kenniscentrum/opleidingen-officials/belangrijke-documenten-opleidingen/" target="_blank" rel="noopener">"Scorer 1" (januari 2024)</a> en dekt alléén de scoretekens die daarin worden behandeld. Het volledige scoreformulier valt buiten deze opleiding en dus ook buiten deze trainer, inclusief de kolommen PA t/m E (AB, R, H, RBI e.d.); dat komt aan bod in Scorer 2 en Scorer 3. Het is aan te raden om eerst het cursusmateriaal zelf een keer door te lezen voordat je hier gaat oefenen. Deze trainer is bedoeld om het geleerde te oefenen, niet om het als eerste kennismaking te leren.</p>
+    <p>Deze trainer is gebaseerd op het officiële KNBSB-cursusmateriaal <a href="https://www.knbsb.nl/kenniscentrum/opleidingen-officials/belangrijke-documenten-opleidingen/" target="_blank" rel="noopener">"Scorer 1" (maart 2026)</a> en dekt alléén de scoretekens die daarin worden behandeld. Het volledige scoreformulier valt buiten deze opleiding en dus ook buiten deze trainer, inclusief de kolommen PA t/m E (AB, R, H, RBI e.d.); dat komt aan bod in Scorer 2 en Scorer 3. Het is aan te raden om eerst het cursusmateriaal zelf een keer door te lezen voordat je hier gaat oefenen. Deze trainer is bedoeld om het geleerde te oefenen, niet om het als eerste kennismaking te leren.</p>
     <h3 class="intro-subhead">Hoe het werkt</h3>
     <p>Het doel is om vertrouwd te raken met de scoretekens en met het scoreformulier zelf, in een gesimuleerde wedstrijd tussen <b>Honkvast</b> en <b>Bal op het dak</b> (dezelfde teams als in het voorbeeld uit het document). Benieuwd naar de precieze werking van de interface? Lees <a href="#" id="helpLinkSetup">de stap-voor-stap uitleg</a>.</p>
     <div class="setup-fields">
@@ -1065,7 +1065,7 @@
 </main>
 
 <footer>
-  Oefentrainer op basis van het cursusmateriaal "Scorer 1" (KNBSB, januari 2024). Geen officieel KNBSB-product.<br>
+  Oefentrainer op basis van het cursusmateriaal "Scorer 1" (KNBSB, maart 2026). Geen officieel KNBSB-product.<br>
   Voor de officiële cursusdocumenten en vervolgopleidingen (Scorer 2 &amp; 3): <a href="https://www.knbsb.nl/kenniscentrum/opleidingen-officials/belangrijke-documenten-opleidingen/" target="_blank" rel="noopener">knbsb.nl, Belangrijke documenten opleidingen</a><br>
   <button id="exportBtn" class="footer-debug-btn" title="Exporteer huidige status als JSON (debug)">⬇ Debug-export</button>
 </footer>
@@ -1426,13 +1426,13 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       break;
     case 'BB':
       ev.narrative = `De werper werpt vier ballen buiten de slagzone. <b>${batter.name}</b> krijgt een vrije loop naar het eerste honk.`;
-      ev.code='BB'; ev.refs=['Base on balls, p.10, Scoreregel 9.14.a']; ev.targetQuadrant='1e';
+      ev.code='BB'; ev.refs=['Base on balls, p.10, Scoreregel 16.8']; ev.targetQuadrant='1e';
       ev.explain='Vier wijd noteer je met code <code>BB</code>.';
       ev.applyBases = bases=>forcedWalk(bases, batter.name, ev.code, battingSlot);
       break;
     case 'IBB':
       ev.narrative = `De manager van het veldteam laat <b>${batter.name}</b> opzettelijk vier wijd geven.`;
-      ev.code='IBB'; ev.refs=['Intentional base on balls, p.10, Scoreregel 9.14.b']; ev.targetQuadrant='1e';
+      ev.code='IBB'; ev.refs=['Intentional base on balls, p.10, Scoreregel 16.8.1.3']; ev.targetQuadrant='1e';
       ev.explain='Opzettelijk vier wijd noteer je met code <code>IBB</code>.';
       ev.applyBases = bases=>forcedWalk(bases, batter.name, ev.code, battingSlot);
       break;
@@ -1457,7 +1457,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       break; }
     case 'K':
       ev.narrative = `<b>${batter.name}</b> zwaait door een derde slagbal: drie slag!`;
-      ev.code='K'; ev.refs=['Drie slag, p.16, Scoreregel 9.15'];
+      ev.code='K'; ev.refs=['Drie slag, p.16, Scoreregel 16.9'];
       ev.explain='Drie slag noteer je met code <code>K</code>.';
       ev.applyBases = bases=>({bases, runs:0});
       ev.outsDelta=1;
@@ -1477,7 +1477,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
     case 'KTHROW': {
       const seq = [2,3];
       ev.narrative = `<b>${batter.name}</b> zwaait door de derde slagbal, die de achtervanger niet direct onder controle krijgt. Omdat ${!bases[0]?'het eerste honk vrij is':'er al twee spelers uit zijn'}, sprint ${batter.name} naar het eerste honk, maar de achtervanger herstelt zich, gooit snel naar het eerste honk en is er eerder dan ${batter.name}.`;
-      ev.code = 'K'+seq.join(''); ev.refs=['Drie slag, p.16, Scoreregel 9.15'];
+      ev.code = 'K'+seq.join(''); ev.refs=['Drie slag, p.16, Scoreregel 16.9'];
       ev.explain=`Wanneer de bal niet direct onder controle wordt gekregen, mag de slagman een poging doen het eerste honk te bereiken (als dat vrij is, of bij al twee uit). Lukt dat niet doordat hij tijdig wordt aangegooid, dan noteer je zowel de drie slag als de aangooi samen: code <code>K${seq.join('')}</code>.`;
       ev.applyBases = bases=>({bases, runs:0});
       ev.outsDelta=1;
@@ -1672,7 +1672,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       const leadRunner = bases[leadIdx];
       const destLabel = leadIdx===2 ? 'veilig naar huis' : `veilig naar het ${leadIdx===1?'derde':'tweede'} honk`;
       ev.narrative = `<b>${batter.name}</b> legt een stootslag neer. De ${P(fielder)} gooit naar het eerste honk voor de uit, en <b>${leadRunner.name}</b> komt ondertussen ${destLabel}.`;
-      ev.code = 'SH'+fielder+'3'; ev.refs=['Sacrifice hit, p.17, Scoreregel 9.08'];
+      ev.code = 'SH'+fielder+'3'; ev.refs=['Sacrifice hit, p.17, Scoreregel 16.5'];
       ev.explain=`Een opofferingsstootslag noteer je met <code>SH</code> gevolgd door de actie: code <code>SH${fielder}3</code>. Let op: dit is alleen een sacrifice hit als er nog geen twee uit waren, de slagman zelf écht uit gaat én de loper daadwerkelijk een honk verder komt. Blijft de slagman ook veilig (bijv. door een fout of trage worp), dan is het geen offer meer maar een gewone honkslag of een fout. Dat lees je in de paragrafen Honkslagen en Fouten.`;
       ev.applyBases = bases=>{
         const nb = cloneBases(bases);
@@ -1697,7 +1697,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       const leadRunner = bases[leadIdx];
       const destLabel = leadIdx===2 ? 'veilig naar huis' : `veilig naar het ${leadIdx===1?'derde':'tweede'} honk`;
       ev.narrative = `<b>${batter.name}</b> legt een stootslag neer, precies zoals bedoeld om <b>${leadRunner.name}</b> ${destLabel} te laten komen. De ${P(fielder)} gooit onzuiver naar het eerste honk, waardoor de slagman óók veilig blijft staan.`;
-      ev.code = code; ev.refs=['Sacrifice hit, p.17, Scoreregel 9.08'];
+      ev.code = code; ev.refs=['Sacrifice hit, p.17, Scoreregel 16.5'];
       ev.explain=`Wanneer de aangooi mislukt en de slagman daardoor zélf ook veilig blijft, blijft het toch een opofferingsstootslag (nog steeds met minder dan twee uit) als die zonder de fout gescoord had moeten worden, met de fout erbij genoteerd: code <code>${code}</code>.`;
       ev.forBatter=true;
       ev.applyBases = bases=>{
@@ -1726,7 +1726,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       const receiver = options.length? pick(options) : 4;
       const code = 'FC'+fielder+receiver;
       ev.narrative = `<b>${batter.name}</b> legt een stootslag neer. De ${P(fielder)} raapt de bal snel op en gooit naar de ${P(receiver)} op het tweede honk, die <b>${leadRunner.name}</b> daar uit maakt in plaats van de slagman op het eerste honk.`;
-      ev.code = code; ev.refs=['Velderskeus, p.10', 'Sacrifice hit, p.17, Scoreregel 9.08']; ev.targetQuadrant='1e';
+      ev.code = code; ev.refs=['Velderskeus, p.10', 'Sacrifice hit, p.17, Scoreregel 16.5']; ev.targetQuadrant='1e';
       ev.explain = `De loper die gedwongen naar het tweede honk moest, wordt hier alsnog uitgemaakt: hij komt dus niet daadwerkelijk een honk verder. Dat betekent dat dit ondanks de stootslag géén sacrifice hit (SH) is, maar een gewone velderskeus: noteer <code>FC</code> gevolgd door de aangooi, code <code>${code}</code>.`;
       ev.applyBases = b=>{
         const nb=cloneBases(b);
@@ -1739,7 +1739,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
     case 'SF': {
       const p2 = pick([7,8,9]);
       ev.narrative = `<b>${batter.name}</b> slaat een hoge bal naar het buitenveld, gevangen door de ${P(p2)}. De loper van het derde honk rent naar huis.`;
-      ev.code = 'SF'+p2; ev.refs=['Sacrifice fly, p.18, Scoreregel 9.08'];
+      ev.code = 'SF'+p2; ev.refs=['Sacrifice fly, p.18, Scoreregel 16.5'];
       ev.explain=`Een opofferingsslag in het buitenveld noteer je met code <code>SF${p2}</code>. Let op: dit telt alleen als sacrifice fly als er nog geen twee uit waren, de bal wordt gevangen (slagman dus uit) én de loper van het derde honk daadwerkelijk scoort. Wordt de bal niet gevangen, of scoort de loper niet, dan is het geen SF meer maar bijvoorbeeld een gewone vangbal-uit of een fout.`;
       ev.applyBases = bases=>{
         const nb=cloneBases(bases);
@@ -1753,7 +1753,7 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       const p2 = pick([7,8,9]);
       const code = 'SF'+p2+' E'+p2;
       ev.narrative = `<b>${batter.name}</b> slaat een hoge bal naar het buitenveld. De ${P(p2)} had een goede vangkans, maar laat de bal vallen. De slagman bereikt het eerste honk, en de loper van het derde honk scoort alsnog, precies zoals bij een gevangen bal zou zijn gebeurd.`;
-      ev.code = code; ev.refs=['Sacrifice fly, p.18, Scoreregel 9.08'];
+      ev.code = code; ev.refs=['Sacrifice fly, p.18, Scoreregel 16.5'];
       ev.explain=`Wanneer een opofferingsslag door een fout niet wordt gevangen, maar zonder de fout wél een sacrifice fly gescoord had moeten worden (er waren nog geen twee uit), blijft het een SF met de fout erbij genoteerd: code <code>${code}</code>.`;
       ev.forBatter=true;
       ev.applyBases = bases=>{
@@ -1909,7 +1909,7 @@ function buildRunnerEvent(key){
     case 'SB1': {
       const r = bases[0];
       ev.narrative = `<b>${r.name}</b> steelt het tweede honk.`;
-      ev.code='SB'; ev.refs=['Stolen base, p.13, Scoreregel 9.07']; ev.targetQuadrant='2e';
+      ev.code='SB'; ev.refs=['Stolen base, p.13, Scoreregel 16.7']; ev.targetQuadrant='2e';
       ev.priorHistory = Object.assign({}, r.history);
       ev.explain='Een gestolen honk, op eigen kracht bereikt, noteer je met code <code>SB</code>.';
       ev.applyBases = b=>{ const nb=cloneBases(b); nb[1]=Object.assign({},nb[0],{arrivedVia:'SB', history:Object.assign({},nb[0].history,{'2e':'SB'})}); nb[0]=null; return {bases:nb, runs:0}; };
@@ -1918,7 +1918,7 @@ function buildRunnerEvent(key){
       const r = bases[0];
       const code = 'E2T';
       ev.narrative = `<b>${r.name}</b> steelt het tweede honk. De achtervanger gooit onzuiver naar het tweede honk, waardoor <b>${r.name}</b> meteen doorloopt naar het derde honk.`;
-      ev.code='SB'; ev.refs=['Stolen base, p.13, Scoreregel 9.07']; ev.targetQuadrant='2e';
+      ev.code='SB'; ev.refs=['Stolen base, p.13, Scoreregel 16.7']; ev.targetQuadrant='2e';
       ev.priorHistory = Object.assign({}, r.history);
       ev.explain=`Het gestolen honk blijft <code>SB</code> in het tweede honk-vakje. Omdat de onzuivere aangooi (<code>${code}</code>) hem in staat stelt nóg een honk extra af te lopen, komt daar ook de foutcode bij te staan, en zet je in het derde honk-vakje een pijltje voor het vervolg.`;
       ev.extraBaseErrorCode = null;
@@ -1936,7 +1936,7 @@ function buildRunnerEvent(key){
     case 'SB2': {
       const r = bases[1];
       ev.narrative = `<b>${r.name}</b> steelt het derde honk.`;
-      ev.code='SB'; ev.refs=['Stolen base, p.13, Scoreregel 9.07']; ev.targetQuadrant='3e';
+      ev.code='SB'; ev.refs=['Stolen base, p.13, Scoreregel 16.7']; ev.targetQuadrant='3e';
       ev.priorHistory = Object.assign({}, r.history);
       ev.explain='Een gestolen honk noteer je met code <code>SB</code>.';
       ev.applyBases = b=>{ const nb=cloneBases(b); nb[2]=Object.assign({},nb[1],{arrivedVia:'SB', history:Object.assign({},nb[1].history,{'3e':'SB'})}); nb[1]=null; return {bases:nb, runs:0}; };
@@ -1945,7 +1945,7 @@ function buildRunnerEvent(key){
       const r = bases[1];
       const code = 'E2T';
       ev.narrative = `<b>${r.name}</b> steelt het derde honk. De achtervanger gooit onzuiver naar het derde honk, waardoor <b>${r.name}</b> meteen doorloopt naar het thuishonk.`;
-      ev.code='SB'; ev.refs=['Stolen base, p.13, Scoreregel 9.07']; ev.targetQuadrant='3e';
+      ev.code='SB'; ev.refs=['Stolen base, p.13, Scoreregel 16.7']; ev.targetQuadrant='3e';
       ev.priorHistory = Object.assign({}, r.history);
       ev.explain=`Het gestolen honk blijft <code>SB</code> in het derde honk-vakje. Omdat de onzuivere aangooi (<code>${code}</code>) hem in staat stelt nóg een honk extra af te lopen, komt daar ook de foutcode bij te staan, en zet je in het thuis-vakje een pijltje voor het vervolg.`;
       ev.extraBaseErrorCode = null;
@@ -1964,7 +1964,7 @@ function buildRunnerEvent(key){
       const r = bases[0]; const seq=pick([[2,4],[2,6]]);
       const code = wrapOut('CS'+seq.join(''));
       ev.narrative = `<b>${r.name}</b> probeert het tweede honk te stelen. De achtervanger gooit naar de ${P(seq[1])}, die hem net op tijd tikt.`;
-      ev.code=code; ev.refs=['Caught stealing, p.14, Scoreregel 9.07']; ev.targetQuadrant='2e';
+      ev.code=code; ev.refs=['Caught stealing, p.14, Scoreregel 16.7']; ev.targetQuadrant='2e';
       ev.priorHistory = Object.assign({}, r.history);
       ev.explain=`Uit bij stelen noteer je met <code>CS</code> gevolgd door de aangooi (achtervanger → ${P(seq[1])}), tussen haakjes omdat de loper uit is: code <code>${code}</code>.`;
       ev.applyBases = b=>{
@@ -1980,7 +1980,7 @@ function buildRunnerEvent(key){
       const r = bases[0]; const seq=pick([[2,4],[2,6]]);
       const code = 'CS'+seq.join('')+' E'+seq[1];
       ev.narrative = `<b>${r.name}</b> probeert het tweede honk te stelen. De achtervanger gooit naar de ${P(seq[1])}, maar die laat de bal vallen bij het tikken, waardoor <b>${r.name}</b> veilig blijft op het tweede honk.`;
-      ev.code=code; ev.refs=['Caught stealing, p.14, Scoreregel 9.07', 'Fouten, p.11, Scoreregel 9.12']; ev.targetQuadrant='2e';
+      ev.code=code; ev.refs=['Caught stealing, p.14, Scoreregel 16.7', 'Fouten, p.11, Scoreregel 17.3']; ev.targetQuadrant='2e';
       ev.priorHistory = Object.assign({}, r.history);
       ev.explain=`Zonder de fout was dit een uit bij stelen geweest, dus schrijf je toch <code>CS${seq.join('')}</code>, met daarachter de foutcode <code>E${seq[1]}</code>, zodat duidelijk is dat hij dankzij de fout veilig bleef. Er wordt hier geen nul genoteerd: de loper blijft gewoon op het honk staan.`;
       ev.applyBases = b=>{ const nb=cloneBases(b); nb[1]=Object.assign({},nb[0],{arrivedVia:code, history:Object.assign({},nb[0].history,{'2e':code})}); nb[0]=null; return {bases:nb, runs:0}; };
@@ -1989,7 +1989,7 @@ function buildRunnerEvent(key){
       const r = bases[1]; const seq=[2,5];
       const code = wrapOut('CS'+seq.join(''));
       ev.narrative = `<b>${r.name}</b> probeert het derde honk te stelen. De achtervanger gooit naar de ${P(seq[1])}, die hem net op tijd tikt.`;
-      ev.code=code; ev.refs=['Caught stealing, p.14, Scoreregel 9.07']; ev.targetQuadrant='3e';
+      ev.code=code; ev.refs=['Caught stealing, p.14, Scoreregel 16.7']; ev.targetQuadrant='3e';
       ev.priorHistory = Object.assign({}, r.history);
       ev.explain=`Uit bij stelen noteer je met <code>CS</code> gevolgd door de aangooi (achtervanger → ${P(seq[1])}), tussen haakjes omdat de loper uit is: code <code>${code}</code>.`;
       ev.applyBases = b=>{
@@ -2009,7 +2009,7 @@ function buildRunnerEvent(key){
       // whoever threw wildly (seq[0], the achtervanger), not to seq[1] who merely received it.
       const code = 'CS'+seq.join('')+' E'+seq[0];
       ev.narrative = `<b>${r.name}</b> probeert het derde honk te stelen. De achtervanger gooit naar de ${P(seq[1])}, maar de aangooi is onzuiver, waardoor <b>${r.name}</b> veilig blijft op het derde honk.`;
-      ev.code=code; ev.refs=['Caught stealing, p.14, Scoreregel 9.07', 'Fouten, p.11, Scoreregel 9.12']; ev.targetQuadrant='3e';
+      ev.code=code; ev.refs=['Caught stealing, p.14, Scoreregel 16.7', 'Fouten, p.11, Scoreregel 17.3']; ev.targetQuadrant='3e';
       ev.priorHistory = Object.assign({}, r.history);
       ev.explain=`Zonder de fout was dit een uit bij stelen geweest, dus schrijf je toch <code>CS${seq.join('')}</code>, met daarachter de foutcode <code>E${seq[0]}</code> (de achtervanger, die onzuiver aangooide), zodat duidelijk is dat hij dankzij de fout veilig bleef. Er wordt hier geen nul genoteerd: de loper blijft gewoon op het honk staan.`;
       ev.applyBases = b=>{ const nb=cloneBases(b); nb[2]=Object.assign({},nb[1],{arrivedVia:code, history:Object.assign({},nb[1].history,{'3e':code})}); nb[1]=null; return {bases:nb, runs:0}; };
@@ -2035,7 +2035,7 @@ function buildRunnerEvent(key){
       const runnerCount = [bases[0],bases[1],bases[2]].filter(Boolean).length;
       const moveNar = runnerCount>1 ? `De honklopers schuiven op.` : `<b>${lead.name}</b> schuift op.`;
       ev.narrative = `De werper gooit een wilde worp, hoog over de achtervanger. ${moveNar}`;
-      ev.code='WP'; ev.refs=['Wild Pitch, p.14, Scoreregel 9.13'];
+      ev.code='WP'; ev.refs=['Wild Pitch, p.14, Scoreregel 17.5'];
       ev.targetQuadrant = bases[2] ? 'thuis' : (bases[1] ? '3e' : '2e');
       if(bases[2]) ev.scoresRun=true;
       ev.priorHistory = Object.assign({}, lead.history);
@@ -2048,7 +2048,7 @@ function buildRunnerEvent(key){
       const runnerCount = [bases[0],bases[1],bases[2]].filter(Boolean).length;
       const moveNar = runnerCount>1 ? `De honklopers schuiven op.` : `<b>${lead.name}</b> schuift op.`;
       ev.narrative = `De achtervanger kan de bal niet vasthouden: doorgeschoten bal. ${moveNar}`;
-      ev.code='PB'; ev.refs=['Passed Ball, p.15, Scoreregel 9.13'];
+      ev.code='PB'; ev.refs=['Passed Ball, p.15, Scoreregel 17.5'];
       ev.targetQuadrant = bases[2] ? 'thuis' : (bases[1] ? '3e' : '2e');
       if(bases[2]) ev.scoresRun=true;
       ev.priorHistory = Object.assign({}, lead.history);
@@ -2086,7 +2086,7 @@ function buildRunnerEvent(key){
     case 'SB3': {
       const r = bases[2];
       ev.narrative = `<b>${r.name}</b> steelt het thuishonk!`;
-      ev.code='SB'; ev.refs=['Stolen base, p.13, Scoreregel 9.07']; ev.targetQuadrant='thuis'; ev.scoresRun=true;
+      ev.code='SB'; ev.refs=['Stolen base, p.13, Scoreregel 16.7']; ev.targetQuadrant='thuis'; ev.scoresRun=true;
       ev.priorHistory = Object.assign({}, r.history);
       ev.explain='Ook het stelen van het thuishonk noteer je met code <code>SB</code>, nu in het thuis-vakje: de loper scoort een punt.';
       ev.applyBases = b=>{ const nb=cloneBases(b); nb[2]=null; return {bases:nb, runs:1}; };
@@ -2096,7 +2096,7 @@ function buildRunnerEvent(key){
       const r = bases[2];
       const code = wrapOut('CS2');
       ev.narrative = `<b>${r.name}</b> probeert het thuishonk te stelen. De achtervanger vangt de worp en tikt hem uit bij de thuisplaat.`;
-      ev.code=code; ev.refs=['Caught stealing, p.14, Scoreregel 9.07']; ev.targetQuadrant='thuis';
+      ev.code=code; ev.refs=['Caught stealing, p.14, Scoreregel 16.7']; ev.targetQuadrant='thuis';
       ev.priorHistory = Object.assign({}, r.history);
       ev.explain=`Uit bij stelen van het thuishonk noteer je met <code>CS</code> gevolgd door de veldpositie die de tik maakt. Hier vangt en tikt de achtervanger zelf, zonder aangooi, tussen haakjes omdat de loper uit is: code <code>${code}</code>.`;
       ev.applyBases = b=>{
@@ -2246,7 +2246,7 @@ function buildEndOfInningQuizEvent(){
         'Alleen als de bal na het missen ook nog buiten het speelveld terechtkomt; anders reken je het toe aan het harde lopen van de loper zelf.',
         'Nee, dit reken je toe aan de snelheid van de loper, niet aan de achtervanger, want die deed tenminste nog een poging tot de vangst.'
       ], correctIndex: 0,
-      refs:['Fouten, p.11-12, Scoreregel 9.12'],
+      refs:['Fouten, p.11-12, Scoreregel 17.3'],
       explain: 'Een gemiste aangooi of vangbal die een loper in staat stelt verder te komen dan hij anders had gehaald, is een fout, ook als de veldspeler de bal niet had hoeven aanraken om hem wel goed te verwerken.',
     },
     {
@@ -2257,7 +2257,7 @@ function buildEndOfInningQuizEvent(){
         'Alleen als de trage verwerking de slagman ook echt een extra honk oplevert dat hij anders niet had gehaald.',
         'Ja, maar alleen wanneer de veldspeler de bal wél goed vasthoudt en gewoon te langzaam aangooit naar het honk.'
       ], correctIndex: 0,
-      refs:['Fouten, p.11, Scoreregel 9.12'],
+      refs:['Fouten, p.11, Scoreregel 17.3'],
       explain: 'Langzame verwerking zonder de bal verkeerd te behandelen is geen fout. Dat zijn denk- of beoordelingsfouten, en die noteer je niet als E.',
     },
     {
@@ -2279,7 +2279,7 @@ function buildEndOfInningQuizEvent(){
         'Als de slagman de bal niet recht voor de thuisplaat, maar meer richting het derde honk legt.',
         'Als de loper die opschuift een invaller (pinch runner) is in plaats van de oorspronkelijke honkloper.'
       ], correctIndex: 0,
-      refs:['Sacrifice hit, p.17, Scoreregel 9.08'],
+      refs:['Sacrifice hit, p.17, Scoreregel 16.5'],
       explain: 'Een sacrifice hit vereist dat de slagman zelf daadwerkelijk uit gaat én de loper een honk verder brengt. Blijft de slagman ook veilig, dan is het geen SH meer maar een gewone honkslag of fout, ongeacht welke veldspeler erbij betrokken was, waar de stootslag precies neerkwam, of wie er als loper meeging.',
     },
     {
@@ -2290,7 +2290,7 @@ function buildEndOfInningQuizEvent(){
         'Ja, mits de loper die opschuift daardoor niet als derde uit wordt gemaakt (anders eindigt de slagbeurt zonder dat de SH nog telt).',
         'Alleen als het de laatste slagbeurt van de inning is; dan telt het aantal uit niet meer mee voor SH.'
       ], correctIndex: 0,
-      refs:['Sacrifice hit, p.17, Scoreregel 9.08'],
+      refs:['Sacrifice hit, p.17, Scoreregel 16.5'],
       explain: 'Een sacrifice hit vereist minder dan twee uit op het moment dat de stootslag wordt gelegd. Met twee uit al bereikt, is een verder correct uitgevoerde offerstootslag toch geen SH: die zou de inning immers meteen beëindigen zonder dat er nog iets te "offeren" valt.',
     },
     {
@@ -2568,8 +2568,8 @@ function buildAdvanceCreditEvent(adv, battingOrderNum, batterName, priorHistory,
 }
 
 const RUNNER_LABEL_REFS = {
-  'WP': ['Wild Pitch, p.14, Scoreregel 9.13'],
-  'PB': ['Passed Ball, p.15, Scoreregel 9.13'],
+  'WP': ['Wild Pitch, p.14, Scoreregel 17.5'],
+  'PB': ['Passed Ball, p.15, Scoreregel 17.5'],
   'BK': ['BalK, p.15'],
   'IP': ['Illegal pitch, p.15'],
 };
