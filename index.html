@@ -2973,6 +2973,14 @@ function honkslagMarkHTML(n){
   return `<span class="hs-mark">${svg}</span>`;
 }
 
+// renderCodeDisplay/outCircleContent's fallback paths echo whatever the scorer actually typed
+// (not just the app's own known codes) straight into innerHTML — so anything that isn't a
+// recognized notation pattern must come back HTML-escaped, or a live builder preview / logboek
+// entry becomes a straightforward markup-injection sink for arbitrary typed text.
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 // Shared by renderCodeDisplay (any code wrapped in the scorer's own "(" ")") and
 // renderScorecardCellHTML — keeps the "letter prefix on its own line from the throw sequence"
 // treatment identical everywhere an out-circle-inner gets built, instead of two codepaths drifting.
@@ -2984,7 +2992,7 @@ function outCircleContent(code){
   // layout — which centers the content vertically instead of leaving a single-line code
   // top-aligned — stacks them as two flex items; a flex container doesn't honor a <br> as a
   // line break the way normal text flow does.
-  return /^([A-Za-z]+)(\d+)$/.test(code) ? code.replace(/^([A-Za-z]+)(\d+)$/, '<span class="oc-line">$1</span><span class="oc-line num-tail">$2</span>') : code;
+  return /^([A-Za-z]+)(\d+)$/.test(code) ? code.replace(/^([A-Za-z]+)(\d+)$/, '<span class="oc-line">$1</span><span class="oc-line num-tail">$2</span>') : escapeHtml(code);
 }
 
 // The circle around an out's code is no longer drawn automatically from outsDelta bookkeeping —
@@ -3006,7 +3014,7 @@ function renderCodeDisplay(code){
   // instead of at the meaningful boundary.
   const compoundMatch = /^([A-Za-z]+\d+)\s*([A-Za-z]+\d+)$/.exec(code);
   if(compoundMatch) return `<span class="compound-code"><span class="oc-line">${compoundMatch[1]}</span><span class="oc-line num-tail">${compoundMatch[2]}</span></span>`;
-  return code;
+  return escapeHtml(code);
 }
 
 function renderScorecardCellHTML(cell){
@@ -3273,7 +3281,7 @@ function addLogEntry(ev, userStr, slot, codeOK, slotOK, fullyCorrect){
     </div>
     <div class="log-details">
       <span class="txt">${cleanNarrative}</span>
-      <span class="codes">${userStr || '<span class="codes-empty">(leeg)</span>'} → ${ev.code}</span>
+      <span class="codes">${userStr ? escapeHtml(userStr) : '<span class="codes-empty">(leeg)</span>'} → ${escapeHtml(ev.code)}</span>
     </div>`;
   log.insertBefore(div, log.firstChild);
 }
