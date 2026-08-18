@@ -12,7 +12,8 @@
     "lint:js": "node scripts/extract-inline-script.mjs && eslint .",
     "lint:css": "stylelint index.html",
     "lint:html": "htmlhint index.html",
-    "verify": "npm run lint && npm test"
+    "verify": "npm run lint && npm test",
+    "mutation-test": "node scripts/mutation-test.mjs"
   },
   "repository": {
     "type": "git",
@@ -27,6 +28,7 @@
   "homepage": "https://github.com/spoorcc/knbsb-scorer1#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "acorn": "^8.18.0",
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^10.8.1",
     "globals": "^17.9.0",

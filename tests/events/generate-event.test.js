@@ -43,6 +43,36 @@ describe("generateBatterEvent", () => {
   });
 });
 
+describe("generateBatterEvent — FCFAIL precondition", () => {
+  it("never offers FCFAIL while 2nd base is occupied", () => {
+    // buildBatterEvent's FCFAIL case only ever moves bases[0] up to 2nd and leaves bases[2] alone —
+    // it never looks at bases[1], so a runner already standing on 2nd would silently vanish (not
+    // moved, not scored, just dropped from the returned bases array) instead of erroring loudly.
+    // The only thing preventing that today is this pool guard (`if(!b1) pool.push({key:'FCFAIL'})`
+    // in generateBatterEvent) — pin it here so a future edit that loosens it fails a test instead of
+    // silently corrupting a live game's base state.
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    const bases = [
+      { name: "R1", battingSlot: 0, history: {} },
+      { name: "R2", battingSlot: 1, history: {} },
+      null,
+    ];
+    evalIn(dom, `G.bases = ${JSON.stringify(bases)};`);
+    for (const outs of [0, 1]) {
+      evalIn(dom, `G.outs = ${outs};`);
+      for (let i = 0; i < 100; i++) {
+        stubRngConstant(dom, i / 100);
+        const ev = dom.window.generateBatterEvent();
+        // FCFAIL is the only forBatter, FC-coded key that isn't an out (outsDelta 0) — FC and
+        // FCINT (the other FC-shaped keys offered with 1st occupied) are always outsDelta 1.
+        const looksLikeFcfail = typeof ev.code === "string" && ev.code.startsWith("FC") && ev.outsDelta === 0;
+        expect(looksLikeFcfail).toBe(false);
+      }
+    }
+  });
+});
+
 describe("generateEvent", () => {
   it("never throws, and only routes to a runner/quiz event when a runner is actually on base", () => {
     const dom = loadApp();
