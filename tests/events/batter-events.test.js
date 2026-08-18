@@ -537,6 +537,12 @@ describe("buildBatterEvent — sanity across every key with fuzzed base states",
     ],
   ];
   const BASE_STATES_WITH_FIRST = BASE_STATES.filter((b) => b[0]);
+  // FCFAIL's applyBases only ever moves bases[0] to 2nd and leaves bases[2] alone — it doesn't
+  // look at bases[1] at all, so a runner already on 2nd would just vanish (not moved, not scored,
+  // not returned). generateBatterEvent only offers FCFAIL when 1st is occupied AND 2nd is empty
+  // (see its pool-building `if(!b1) pool.push({key:'FCFAIL', ...})`), so fuzz it against that
+  // narrower precondition, not the wider "1st occupied" one FC/FCINT actually trust.
+  const BASE_STATES_WITH_FIRST_ONLY = BASE_STATES_WITH_FIRST.filter((b) => !b[1]);
   const BASE_STATES_WITH_THIRD = BASE_STATES.filter((b) => b[2]);
   const BASE_STATES_WITH_ANY_RUNNER = BASE_STATES.filter((b) => b[0] || b[1] || b[2]);
 
@@ -556,10 +562,10 @@ describe("buildBatterEvent — sanity across every key with fuzzed base states",
     }
   });
 
-  it("FC / FCFAIL / FCINT never throw, for every base state where 1st is occupied", () => {
+  it("FC / FCINT never throw, for every base state where 1st is occupied", () => {
     const dom = loadApp();
     dom.window.initGame(3, "Honkbal", "1");
-    for (const key of ["FC", "FCFAIL", "FCINT"]) {
+    for (const key of ["FC", "FCINT"]) {
       for (const bases of BASE_STATES_WITH_FIRST) {
         for (let i = 0; i < 8; i++) {
           stubRngConstant(dom, i / 8);
@@ -567,6 +573,24 @@ describe("buildBatterEvent — sanity across every key with fuzzed base states",
           commonShape(ev);
           expect(() => ev.applyBases(dom.window.cloneBases(bases))).not.toThrow();
         }
+      }
+    }
+  });
+
+  it("FCFAIL never throws, and never drops a runner, for every base state where 1st is occupied and 2nd is empty", () => {
+    const dom = loadApp();
+    dom.window.initGame(3, "Honkbal", "1");
+    for (const bases of BASE_STATES_WITH_FIRST_ONLY) {
+      for (let i = 0; i < 8; i++) {
+        stubRngConstant(dom, i / 8);
+        const ev = dom.window.buildBatterEvent("FCFAIL", batter(), bases, 0);
+        commonShape(ev);
+        const result = ev.applyBases(dom.window.cloneBases(bases));
+        // Every runner present before the play must still be accounted for after it: the batter
+        // plus each pre-existing runner, none silently dropped.
+        const before = bases.filter(Boolean).length;
+        const after = result.bases.filter(Boolean).length;
+        expect(after).toBe(before + 1);
       }
     }
   });

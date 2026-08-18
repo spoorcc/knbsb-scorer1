@@ -1636,6 +1636,11 @@ function buildBatterEvent(key, batter, bases, battingSlot){
       ev.outsDelta=1;
       break; }
     case 'FCFAIL': {
+      // applyBases below only ever reads bases[0] and bases[2] — it doesn't check bases[1] at all,
+      // so it must never run while 2nd is occupied, or that runner silently vanishes (not moved, not
+      // scored, just dropped). The pool guard in generateBatterEvent (`if(!b1) pool.push({key:
+      // 'FCFAIL', ...})`) is what keeps that true; see generate-event.test.js's "never offers FCFAIL
+      // while 2nd base is occupied" for the regression test pinning it.
       const leadRunner = bases[0];
       const fielder = pick([3,4,5,6]);
       const options=[4,6].filter(x=>x!==fielder);

@@ -68,6 +68,23 @@ Run once: `npm install`.
   (markup), in that order.
 - `npm run verify` — lint, then test; run this before considering any change
   to `index.html` done.
+- `npm run mutation-test` — mutation testing over the inline `<script>`
+  (`scripts/mutation-test.mjs`): parses it with acorn, generates small
+  single-token mutants (flipped operators, negated conditions, boundary
+  shifts, swapped booleans), and for each one temporarily overwrites the real
+  `index.html` with the mutated version, runs the test suite against it, and
+  restores the original afterwards. A mutant that survives (tests still pass)
+  is a coverage gap — occasionally a real bug hiding behind an otherwise-only
+  test-covered guard (see the FCFAIL precondition test in
+  `tests/events/generate-event.test.js` for a worked example). Useful flags:
+  `--limit N` (default 60), `--full` (run the whole suite per mutant instead
+  of the faster non-integration subset), `--filter <text>` (only mutants on a
+  matching source line), `--list` (preview without running), `--seed N`
+  (reproducible sample). **Never edit `index.html` while this is running, and
+  never run two instances at once** — it repeatedly overwrites the real file
+  in place and only restores it at the end, so a concurrent write races that
+  restore and can leave a stray mutant permanently stuck in the working tree.
+  It refuses to start unless `index.html` is already clean in git.
 
 To run a single test file: `npx vitest run tests/events/batter-events.test.js`.
 To run tests matching a name: `npx vitest run -t "buildBatterEvent"`.
