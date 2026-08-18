@@ -51,6 +51,19 @@ describe("initGame", () => {
     expect(getG(dom).matchNumber).toBe(Math.floor(0.123456 * 900000) + 100000);
   });
 
+  it("falls back to a random seed (via Math.random) when matchNumber passes isNaN but parseInt still can't use it", () => {
+    // "Infinity": isNaN("Infinity") is false (Number("Infinity") is a valid, non-NaN value), but
+    // parseInt("Infinity",10) can't parse it and returns NaN — a second, separate fallback path
+    // from the "no matchNumber given at all" case above, guarded by its own
+    // Number.isSafeInteger(seed) check rather than the ternary's own condition. Pinning this with
+    // a controlled Math.random (mirroring the test above) so the exact fallback formula stays
+    // covered on this path too, not just the ternary's own branch.
+    const dom = loadApp();
+    dom.window.Math.random = () => 0.654321;
+    dom.window.initGame(3, "Honkbal", "Infinity");
+    expect(getG(dom).matchNumber).toBe(Math.floor(0.654321 * 900000) + 100000);
+  });
+
   it("defaults to Honkbal when no sport is given", () => {
     const dom = loadApp();
     dom.window.initGame(3, undefined, "1");
